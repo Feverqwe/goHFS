@@ -1,7 +1,7 @@
 Build app
 ---
 ````
-go build -ldflags -H=windowsgui
+go build -ldflags -H=windowsgui -trimpath
 ````
 
 Build resources with go-bindata
