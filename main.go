@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-pkgz/rest"
 	"goHfs/internal"
 	"io"
@@ -17,6 +18,11 @@ func main() {
 
 	var config = internal.LoadConfig()
 
+	var powerControl *internal.PowerControl
+	if runtime.GOOS == "windows" {
+		powerControl = internal.GetPowerControl()
+	}
+
 	internal.TrayIcon(&config, callChan)
 
 	go func() {
@@ -27,7 +33,7 @@ func main() {
 
 	for {
 		v := <-callChan
-		println("callChan", v)
+		fmt.Println("callChan", v)
 
 		switch v {
 		case "restartServer":
@@ -37,7 +43,7 @@ func main() {
 
 			handler := rest.Wrap(
 				fsServer(config.Public),
-				powerLock(),
+				powerLock(powerControl),
 				handleDir(config.Public),
 			)
 
@@ -105,20 +111,12 @@ func handleDir(public string) func(http.Handler) http.Handler {
 	}
 }
 
-func powerLock() func(http.Handler) http.Handler {
-	var powerControl func() func()
-	if runtime.GOOS == "windows" {
-		powerControl = internal.PowerControl()
-	}
-
+func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if powerControl != nil {
-				disposer := powerControl()
-				// println("start", now, request.RequestURI)
-				defer func() {
-					disposer()
-				}()
+				powerControl.Inc()
+				defer powerControl.Dec()
 			}
 			next.ServeHTTP(writer, request)
 		}
