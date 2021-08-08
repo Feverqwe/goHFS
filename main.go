@@ -14,6 +14,10 @@ import (
 )
 
 func main() {
+	if _, err := internal.CreateMutex("GoHFS"); err != nil {
+		panic(err)
+	}
+
 	callChan := make(chan string)
 
 	var config = internal.LoadConfig()
