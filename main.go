@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -77,13 +76,8 @@ func handleDir(public string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" {
-				uri, err := url.QueryUnescape(request.RequestURI)
-				if err != nil {
-					writer.WriteHeader(403)
-					return
-				}
-
-				path := filepath.Join(public, filepath.Clean(uri))
+				urlPath := request.URL.Path
+				path := filepath.Join(public, filepath.Clean(urlPath))
 				stat, err := os.Stat(path)
 				if err != nil {
 					if os.IsNotExist(err) {
@@ -95,13 +89,13 @@ func handleDir(public string) func(http.Handler) http.Handler {
 				}
 
 				if stat.IsDir() {
-					if uri[len(uri)-1:] != "/" {
-						writer.Header().Set("Location", uri+"/")
+					if urlPath[len(urlPath) - 1:] != "/" {
+						writer.Header().Set("Location", urlPath + "/")
 						writer.WriteHeader(301)
 						return
 					}
 
-					_, err := io.WriteString(writer, fileIndex(uri, path))
+					_, err := io.WriteString(writer, fileIndex(urlPath, path))
 					if err != nil {
 						panic(err)
 					}
