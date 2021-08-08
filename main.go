@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/go-pkgz/rest"
 	"goHfs/internal"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 )
 
 func main() {
@@ -97,7 +97,10 @@ func handleDir(public string) func(http.Handler) http.Handler {
 						return
 					}
 
-					_, err := io.WriteString(writer, fileIndex(urlPath, path))
+					content := []byte(fileIndex(urlPath, path))
+					writer.Header().Set("Content-Length", strconv.Itoa(len(content)))
+					writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
+					_, err := writer.Write(content)
 					if err != nil {
 						panic(err)
 					}
