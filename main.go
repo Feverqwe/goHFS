@@ -13,18 +13,20 @@ import (
 )
 
 func main() {
-	if _, err := internal.CreateMutex("GoHFS"); err != nil {
-		panic(err)
+	if runtime.GOOS == "windows" {
+		if _, err := internal.CreateMutex("GoHFS"); err != nil {
+			panic(err)
+		}
 	}
 
-	callChan := make(chan string)
-
-	var config = internal.LoadConfig()
+	config := internal.LoadConfig()
 
 	var powerControl *internal.PowerControl
 	if runtime.GOOS == "windows" {
 		powerControl = internal.GetPowerControl()
 	}
+
+	callChan := make(chan string)
 
 	internal.TrayIcon(&config, callChan)
 
