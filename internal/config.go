@@ -41,19 +41,14 @@ func getNewConfig() Config {
 func LoadConfig() Config {
 	config := getNewConfig()
 
-	path := ""
-	if pwd, err := os.Getwd(); err == nil {
-		path = filepath.Join(pwd, "config.json")
-	}
+	path := getConfigPath()
 
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if data, err := json.Marshal(config); err == nil {
-				err = ioutil.WriteFile(path, data, 0644)
-				if err != nil {
-					log.Println("Write config error", err)
-				}
+			err := SaveConfig(config)
+			if err != nil {
+				log.Println("Write new config error", err)
 			}
 		}
 	} else {
@@ -63,4 +58,21 @@ func LoadConfig() Config {
 	}
 
 	return config
+}
+
+func SaveConfig(config Config) error  {
+	path := getConfigPath()
+	if data, err := json.Marshal(config); err == nil {
+		err = ioutil.WriteFile(path, data, 0644)
+		return err;
+	}
+	return nil
+}
+
+func getConfigPath() string  {
+	path := ""
+	if pwd, err := os.Getwd(); err == nil {
+		path = filepath.Join(pwd, "config.json")
+	}
+	return path
 }

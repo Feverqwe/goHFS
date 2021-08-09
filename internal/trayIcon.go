@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/gen2brain/dlgs"
 	"github.com/getlantern/systray"
 	"goHfs/asserts"
 	"log"
@@ -39,7 +40,7 @@ func TrayIcon(config *Config, callChan chan string) {
 		mOpen := systray.AddMenuItem("Open", "Open")
 
 		subConfig := systray.AddMenuItem("Config", "Config")
-		// mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
+		mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
 		mEditConfig := subConfig.AddSubMenuItem("Edit config", "Edit config")
 		mOpenConfigPath := subConfig.AddSubMenuItem("Open config path", "Open config path")
 		mReloadConfig := subConfig.AddSubMenuItem("Reload config", "Reload config")
@@ -62,9 +63,20 @@ func TrayIcon(config *Config, callChan chan string) {
 					if err != nil {
 						log.Println("Open config error", err)
 					}
-				/*case <-mSetPublicPath.ClickedCh:
-				  fmt.Println("mSetPublicPath")
-				  // todo: fix me*/
+				case <-mSetPublicPath.ClickedCh:
+					path, success, err := dlgs.File("Select folder", "", true)
+					if err != nil {
+						log.Println("Select folder error", err)
+					} else
+					if success {
+						config.Public = path
+						err := SaveConfig(*config)
+						if err != nil {
+							log.Println("Save config error", err)
+						}
+						callChan <- "reloadConfig"
+						callChan <- "restartServer"
+					}
 				case <-mOpenConfigPath.ClickedCh:
 					err := open.Run(pwd)
 					if err != nil {
