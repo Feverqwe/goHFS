@@ -6,8 +6,8 @@ import (
 	"goHfs/asserts"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
+	"strconv"
 )
 
 import "github.com/skratchdot/open-golang/open"
@@ -15,11 +15,6 @@ import "github.com/skratchdot/open-golang/open"
 var icon []byte
 
 func TrayIcon(config *Config, callChan chan string) {
-	pwd := ""
-	if _pwd, err := os.Getwd(); err == nil {
-		pwd = _pwd
-	}
-
 	if icon == nil {
 		if runtime.GOOS == "windows" {
 			data, err := asserts.Asset("icon.ico")
@@ -41,9 +36,8 @@ func TrayIcon(config *Config, callChan chan string) {
 
 		subConfig := systray.AddMenuItem("Config", "Config")
 		mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
-		mEditConfig := subConfig.AddSubMenuItem("Edit config", "Edit config")
-		mOpenConfigPath := subConfig.AddSubMenuItem("Open config path", "Open config path")
-		mReloadConfig := subConfig.AddSubMenuItem("Reload config", "Reload config")
+		mSetPort := subConfig.AddSubMenuItem("Set port", "Set port")
+		mSetAddress := subConfig.AddSubMenuItem("Set address", "Set address")
 
 		mQuit := systray.AddMenuItem("Quit", "Quit")
 
@@ -58,11 +52,6 @@ func TrayIcon(config *Config, callChan chan string) {
 					if err != nil {
 						log.Println("Open url error", err)
 					}
-				case <-mEditConfig.ClickedCh:
-					err := open.Run(filepath.Join(pwd, "config.json"))
-					if err != nil {
-						log.Println("Open config error", err)
-					}
 				case <-mSetPublicPath.ClickedCh:
 					path, success, err := dlgs.File("Select folder", "", true)
 					if err != nil {
@@ -70,21 +59,34 @@ func TrayIcon(config *Config, callChan chan string) {
 					} else
 					if success {
 						config.Public = path
-						err := SaveConfig(*config)
-						if err != nil {
-							log.Println("Save config error", err)
+						if err := SaveConfig(*config); err == nil {
+							callChan <- "reload"
 						}
-						callChan <- "reloadConfig"
-						callChan <- "restartServer"
 					}
-				case <-mOpenConfigPath.ClickedCh:
-					err := open.Run(pwd)
+				case <-mSetPort.ClickedCh:
+					portStr, success, err := dlgs.Entry("Set port", "Enter port:", strconv.Itoa(config.Port))
 					if err != nil {
-						log.Println("Open config path error", err)
+						log.Println("Enter port error", err)
+					} else
+					if success {
+						if port, err := strconv.Atoi(portStr); err == nil {
+							config.Port = port
+							if err := SaveConfig(*config); err == nil {
+								callChan <- "reload"
+							}
+						}
 					}
-				case <-mReloadConfig.ClickedCh:
-					callChan <- "reloadConfig"
-					callChan <- "restartServer"
+				case <-mSetAddress.ClickedCh:
+					address, success, err := dlgs.Entry("Set address", "Enter address:", config.Address)
+					if err != nil {
+						log.Println("Enter address error", err)
+					} else
+					if success {
+						config.Address = address
+						if err := SaveConfig(*config); err == nil {
+							callChan <- "reload"
+						}
+					}
 				}
 			}
 		}()

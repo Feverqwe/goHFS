@@ -19,7 +19,7 @@ func main() {
 		}
 	}
 
-	config := internal.LoadConfig()
+	var config internal.Config
 
 	var powerControl *internal.PowerControl
 	if runtime.GOOS == "windows" {
@@ -31,7 +31,7 @@ func main() {
 	internal.TrayIcon(&config, callChan)
 
 	go func() {
-		callChan <- "restartServer"
+		callChan <- "reload"
 	}()
 
 	var httpServer *http.Server
@@ -41,7 +41,9 @@ func main() {
 		fmt.Println("callChan", v)
 
 		switch v {
-		case "restartServer":
+		case "reload":
+			config = internal.LoadConfig()
+
 			if httpServer != nil {
 				httpServer.Close()
 			}
@@ -66,8 +68,6 @@ func main() {
 					log.Println("Server error", err)
 				}
 			}()
-		case "reloadConfig":
-			config = internal.LoadConfig()
 		}
 	}
 }

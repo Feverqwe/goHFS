@@ -62,7 +62,7 @@ func LoadConfig() Config {
 
 func SaveConfig(config Config) error  {
 	path := getConfigPath()
-	if data, err := json.Marshal(config); err == nil {
+	if data, err := json.MarshalIndent(config, "", "  "); err == nil {
 		err = ioutil.WriteFile(path, data, 0644)
 		return err;
 	}
