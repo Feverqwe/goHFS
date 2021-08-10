@@ -5,7 +5,6 @@ import (
 	"github.com/getlantern/systray"
 	"goHfs/asserts"
 	"log"
-	"os"
 	"runtime"
 	"strconv"
 )
@@ -46,7 +45,6 @@ func TrayIcon(config *Config, callChan chan string) {
 				select {
 				case <-mQuit.ClickedCh:
 					systray.Quit()
-					os.Exit(0)
 				case <-mOpen.ClickedCh:
 					err := open.Run(config.GetBrowserAddress())
 					if err != nil {
@@ -56,8 +54,7 @@ func TrayIcon(config *Config, callChan chan string) {
 					path, success, err := dlgs.File("Select folder", "", true)
 					if err != nil {
 						log.Println("Select folder error", err)
-					} else
-					if success {
+					} else if success {
 						config.Public = path
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
@@ -67,8 +64,7 @@ func TrayIcon(config *Config, callChan chan string) {
 					portStr, success, err := dlgs.Entry("Set port", "Enter port:", strconv.Itoa(config.Port))
 					if err != nil {
 						log.Println("Enter port error", err)
-					} else
-					if success {
+					} else if success {
 						if port, err := strconv.Atoi(portStr); err == nil {
 							config.Port = port
 							if err := SaveConfig(*config); err == nil {
@@ -80,8 +76,7 @@ func TrayIcon(config *Config, callChan chan string) {
 					address, success, err := dlgs.Entry("Set address", "Enter address:", config.Address)
 					if err != nil {
 						log.Println("Enter address error", err)
-					} else
-					if success {
+					} else if success {
 						config.Address = address
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
@@ -94,7 +89,5 @@ func TrayIcon(config *Config, callChan chan string) {
 
 	onExit := func() {}
 
-	go func() {
-		systray.Run(onRun, onExit)
-	}()
+	systray.Run(onRun, onExit)
 }

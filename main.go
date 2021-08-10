@@ -28,48 +28,50 @@ func main() {
 
 	callChan := make(chan string)
 
-	internal.TrayIcon(&config, callChan)
-
 	go func() {
-		callChan <- "reload"
+		var httpServer *http.Server
+
+		go func() {
+			callChan <- "reload"
+		}()
+
+		for {
+			v := <-callChan
+			fmt.Println("callChan", v)
+
+			switch v {
+			case "reload":
+				config = internal.LoadConfig()
+
+				if httpServer != nil {
+					httpServer.Close()
+				}
+
+				handler := rest.Wrap(
+					fsServer(config.Public),
+					powerLock(powerControl),
+					handleDir(config.Public),
+				)
+
+				address := config.GetAddress()
+
+				log.Printf("Listening on %s...", address)
+				httpServer = &http.Server{
+					Addr:    address,
+					Handler: handler,
+				}
+
+				go func() {
+					err := httpServer.ListenAndServe()
+					if err != nil {
+						log.Println("Server error", err)
+					}
+				}()
+			}
+		}
 	}()
 
-	var httpServer *http.Server
-
-	for {
-		v := <-callChan
-		fmt.Println("callChan", v)
-
-		switch v {
-		case "reload":
-			config = internal.LoadConfig()
-
-			if httpServer != nil {
-				httpServer.Close()
-			}
-
-			handler := rest.Wrap(
-				fsServer(config.Public),
-				powerLock(powerControl),
-				handleDir(config.Public),
-			)
-
-			address := config.GetAddress()
-
-			log.Printf("Listening on %s...", address)
-			httpServer = &http.Server{
-				Addr:    address,
-				Handler: handler,
-			}
-
-			go func() {
-				err := httpServer.ListenAndServe()
-				if err != nil {
-					log.Println("Server error", err)
-				}
-			}()
-		}
-	}
+	internal.TrayIcon(&config, callChan)
 }
 
 func handleDir(public string) func(http.Handler) http.Handler {
@@ -91,8 +93,8 @@ func handleDir(public string) func(http.Handler) http.Handler {
 				}
 
 				if stat.IsDir() {
-					if urlPath[len(urlPath) - 1:] != "/" {
-						writer.Header().Set("Location", urlPath + "/")
+					if urlPath[len(urlPath)-1:] != "/" {
+						writer.Header().Set("Location", urlPath+"/")
 						writer.WriteHeader(301)
 						return
 					}
