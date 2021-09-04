@@ -2,7 +2,7 @@
 // sources:
 // icon.ico
 // folder.html
-package asserts
+package assets
 
 import (
 	"bytes"

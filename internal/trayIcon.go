@@ -3,7 +3,7 @@ package internal
 import (
 	"github.com/gen2brain/dlgs"
 	"github.com/getlantern/systray"
-	"goHfs/asserts"
+	"goHfs/assets"
 	"log"
 	"runtime"
 	"strconv"
@@ -16,7 +16,7 @@ var icon []byte
 func TrayIcon(config *Config, callChan chan string) {
 	if icon == nil {
 		if runtime.GOOS == "windows" {
-			data, err := asserts.Asset("icon.ico")
+			data, err := assets.Asset("icon.ico")
 			if err != nil {
 				panic(err)
 			}

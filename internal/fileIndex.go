@@ -2,7 +2,7 @@ package internal
 
 import (
 	"encoding/json"
-	"goHfs/asserts"
+	"goHfs/assets"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +25,7 @@ type File struct {
 
 func GetFileIndex(root string) func(uri string, path string) string {
 	if template == "" {
-		data, err := asserts.Asset("folder.html")
+		data, err := assets.Asset("folder.html")
 		if err != nil {
 			panic(err)
 		}
@@ -44,7 +44,7 @@ func GetFileIndex(root string) func(uri string, path string) string {
 				if info, err := entity.Info(); err == nil {
 					file.Size = info.Size()
 					file.Ctime = UnixMilli(info.ModTime())
-					if info.Mode() & os.ModeSymlink != 0 {
+					if info.Mode()&os.ModeSymlink != 0 {
 						if stat, err := os.Stat(filepath.Join(path, file.Name)); err == nil {
 							file.IsDir = stat.IsDir()
 							file.Size = stat.Size()
