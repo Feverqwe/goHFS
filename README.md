@@ -1,3 +1,14 @@
+<div align="center">
+	<img src="assets/screenshot1.png" alt=""/>
+	<h1>GoHFS</h1>
+	<p>
+		<b>Simple file server</b>
+	</p>
+	<br>
+	<br>
+	<br>
+</div>
+
 Build app
 ---
 ````
