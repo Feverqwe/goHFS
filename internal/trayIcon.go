@@ -1,34 +1,30 @@
 package internal
 
 import (
-	"github.com/gen2brain/dlgs"
-	"github.com/getlantern/systray"
 	"goHfs/assets"
 	"log"
-	"runtime"
 	"strconv"
-)
 
-import "github.com/skratchdot/open-golang/open"
+	"github.com/gen2brain/dlgs"
+	"github.com/getlantern/systray"
+	"github.com/skratchdot/open-golang/open"
+)
 
 var icon []byte
 
 func TrayIcon(config *Config, callChan chan string) {
 	if icon == nil {
-		if runtime.GOOS == "windows" {
-			data, err := assets.Asset("icon.ico")
-			if err != nil {
-				panic(err)
-			}
-			icon = data
+		data, err := assets.Asset("icon.ico")
+		if err != nil {
+			panic(err)
 		}
+		icon = data
 	}
 
 	onRun := func() {
 		if icon != nil {
 			systray.SetTemplateIcon(icon, icon)
 		}
-		systray.SetTitle("GoHFS")
 		systray.SetTooltip("GoHFS")
 
 		mOpen := systray.AddMenuItem("Open", "Open")
