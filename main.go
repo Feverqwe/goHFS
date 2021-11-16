@@ -2,29 +2,24 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-pkgz/rest"
 	"goHfs/internal"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
+
+	"github.com/go-pkgz/rest"
 )
 
 func main() {
-	if runtime.GOOS == "windows" {
-		if _, err := internal.CreateMutex("GoHFS"); err != nil {
-			panic(err)
-		}
+	if _, err := internal.CreateMutex("GoHFS"); err != nil {
+		panic(err)
 	}
 
 	var config internal.Config
 
-	var powerControl *internal.PowerControl
-	if runtime.GOOS == "windows" {
-		powerControl = internal.GetPowerControl()
-	}
+	var powerControl = internal.GetPowerControl()
 
 	callChan := make(chan string)
 

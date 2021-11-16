@@ -3,13 +3,12 @@ package internal
 import (
 	"fmt"
 	"golang.org/x/sys/windows"
-	"syscall"
 	"unsafe"
 )
 
 type PowerControl struct {
 	count int
-	ch chan int
+	ch    chan int
 }
 
 func (self *PowerControl) Inc() {
@@ -35,13 +34,13 @@ type SimpleReasonString struct {
 }
 
 type REASON_CONTEXT struct {
-	Version ULONG;
-	Flags DWORD;
-	Reason SimpleReasonString
+	Version ULONG
+	Flags   DWORD
+	Reason  SimpleReasonString
 }
 
 func GetPowerControl() *PowerControl {
-	kernel32 := syscall.NewLazyDLL("kernel32.dll")
+	kernel32 := windows.syscall.NewLazyDLL("kernel32.dll")
 	powerControl := &PowerControl{
 		ch: make(chan int),
 	}
@@ -51,7 +50,7 @@ func GetPowerControl() *PowerControl {
 		powerClearRequest := kernel32.NewProc("PowerClearRequest")
 		var ctx uintptr
 		for {
-			v := <- powerControl.ch
+			v := <-powerControl.ch
 			switch v {
 			case 1:
 				sr, err := windows.UTF16PtrFromString("Active connection")
@@ -60,8 +59,8 @@ func GetPowerControl() *PowerControl {
 				}
 				reason := &REASON_CONTEXT{
 					Version: 0,
-					Flags: 0x1,
-					Reason: SimpleReasonString{sr},
+					Flags:   0x1,
+					Reason:  SimpleReasonString{sr},
 				}
 				pCtx, errNum, status := powerCreateRequest.Call(uintptr(unsafe.Pointer(reason)))
 				ctx = pCtx
