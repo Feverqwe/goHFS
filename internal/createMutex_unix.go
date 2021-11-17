@@ -1,12 +1,21 @@
 package internal
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/juju/fslock"
 )
 
 func CreateMutex(name string) (uintptr, error) {
-	lock := fslock.New(name)
-	err := lock.TryLock()
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	path := filepath.Join(filepath.Dir(ex), "open.lock")
+
+	lock := fslock.New(path)
+	err = lock.TryLock()
 	if err != nil {
 		return 0, err
 	}

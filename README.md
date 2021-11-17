@@ -9,11 +9,21 @@
 	<br>
 </div>
 
-Build app
+Build exe
 ---
 ````
-go build -ldflags -H=windowsgui -trimpath
+go build -ldflags -H=windowsgui -trimpath -o goHFS.exe
 ````
+
+Build mac app
+---
+```
+go build -trimpath -o goHFS
+go get github.com/strosel/appify
+go install github.com/strosel/appify
+~/go/bin/appify -menubar -name goHFS -author "Anton V" -id com.rndnm.gohfs -icon ./assets/icon.icns goHfs
+rm ./goHFS.app/Contents/README
+```
 
 Build resources with go-bindata
 ---

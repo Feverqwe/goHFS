@@ -6,13 +6,15 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 )
 
 type Config struct {
-	Port    int
-	Address string
-	Public  string
+	Port            int
+	Address         string
+	Public          string
+	ShowHiddenFiles bool
 }
 
 func (self *Config) GetAddress() string {
@@ -35,6 +37,7 @@ func getNewConfig() Config {
 	}
 	config.Port = 80
 	config.Public = pwd
+	config.ShowHiddenFiles = false
 	return config
 }
 
@@ -60,19 +63,29 @@ func LoadConfig() Config {
 	return config
 }
 
-func SaveConfig(config Config) error  {
+func SaveConfig(config Config) error {
 	path := getConfigPath()
 	if data, err := json.MarshalIndent(config, "", "  "); err == nil {
 		err = ioutil.WriteFile(path, data, 0644)
-		return err;
+		return err
 	}
 	return nil
 }
 
-func getConfigPath() string  {
-	path := ""
-	if pwd, err := os.Getwd(); err == nil {
-		path = filepath.Join(pwd, "config.json")
+func getConfigPath() string {
+	place := ""
+	if runtime.GOOS == "windows" {
+		pwd, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+		place = pwd
+	} else {
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		place = filepath.Dir(ex)
 	}
-	return path
+	return filepath.Join(place, "config.json")
 }

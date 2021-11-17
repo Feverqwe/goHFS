@@ -45,7 +45,7 @@ func main() {
 				handler := rest.Wrap(
 					fsServer(config.Public),
 					powerLock(powerControl),
-					handleDir(config.Public),
+					handleDir(config.Public, config.ShowHiddenFiles),
 				)
 
 				address := config.GetAddress()
@@ -69,8 +69,8 @@ func main() {
 	internal.TrayIcon(&config, callChan)
 }
 
-func handleDir(public string) func(http.Handler) http.Handler {
-	fileIndex := internal.GetFileIndex(public)
+func handleDir(public string, showHiddenFiles bool) func(http.Handler) http.Handler {
+	fileIndex := internal.GetFileIndex(public, showHiddenFiles)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {

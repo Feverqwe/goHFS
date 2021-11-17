@@ -33,6 +33,7 @@ func TrayIcon(config *Config, callChan chan string) {
 		mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
 		mSetPort := subConfig.AddSubMenuItem("Set port", "Set port")
 		mSetAddress := subConfig.AddSubMenuItem("Set address", "Set address")
+		mShowHiddenFiles := subConfig.AddSubMenuItemCheckbox("Show hidden files", "Show hidden files", config.ShowHiddenFiles)
 
 		mQuit := systray.AddMenuItem("Quit", "Quit")
 
@@ -77,6 +78,17 @@ func TrayIcon(config *Config, callChan chan string) {
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
+					}
+				case <-mShowHiddenFiles.ClickedCh:
+					if config.ShowHiddenFiles {
+						config.ShowHiddenFiles = false
+						mShowHiddenFiles.Uncheck()
+					} else {
+						config.ShowHiddenFiles = true
+						mShowHiddenFiles.Checked()
+					}
+					if err := SaveConfig(*config); err == nil {
+						callChan <- "reload"
 					}
 				}
 			}

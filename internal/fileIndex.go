@@ -5,6 +5,7 @@ import (
 	"goHfs/assets"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -23,7 +24,7 @@ type File struct {
 	Size  int64  `json:"size"`  // bytes
 }
 
-func GetFileIndex(root string) func(uri string, path string) string {
+func GetFileIndex(root string, showHiddenFiles bool) func(uri string, path string) string {
 	if template == "" {
 		data, err := assets.Asset("folder.html")
 		if err != nil {
@@ -41,6 +42,15 @@ func GetFileIndex(root string) func(uri string, path string) string {
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
+				if !showHiddenFiles {
+					if runtime.GOOS == "windows" {
+						if file.Name == "desktop.ini" || file.Name == "Thumbs.db" {
+							continue
+						}
+					} else if file.Name[0] == '.' {
+						continue
+					}
+				}
 				if info, err := entity.Info(); err == nil {
 					file.Size = info.Size()
 					file.Ctime = UnixMilli(info.ModTime())
