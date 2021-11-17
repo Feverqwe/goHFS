@@ -21,7 +21,7 @@ Build mac app
 go build -trimpath -o goHFS
 go get github.com/strosel/appify
 go install github.com/strosel/appify
-~/go/bin/appify -menubar -name goHFS -author "Anton V" -id com.rndnm.gohfs -icon ./assets/icon.icns goHfs
+~/go/bin/appify -menubar -name goHFS -author "Anton V" -id com.rndnm.gohfs -icon ./assets/icon.icns goHFS
 rm ./goHFS.app/Contents/README
 ```
 
