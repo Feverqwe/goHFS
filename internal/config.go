@@ -14,6 +14,7 @@ type Config struct {
 	Port            int
 	Address         string
 	Public          string
+	Upload          string
 	ShowHiddenFiles bool
 }
 
@@ -37,6 +38,7 @@ func getNewConfig() Config {
 	}
 	config.Port = 80
 	config.Public = pwd
+	config.Upload = filepath.Join(pwd, "upload")
 	config.ShowHiddenFiles = false
 	return config
 }

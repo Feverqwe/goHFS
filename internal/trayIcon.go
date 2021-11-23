@@ -31,6 +31,7 @@ func TrayIcon(config *Config, callChan chan string) {
 
 		subConfig := systray.AddMenuItem("Config", "Config")
 		mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
+		mSetUploadPath := subConfig.AddSubMenuItem("Set upload path", "Set upload path")
 		mSetPort := subConfig.AddSubMenuItem("Set port", "Set port")
 		mSetAddress := subConfig.AddSubMenuItem("Set address", "Set address")
 		mShowHiddenFiles := subConfig.AddSubMenuItemCheckbox("Show hidden files", "Show hidden files", config.ShowHiddenFiles)
@@ -53,6 +54,16 @@ func TrayIcon(config *Config, callChan chan string) {
 						log.Println("Select folder error", err)
 					} else if success {
 						config.Public = path
+						if err := SaveConfig(*config); err == nil {
+							callChan <- "reload"
+						}
+					}
+				case <-mSetUploadPath.ClickedCh:
+					path, success, err := dlgs.File("Select folder", "", true)
+					if err != nil {
+						log.Println("Select folder error", err)
+					} else if success {
+						config.Upload = path
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
