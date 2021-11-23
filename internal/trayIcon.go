@@ -28,6 +28,7 @@ func TrayIcon(config *Config, callChan chan string) {
 		systray.SetTooltip("GoHFS")
 
 		mOpen := systray.AddMenuItem("Open", "Open")
+		mOpenUpload := systray.AddMenuItem("Open upload path", "Open upload path")
 
 		subConfig := systray.AddMenuItem("Config", "Config")
 		mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
@@ -47,6 +48,11 @@ func TrayIcon(config *Config, callChan chan string) {
 					err := open.Run(config.GetBrowserAddress())
 					if err != nil {
 						log.Println("Open url error", err)
+					}
+				case <-mOpenUpload.ClickedCh:
+					err := open.Run(config.Upload)
+					if err != nil {
+						log.Println("Open path error", err)
 					}
 				case <-mSetPublicPath.ClickedCh:
 					path, success, err := dlgs.File("Select folder", "", true)
