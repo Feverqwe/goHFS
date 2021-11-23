@@ -93,16 +93,26 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 
 					filename := part.FileName()
 
+					target := filepath.Join(uploadPath, filepath.Clean(filename))
+
+					_, err = os.Lstat(target)
+					if err == nil {
+						log.Println("Lstat targetFile exists")
+						writer.WriteHeader(500)
+						return
+					}
+
 					err = os.MkdirAll(uploadPath, os.ModePerm)
 					if err != nil {
-						log.Println("MkdirAll error", err)
+						log.Println("MkdirAll upload path error", err)
 						writer.WriteHeader(500)
 						return
 					}
 
 					tmpFile, err = os.CreateTemp(uploadPath, "tmp")
+					source := tmpFile.Name()
 					if err != nil {
-						log.Println("Create error", err)
+						log.Println("Create tmpFile error", err)
 						writer.WriteHeader(500)
 						return
 					}
@@ -110,24 +120,18 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 
 					_, err = io.Copy(tmpFile, part)
 					if err != nil {
-						log.Println("Copy error", err)
+						log.Println("Copy from tmpFile error", err)
 						writer.WriteHeader(500)
-						return
-					}
-
-					source := tmpFile.Name()
-					target := filepath.Join(uploadPath, filepath.Clean(filename))
-
-					_, err = os.Lstat(target)
-					if err == nil {
-						log.Println("Lstat exists")
-						writer.WriteHeader(500)
+						err := os.Remove(source)
+						if err != nil {
+							log.Println("Remove tmpFile error", err)
+						}
 						return
 					}
 
 					err = os.Rename(source, target)
 					if err != nil {
-						log.Println("Rename error", err)
+						log.Println("Rename tmpFile to targetFile error", err)
 						writer.WriteHeader(500)
 						return
 					}
