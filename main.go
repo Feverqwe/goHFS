@@ -47,7 +47,7 @@ func main() {
 					fsServer(config.Public),
 					powerLock(powerControl),
 					handleUpload(&config),
-					handleDir(config.Public, config.ShowHiddenFiles),
+					handleDir(&config),
 				)
 
 				address := config.GetAddress()
@@ -146,7 +146,9 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 	}
 }
 
-func handleDir(public string, showHiddenFiles bool) func(http.Handler) http.Handler {
+func handleDir(config *internal.Config) func(http.Handler) http.Handler {
+	public := config.Public
+	showHiddenFiles := config.ShowHiddenFiles
 	fileIndex := internal.GetFileIndex(public, showHiddenFiles)
 
 	return func(next http.Handler) http.Handler {
