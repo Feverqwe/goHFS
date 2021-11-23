@@ -9,7 +9,8 @@ import {
   Image as ImageIcon,
   InsertDriveFile as InsertDriveFileIcon,
   Movie as MovieIcon,
-  Sort as SortIcon
+  Sort as SortIcon,
+  Upload as UploadIcon,
 } from "@mui/icons-material";
 import {makeStyles} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
@@ -71,6 +72,30 @@ const Folder = React.memo(({store}: FolderProps) => {
     setShowSortDialog(true);
   }, []);
 
+  const handleUploadBtn = React.useCallback((e) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.addEventListener('change', (e) => {
+      const files = input.files!;
+
+      const data = new FormData();
+      for (let i = 0, file; file = files[i]; i++) {
+        data.append('file', files[i])
+      }
+
+      fetch('/~/upload', {
+        method: 'POST',
+        body: data,
+      }).then((response) => {
+        console.log(response.status);
+      }, (err) => {
+        console.error('Upload error');
+      });
+    });
+    input.dispatchEvent(new MouseEvent('click'));
+  }, []);
+
   const handleCloseSortDialog = React.useCallback(() => {
     setShowSortDialog(false);
   }, []);
@@ -84,6 +109,9 @@ const Folder = React.memo(({store}: FolderProps) => {
             <Box className={classes.pathLinePath}>
               {store.dir}
             </Box>
+            <IconButton onClick={handleUploadBtn} size="small">
+              <UploadIcon fontSize="inherit" />
+            </IconButton>
             <IconButton onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
             </IconButton>

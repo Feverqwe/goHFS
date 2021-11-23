@@ -2,7 +2,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const Path = require('path');
 const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 
-const outputPath = Path.join(__dirname, '../assets/');
+const outputPath = Path.join(__dirname, './dist/');
 const isProduction = process.argv[process.argv.indexOf('--mode') + 1] === 'production';
 
 console.log('isProduction', isProduction);
@@ -15,7 +15,7 @@ const config = {
     filename: '[name]-[contenthash].js',
     chunkFilename: '[contenthash].chunk.js',
     publicPath: '/assets/',
-    path: Path.join(outputPath, 'folderAssets'),
+    path: Path.join(outputPath, 'assets'),
   },
   module: {
     rules: [

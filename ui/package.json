@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "clean:dist": "del-cli ../assets/folder.htnl",
-    "clean:assets": "del-cli ../assets/folderAssets/ --force",
+    "clean:dist": "del-cli ./dist",
+    "copy:dist": "ncp ./dist/folder.html ../assets/folder.html",
     "build:site": "webpack --mode production",
     "watch:site": "webpack --mode development --watch",
-    "release:site": "npm run clean:dist && npm run build:site && npm run clean:assets"
+    "release:site": "npm run clean:dist && npm run build:site && npm run copy:dist"
   },
   "author": "",
   "license": "ISC",
@@ -28,6 +28,7 @@
     "cross-env": "^7.0.2",
     "del-cli": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "ncp": "^2.0.0",
     "react-dev-utils": "^11.0.4",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.2",
