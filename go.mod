@@ -12,6 +12,7 @@ require (
 	github.com/getlantern/systray v1.1.0
 	github.com/go-pkgz/rest v1.11.0
 	github.com/gopherjs/gopherjs v0.0.0-20210803090616-8f023c250c89 // indirect
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069

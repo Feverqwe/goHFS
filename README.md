@@ -28,7 +28,9 @@ rm ./goHFS.app/Contents/README
 Build resources with go-bindata
 ---
 ````
-go-bindata .\icon.ico .\folder.html
+go get github.com/jteeuwen/go-bindata/...
+go install github.com/jteeuwen/go-bindata/...
+~/go/bin/go-bindata ./icon.ico ./folder.html
 ````
 
 File icon, use rsrc 
