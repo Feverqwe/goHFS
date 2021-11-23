@@ -5,6 +5,7 @@ package internal
 import (
 	"fmt"
 	"golang.org/x/sys/windows"
+	"syscall"
 	"unsafe"
 )
 
@@ -42,7 +43,7 @@ type REASON_CONTEXT struct {
 }
 
 func GetPowerControl() *PowerControl {
-	kernel32 := windows.syscall.NewLazyDLL("kernel32.dll")
+	kernel32 := syscall.NewLazyDLL("kernel32.dll")
 	powerControl := &PowerControl{
 		ch: make(chan int),
 	}
