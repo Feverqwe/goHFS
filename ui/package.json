@@ -1,0 +1,38 @@
+{
+  "name": "folderpage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean:dist": "del-cli ../assets/folder.htnl",
+    "clean:assets": "del-cli ../assets/folderAssets/ --force",
+    "build:site": "webpack --mode production",
+    "watch:site": "webpack --mode development --watch",
+    "release:site": "npm run clean:dist && npm run build:site && npm run clean:assets"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.6.0",
+    "@emotion/styled": "^11.6.0",
+    "@mui/icons-material": "^5.1.1",
+    "@mui/material": "^5.1.1",
+    "@mui/styles": "^5.1.1",
+    "filesize": "^8.0.6",
+    "mime": "^3.0.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/react-dom": "^17.0.11",
+    "cross-env": "^7.0.2",
+    "del-cli": "^4.0.0",
+    "html-webpack-plugin": "^5.5.0",
+    "react-dev-utils": "^11.0.4",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.2",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.64.2",
+    "webpack-cli": "^4.9.1"
+  }
+}
