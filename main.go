@@ -121,11 +121,11 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 					_, err = io.Copy(tmpFile, part)
 					if err != nil {
 						log.Println("Copy from tmpFile error", err)
-						writer.WriteHeader(500)
 						err := os.Remove(source)
 						if err != nil {
 							log.Println("Remove tmpFile error", err)
 						}
+						writer.WriteHeader(500)
 						return
 					}
 
