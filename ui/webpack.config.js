@@ -46,6 +46,7 @@ const config = {
         removeComments: true,
         collapseWhitespace: true,
       },
+      inject: 'body',
       chunks: ['index']
     }),
     new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/index/]),

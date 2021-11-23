@@ -101,19 +101,13 @@ const cache = createCache({
     prepend: true,
 });
 
-const doRender = () => {
-  document.removeEventListener('DOMContentLoaded', doRender);
-
-  ReactDOM.render(
-    <CacheProvider value={cache}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline/>
-        <Favicon/>
-        <Folder store={rootStore}/>
-      </ThemeProvider>
-    </CacheProvider>,
-    document.getElementById('root')
-  );
-};
-
-document.addEventListener('DOMContentLoaded', doRender);
+ReactDOM.render(
+  <CacheProvider value={cache}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline/>
+      <Favicon/>
+      <Folder store={rootStore}/>
+    </ThemeProvider>
+  </CacheProvider>,
+  document.getElementById('root')
+);
