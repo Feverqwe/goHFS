@@ -14,6 +14,7 @@ import {
 } from "@mui/icons-material";
 import {makeStyles} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
+import UploadDialog from "./UploadDialog";
 
 const mime = require('mime');
 const filesize = require('filesize');
@@ -48,6 +49,8 @@ const Folder = React.memo(({store}: FolderProps) => {
   const [files] = React.useState(store.files);
   const [sortKey, setSortKey] = React.useState(getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]));
   const [showSortDialog, setShowSortDialog] = React.useState(false);
+  const [showUploadDialog, setShowUploadDialog] = React.useState(false);
+  const [uploadDialogError, setUploadDialogError] = React.useState<null | Error>(null);
 
   const changeSort = React.useCallback((keyDir) => {
     setSortKey(keyDir);
@@ -84,16 +87,28 @@ const Folder = React.memo(({store}: FolderProps) => {
         data.append('file', files[i])
       }
 
+      setShowUploadDialog(true);
       fetch('/~/upload', {
         method: 'POST',
         body: data,
       }).then((response) => {
-        console.log(response.status);
+        if (!response.ok) {
+          console.error('Incorrect upload status: %s (%s)', response.status, response.statusText);
+          setUploadDialogError(new Error(`Response code ${response.status} (${response.statusText})`));
+          return;
+        }
+
+        setShowUploadDialog(false);
       }, (err) => {
-        console.error('Upload error');
+        console.error('Upload error: %O', err);
+        setUploadDialogError(err);
       });
     });
     input.dispatchEvent(new MouseEvent('click'));
+  }, []);
+
+  const handleCloseUploadDialog = React.useCallback(() => {
+    setShowUploadDialog(false);
   }, []);
 
   const handleCloseSortDialog = React.useCallback(() => {
@@ -133,6 +148,9 @@ const Folder = React.memo(({store}: FolderProps) => {
       </List>
       {showSortDialog && (
         <SortChooseDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />
+      )}
+      {showUploadDialog && (
+        <UploadDialog error={uploadDialogError} onClose={handleCloseUploadDialog} />
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Button, ButtonGroup, Dialog, DialogActions, DialogContent} from "@mui/material";
+import {Button, ButtonGroup, Dialog, DialogContent, styled} from "@mui/material";
 import {ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon} from "@mui/icons-material";
 
 
@@ -15,6 +15,14 @@ interface SortChooseDialogProps {
   onClose: () => void,
 }
 
+const MyDialog = styled(Dialog)(({theme}) => {
+  return {
+    '.MuiPaper-root': {
+      backgroundImage: 'none',
+    }
+  };
+});
+
 const SortChooseDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseDialogProps) => {
   const handleClose = React.useCallback((e, key) => {
     onClose();
@@ -25,7 +33,7 @@ const SortChooseDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseD
   }, []);
 
   return (
-    <Dialog onClose={handleClose} open={true}>
+    <MyDialog onClose={handleClose} open={true}>
       <DialogContent>
         <ButtonGroup orientation="vertical">
           {Object.entries(keyName).map(([type, name]) => {
@@ -42,9 +50,8 @@ const SortChooseDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseD
             );
           })}
         </ButtonGroup>
-        <DialogActions/>
       </DialogContent>
-    </Dialog>
+    </MyDialog>
   );
 });
 
