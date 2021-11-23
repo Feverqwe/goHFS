@@ -31,7 +31,6 @@ const useStyles = makeStyles<Theme>((theme) => ({
   },
   pathLinePath: {
     flexGrow: 1,
-    lineHeight: 'normal',
   }
 }));
 

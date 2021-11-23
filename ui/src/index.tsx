@@ -2,7 +2,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import Folder from "./components/Folder";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
-import {green} from "@mui/material/colors";
+import {CacheProvider} from '@emotion/react';
+import createCache from '@emotion/cache';
 
 export interface FileInfo {
   size: number,
@@ -64,7 +65,6 @@ const rootStore = ('ROOT_STORE' in window && ROOT_STORE) || {
 
 const theme = createTheme({
   palette: {
-    primary: green,
     mode: 'dark',
     ...{
       text: {
@@ -96,15 +96,22 @@ const Favicon = () => {
   </>, document.head);
 };
 
+const cache = createCache({
+    key: 'css',
+    prepend: true,
+});
+
 const doRender = () => {
   document.removeEventListener('DOMContentLoaded', doRender);
 
   ReactDOM.render(
-    <ThemeProvider theme={theme}>
-      <CssBaseline/>
-      <Favicon/>
-      <Folder store={rootStore}/>
-    </ThemeProvider>,
+    <CacheProvider value={cache}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline/>
+        <Favicon/>
+        <Folder store={rootStore}/>
+      </ThemeProvider>
+    </CacheProvider>,
     document.getElementById('root')
   );
 };
