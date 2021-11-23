@@ -72,7 +72,7 @@ func main() {
 }
 
 func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
-	uploadPath := config.Public
+	uploadPath := config.Upload
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
@@ -92,6 +92,13 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 					}
 
 					filename := part.FileName()
+
+					err = os.MkdirAll(uploadPath, os.ModePerm)
+					if err != nil {
+						log.Println("MkdirAll error", err)
+						writer.WriteHeader(500)
+						return
+					}
 
 					tmpFile, err = os.CreateTemp(uploadPath, "tmp")
 					if err != nil {

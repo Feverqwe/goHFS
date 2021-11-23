@@ -32,9 +32,19 @@ func (self *Config) GetBrowserAddress() string {
 
 func getNewConfig() Config {
 	var config = Config{}
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(err)
+	var pwd string
+	var err error
+	if runtime.GOOS == "windows" {
+		pwd, err = os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		pwd = filepath.Dir(ex)
 	}
 	config.Port = 80
 	config.Public = pwd
