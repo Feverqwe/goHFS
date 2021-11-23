@@ -91,10 +91,17 @@ const Folder = React.memo(({store}: FolderProps) => {
       fetch('/~/upload', {
         method: 'POST',
         body: data,
-      }).then((response) => {
+      }).then(async (response) => {
+        const body: null | {error?: string, result?: string, files: string[]} = await response.json().catch(err => null);
         if (!response.ok) {
           console.error('Incorrect upload status: %s (%s)', response.status, response.statusText);
-          setUploadDialogError(new Error(`Response code ${response.status} (${response.statusText})`));
+          let error;
+          if (body && body.error) {
+            error = new Error(body.error);
+          } else {
+            error = new Error(`Response code ${response.status} (${response.statusText})`);
+          }
+          setUploadDialogError(error);
           return;
         }
 

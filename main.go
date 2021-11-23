@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"goHfs/internal"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,6 +15,16 @@ import (
 
 	"github.com/go-pkgz/rest"
 )
+
+type UploadFailResult struct {
+	Error string   `json:"error"`
+	Files []string `json:"files"`
+}
+
+type UploadSuccessResult struct {
+	Result string   `json:"result"`
+	Files  []string `json:"files"`
+}
 
 func main() {
 	if _, err := internal.CreateMutex("GoHFS"); err != nil {
@@ -78,16 +91,17 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" && request.URL.Path == "/~/upload" {
 				reader, err := request.MultipartReader()
-				if err != nil {
-					log.Println("MultipartReader error", err)
-					writer.WriteHeader(500)
-					return
-				}
 
-				var tmpFile *os.File
+				var files []string = make([]string, 0)
 				for {
-					part, err := reader.NextPart()
+					if err != nil {
+						break
+					}
+
+					var part *multipart.Part
+					part, err = reader.NextPart()
 					if err == io.EOF {
+						err = nil
 						break
 					}
 
@@ -97,46 +111,67 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 
 					_, err = os.Lstat(target)
 					if err == nil {
-						log.Println("Lstat targetFile exists")
-						writer.WriteHeader(500)
-						return
+						err = errors.New("File exists: " + filename)
+						break
 					}
 
 					err = os.MkdirAll(uploadPath, os.ModePerm)
 					if err != nil {
-						log.Println("MkdirAll upload path error", err)
-						writer.WriteHeader(500)
-						return
+						err = errors.New("Create upload path error: " + err.Error())
+						break
 					}
 
+					var tmpFile *os.File
 					tmpFile, err = os.CreateTemp(uploadPath, "tmp")
 					source := tmpFile.Name()
 					if err != nil {
-						log.Println("Create tmpFile error", err)
-						writer.WriteHeader(500)
-						return
+						err = errors.New("Create temp file error: " + err.Error())
+						break
 					}
 					defer tmpFile.Close()
 
 					_, err = io.Copy(tmpFile, part)
 					if err != nil {
-						log.Println("Copy from tmpFile error", err)
-						err := os.Remove(source)
-						if err != nil {
-							log.Println("Remove tmpFile error", err)
-						}
-						writer.WriteHeader(500)
-						return
+						os.Remove(source)
+						err = errors.New("Write temp file error: " + err.Error())
+						break
 					}
 
 					err = os.Rename(source, target)
 					if err != nil {
-						log.Println("Rename tmpFile to targetFile error", err)
-						writer.WriteHeader(500)
-						return
+						err = errors.New("Rename temp file error: " + err.Error())
+						break
 					}
+
+					files = append(files, filename)
 				}
-				writer.WriteHeader(200)
+
+				var result interface{}
+				var statusCode int
+				if err != nil {
+					result = UploadFailResult{
+						Error: err.Error(),
+						Files: files,
+					}
+					statusCode = 500
+				} else {
+					result = UploadSuccessResult{
+						Result: "ok",
+						Files:  files,
+					}
+					statusCode = 200
+				}
+
+				json, err := json.Marshal(result)
+				if err != nil {
+					panic(err)
+				}
+				writer.Header().Set("Content-Type", "application/json")
+				writer.WriteHeader(statusCode)
+				_, err = writer.Write([]byte(string(json)))
+				if err != nil {
+					panic(err)
+				}
 				return
 			}
 
