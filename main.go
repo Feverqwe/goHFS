@@ -44,7 +44,7 @@ func main() {
 				}
 
 				handler := rest.Wrap(
-					fsServer(config.Public),
+					fsServer(&config),
 					powerLock(powerControl),
 					handleUpload(&config),
 					handleDir(&config),
@@ -203,6 +203,6 @@ func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Hand
 	}
 }
 
-func fsServer(public string) http.Handler {
-	return http.FileServer(http.Dir(public))
+func fsServer(config *internal.Config) http.Handler {
+	return http.FileServer(http.Dir(config.Public))
 }
