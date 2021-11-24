@@ -109,7 +109,7 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 
 					target := filepath.Join(uploadPath, filepath.Clean(filename))
 
-					_, err = os.Lstat(target)
+					_, err = os.Stat(target)
 					if err == nil {
 						err = errors.New("File exists: " + filename)
 						break
