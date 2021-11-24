@@ -1,4 +1,4 @@
-package main
+package assets
 
 import (
 	"bytes"
@@ -66,8 +66,9 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() ([]byte, error){
 	"folder.html": folder_html,
-	"icon.ico": icon_ico,
+	"icon.ico":    icon_ico,
 }
+
 // AssetDir returns the file names below a certain
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
@@ -104,12 +105,11 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type _bintree_t struct {
-	Func func() ([]byte, error)
+	Func     func() ([]byte, error)
 	Children map[string]*_bintree_t
 }
+
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"folder.html": &_bintree_t{folder_html, map[string]*_bintree_t{
-	}},
-	"icon.ico": &_bintree_t{icon_ico, map[string]*_bintree_t{
-	}},
+	"folder.html": &_bintree_t{folder_html, map[string]*_bintree_t{}},
+	"icon.ico":    &_bintree_t{icon_ico, map[string]*_bintree_t{}},
 }}
