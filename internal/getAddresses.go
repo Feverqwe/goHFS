@@ -12,22 +12,15 @@ func GetAddresses(port int) []string {
 		portPostfix = ":" + strconv.Itoa(port)
 	}
 	result := make([]string, 0)
-	ifaces, err := net.Interfaces()
+	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		log.Println("Interfaces error", err)
 		return result
 	}
-	for _, iface := range ifaces {
-		addrs, err := iface.Addrs()
-		if err != nil {
-			log.Println("Get interface addrs error", err)
-			continue
-		}
-		for _, a := range addrs {
-			switch v := a.(type) {
-			case *net.IPAddr:
-				result = append(result, "http://"+v.String()+portPostfix)
-			}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && ipnet.IP.IsGlobalUnicast() {
+			ip := ipnet.IP.String()
+			result = append(result, "http://"+ip+portPostfix)
 		}
 	}
 	return result
