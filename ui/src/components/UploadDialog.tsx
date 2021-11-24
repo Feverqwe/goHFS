@@ -27,7 +27,7 @@ const UploadDialog = React.memo(({error, onClose}: UploadDialogProps) => {
         {error ? (
           <>
             <p>Upload error:</p>
-            <Input fullWidth={true} value={error.message}/>
+            <Input fullWidth={true} value={error.message} readOnly/>
           </>
         ) : (
           <LinearProgress />

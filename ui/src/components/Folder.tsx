@@ -11,10 +11,12 @@ import {
   Movie as MovieIcon,
   Sort as SortIcon,
   Upload as UploadIcon,
+  QrCode2 as QrCode2Icon
 } from "@mui/icons-material";
 import {makeStyles} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
 import UploadDialog from "./UploadDialog";
+import AddressesDialog from "./AddressesDialog";
 
 const mime = require('mime');
 const filesize = require('filesize');
@@ -50,6 +52,7 @@ const Folder = React.memo(({store}: FolderProps) => {
   const [sortKey, setSortKey] = React.useState(getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]));
   const [showSortDialog, setShowSortDialog] = React.useState(false);
   const [showUploadDialog, setShowUploadDialog] = React.useState(false);
+  const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
   const [uploadDialogError, setUploadDialogError] = React.useState<null | Error>(null);
 
   const changeSort = React.useCallback((keyDir) => {
@@ -73,6 +76,11 @@ const Folder = React.memo(({store}: FolderProps) => {
   const handleSortBtn = React.useCallback((e) => {
     e.preventDefault();
     setShowSortDialog(true);
+  }, []);
+
+  const handleAddressesBtn = React.useCallback((e) => {
+    e.preventDefault();
+    setShowAddressesDialog(true);
   }, []);
 
   const handleUploadBtn = React.useCallback((e) => {
@@ -122,6 +130,10 @@ const Folder = React.memo(({store}: FolderProps) => {
     setShowSortDialog(false);
   }, []);
 
+  const handleCloseAddressesDialog = React.useCallback(() => {
+    setShowAddressesDialog(false);
+  }, []);
+
   return (
     <>
       <List
@@ -136,6 +148,9 @@ const Folder = React.memo(({store}: FolderProps) => {
             </IconButton>
             <IconButton onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
+            </IconButton>
+            <IconButton onClick={handleAddressesBtn} size="small">
+              <QrCode2Icon fontSize="inherit" />
             </IconButton>
           </ListSubheader>
         }
@@ -158,6 +173,9 @@ const Folder = React.memo(({store}: FolderProps) => {
       )}
       {showUploadDialog && (
         <UploadDialog error={uploadDialogError} onClose={handleCloseUploadDialog} />
+      )}
+      {showAddressesDialog && (
+        <AddressesDialog onClose={handleCloseAddressesDialog} />
       )}
     </>
   );
