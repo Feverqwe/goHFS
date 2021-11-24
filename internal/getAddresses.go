@@ -19,8 +19,10 @@ func GetAddresses(port int) []string {
 	}
 	for _, address := range addrs {
 		if ipnet, ok := address.(*net.IPNet); ok && ipnet.IP.IsGlobalUnicast() {
-			ip := ipnet.IP.String()
-			result = append(result, "http://"+ip+portPostfix)
+			if ipnet.IP.To4() != nil {
+				ip := ipnet.IP.String()
+				result = append(result, "http://"+ip+portPostfix)
+			}
 		}
 	}
 	return result

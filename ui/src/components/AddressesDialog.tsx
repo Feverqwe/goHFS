@@ -87,6 +87,8 @@ interface AddressItemProps {
   address: string,
 }
 
+const QR_CODE_SIZE = 196;
+
 const AddressItem = React.memo(({address}: AddressItemProps) => {
   const refCanvas = React.useRef<null | HTMLCanvasElement>(null);
 
@@ -95,6 +97,7 @@ const AddressItem = React.memo(({address}: AddressItemProps) => {
 
     QRCode.toCanvas(canvas, address, {
       version: 2,
+      width: QR_CODE_SIZE,
     }, (err: Error) => {
       if (err) {
         console.error('Create QRCode error: %O', err);
@@ -108,7 +111,7 @@ const AddressItem = React.memo(({address}: AddressItemProps) => {
           {address}
         </Typography>
         <Box>
-          <canvas ref={refCanvas} width={118} height={118} />
+          <canvas ref={refCanvas} width={QR_CODE_SIZE} height={QR_CODE_SIZE} />
         </Box>
     </Box>
   );
