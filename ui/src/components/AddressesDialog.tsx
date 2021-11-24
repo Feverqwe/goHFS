@@ -30,6 +30,10 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
 
       const body: {result: string[]} = await response.json();
 
+      if (!body.result.length) {
+        throw new Error('Addresses is empty');
+      }
+
       return body.result;
     }).then((addresses) => {
       if (!mounted) return;
@@ -59,7 +63,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
           <LinearProgress />
         ) : error ? (
           <>
-            <p>Request error:</p>
+            <p>Error:</p>
             <Input fullWidth={true} value={error.message} readOnly/>
           </>
         ) : (
