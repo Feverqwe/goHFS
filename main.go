@@ -26,6 +26,10 @@ type UploadSuccessResult struct {
 	Files  []string `json:"files"`
 }
 
+type AddressedResult struct {
+	Result []string `json:"result"`
+}
+
 func main() {
 	if _, err := internal.CreateMutex("GoHFS"); err != nil {
 		panic(err)
@@ -60,6 +64,7 @@ func main() {
 					fsServer(&config),
 					powerLock(powerControl),
 					handleUpload(&config),
+					handleInterfaces(&config),
 					handleDir(&config),
 				)
 
@@ -217,6 +222,33 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 					}
 					return
 				}
+			}
+
+			next.ServeHTTP(writer, request)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func handleInterfaces(config *internal.Config) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, request *http.Request) {
+			if request.Method == "GET" && request.URL.Path == "/~/addresses" {
+				addresses := internal.GetAddresses(config.Port)
+				result := AddressedResult{
+					Result: addresses,
+				}
+				json, err := json.Marshal(result)
+				if err != nil {
+					panic(err)
+				}
+				writer.Header().Set("Content-Type", "application/json")
+				writer.WriteHeader(200)
+				_, err = writer.Write([]byte(string(json)))
+				if err != nil {
+					panic(err)
+				}
+				return
 			}
 
 			next.ServeHTTP(writer, request)
