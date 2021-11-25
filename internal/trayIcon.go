@@ -1,13 +1,11 @@
 package internal
 
 import (
-	"context"
 	"goHfs/assets"
 	"log"
 	"strconv"
 
-	"github.com/gabyx/githooks/githooks/apps/dialog/gui"
-	"github.com/gabyx/githooks/githooks/apps/dialog/settings"
+	"github.com/gen2brain/dlgs"
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -57,45 +55,30 @@ func TrayIcon(config *Config, callChan chan string) {
 						log.Println("Open path error", err)
 					}
 				case <-mSetPublicPath.ClickedCh:
-					props := settings.FileSelection{}
-					props.OnlyDirectories = true
-					props.Root = config.Public
-
-					result, err := gui.ShowFileSelection(context.TODO(), &props)
+					path, success, err := dlgs.File("Select folder", "", true)
 					if err != nil {
 						log.Println("Select folder error", err)
-					} else if result.IsOk() && len(result.Paths) > 0 {
-						config.Public = result.Paths[0]
+					} else if success {
+						config.Public = path
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
 					}
 				case <-mSetUploadPath.ClickedCh:
-					props := settings.FileSelection{}
-					props.OnlyDirectories = true
-					props.Root = config.Upload
-
-					result, err := gui.ShowFileSelection(context.TODO(), &props)
+					path, success, err := dlgs.File("Select folder", "", true)
 					if err != nil {
 						log.Println("Select folder error", err)
-					} else if result.IsOk() && len(result.Paths) > 0 {
-						config.Upload = result.Paths[0]
+					} else if success {
+						config.Upload = path
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
 					}
 				case <-mSetPort.ClickedCh:
-					props := settings.Entry{}
-					props.DefaultCancel = true
-					props.DefaultEntry = strconv.Itoa(config.Port)
-					props.Title = "Change port"
-					props.Text = "Enter port number:"
-
-					result, err := gui.ShowEntry(context.TODO(), &props)
+					portStr, success, err := dlgs.Entry("Set port", "Enter port:", strconv.Itoa(config.Port))
 					if err != nil {
 						log.Println("Enter port error", err)
-					} else if result.IsOk() {
-						portStr := result.Text
+					} else if success {
 						if port, err := strconv.Atoi(portStr); err == nil {
 							config.Port = port
 							if err := SaveConfig(*config); err == nil {
@@ -104,17 +87,11 @@ func TrayIcon(config *Config, callChan chan string) {
 						}
 					}
 				case <-mSetAddress.ClickedCh:
-					props := settings.Entry{}
-					props.DefaultCancel = true
-					props.DefaultEntry = config.Address
-					props.Title = "Change address"
-					props.Text = "Enter address:"
-
-					result, err := gui.ShowEntry(context.TODO(), &props)
+					address, success, err := dlgs.Entry("Set address", "Enter address:", config.Address)
 					if err != nil {
 						log.Println("Enter address error", err)
-					} else if result.IsOk() {
-						config.Address = result.Text
+					} else if success {
+						config.Address = address
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
