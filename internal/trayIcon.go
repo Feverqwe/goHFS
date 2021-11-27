@@ -5,7 +5,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/gen2brain/dlgs"
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -55,30 +54,37 @@ func TrayIcon(config *Config, callChan chan string) {
 						log.Println("Open path error", err)
 					}
 				case <-mSetPublicPath.ClickedCh:
-					path, success, err := dlgs.File("Select folder", "", true)
+					result, err := ShowFolderSelection("Change public path", config.Public)
 					if err != nil {
-						log.Println("Select folder error", err)
-					} else if success {
-						config.Public = path
+						if err.Error() != "Canceled" {
+							log.Println("Select folder error", err)
+						}
+					} else {
+						config.Public = result
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
 					}
 				case <-mSetUploadPath.ClickedCh:
-					path, success, err := dlgs.File("Select folder", "", true)
+					result, err := ShowFolderSelection("Change upload path", config.Upload)
 					if err != nil {
-						log.Println("Select folder error", err)
-					} else if success {
-						config.Upload = path
+						if err.Error() != "Canceled" {
+							log.Println("Select folder error", err)
+						}
+					} else {
+						config.Upload = result
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
 					}
 				case <-mSetPort.ClickedCh:
-					portStr, success, err := dlgs.Entry("Set port", "Enter port:", strconv.Itoa(config.Port))
+					result, err := ShowEntry("Change port", "Enter port number:", strconv.Itoa(config.Port))
 					if err != nil {
-						log.Println("Enter port error", err)
-					} else if success {
+						if err.Error() != "Canceled" {
+							log.Println("Enter port error", err)
+						}
+					} else {
+						portStr := result
 						if port, err := strconv.Atoi(portStr); err == nil {
 							config.Port = port
 							if err := SaveConfig(*config); err == nil {
@@ -87,11 +93,13 @@ func TrayIcon(config *Config, callChan chan string) {
 						}
 					}
 				case <-mSetAddress.ClickedCh:
-					address, success, err := dlgs.Entry("Set address", "Enter address:", config.Address)
+					result, err := ShowEntry("Change address", "Enter address:", config.Address)
 					if err != nil {
-						log.Println("Enter address error", err)
-					} else if success {
-						config.Address = address
+						if err.Error() != "Canceled" {
+							log.Println("Enter address error", err)
+						}
+					} else {
+						config.Address = result
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}

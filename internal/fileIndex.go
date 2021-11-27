@@ -43,6 +43,9 @@ func GetFileIndex(root string, showHiddenFiles bool) func(uri string, path strin
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
 				if !showHiddenFiles {
+					if file.Name == "System Volume Information" {
+						continue
+					}
 					if runtime.GOOS == "windows" {
 						if file.Name == "desktop.ini" || file.Name == "Thumbs.db" {
 							continue
