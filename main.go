@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"goHfs/internal"
 	"io"
@@ -86,7 +87,15 @@ func main() {
 		}
 	}()
 
-	internal.TrayIcon(&config, callChan)
+	disableTrayIconPtr := flag.Bool("disableTrayIcon", false, "Disable tray icon")
+	flag.Parse()
+
+	if !*disableTrayIconPtr {
+		internal.TrayIcon(&config, callChan)
+	} else {
+		loopChan := make(chan string)
+		<-loopChan
+	}
 }
 
 func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
