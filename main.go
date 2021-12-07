@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -241,10 +242,12 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 					}
 
 					content := []byte(fileIndex(urlPath, path))
+					writer.Header().Set("Content-Encoding", "gzip")
 					writer.Header().Set("Content-Length", strconv.Itoa(len(content)))
 					writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
-
-					_, err := writer.Write(content)
+					gz := gzip.NewWriter(writer)
+					defer gz.Close()
+					_, err := gz.Write(content)
 					if err != nil {
 						panic(err)
 					}
@@ -254,7 +257,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 
 			next.ServeHTTP(writer, request)
 		}
-		return internal.GzipHandler(http.HandlerFunc(fn))
+		return http.HandlerFunc(fn)
 	}
 }
 
