@@ -77,14 +77,14 @@ func GetStorage() *Storage {
 	}
 	err := storage.Load()
 	if err != nil {
-		log.Println("Load storage error: ", err)
+		log.Println("Load storage error:", err)
 	}
 	go func() {
 		for {
 			<-storage.ch
 			err := storage.Save()
 			if err != nil {
-				log.Println("Save storage error: ", err)
+				log.Println("Save storage error:", err)
 			}
 		}
 	}()
