@@ -216,8 +216,7 @@ func handleUpload(config *internal.Config) func(http.Handler) http.Handler {
 
 func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 	public := config.Public
-	showHiddenFiles := config.ShowHiddenFiles
-	fileIndex := internal.GetFileIndex(public, showHiddenFiles)
+	fileIndex := internal.GetFileIndex(config)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
@@ -244,6 +243,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 					content := []byte(fileIndex(urlPath, path))
 					writer.Header().Set("Content-Length", strconv.Itoa(len(content)))
 					writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
+
 					_, err := writer.Write(content)
 					if err != nil {
 						panic(err)
@@ -254,7 +254,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 
 			next.ServeHTTP(writer, request)
 		}
-		return http.HandlerFunc(fn)
+		return internal.GzipHandler(http.HandlerFunc(fn))
 	}
 }
 

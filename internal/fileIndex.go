@@ -18,13 +18,17 @@ type RootStore struct {
 }
 
 type File struct {
-	Name  string `json:"name"`
-	IsDir bool   `json:"isDir"`
-	Ctime int64  `json:"ctime"` // ms
-	Size  int64  `json:"size"`  // bytes
+	Name      string `json:"name"`
+	IsDir     bool   `json:"isDir"`
+	Ctime     int64  `json:"ctime"` // ms
+	Size      int64  `json:"size"`  // bytes
+	HandleUrl string `json:"handleUrl"`
 }
 
-func GetFileIndex(root string, showHiddenFiles bool) func(uri string, path string) string {
+func GetFileIndex(config *Config) func(uri string, path string) string {
+	root := config.Public
+	showHiddenFiles := config.ShowHiddenFiles
+
 	if template == "" {
 		data, err := assets.Asset("folder.html")
 		if err != nil {
@@ -42,6 +46,10 @@ func GetFileIndex(root string, showHiddenFiles bool) func(uri string, path strin
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
+				ext := strings.ToLower(filepath.Ext(file.Name))
+				if handleUrl, ok := config.GetFileHandler(ext); ok {
+					file.HandleUrl = handleUrl
+				}
 				if !showHiddenFiles {
 					if file.Name == "System Volume Information" {
 						continue

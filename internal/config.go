@@ -16,22 +16,30 @@ type Config struct {
 	Public          string
 	Upload          string
 	ShowHiddenFiles bool
+	ExtHandle       map[string]string
 }
 
-func (self *Config) GetAddress() string {
-	return self.Address + ":" + strconv.Itoa(self.Port)
+func (s *Config) GetAddress() string {
+	return s.Address + ":" + strconv.Itoa(s.Port)
 }
 
-func (self *Config) GetBrowserAddress() string {
-	addr := self.Address
+func (s *Config) GetBrowserAddress() string {
+	addr := s.Address
 	if addr == "" {
 		addr = "127.0.0.1"
 	}
-	return "http://" + addr + ":" + strconv.Itoa(self.Port)
+	return "http://" + addr + ":" + strconv.Itoa(s.Port)
+}
+
+func (s *Config) GetFileHandler(ext string) (string, bool) {
+	val, ok := s.ExtHandle[ext]
+	return val, ok
 }
 
 func getNewConfig() Config {
-	var config = Config{}
+	var config = Config{
+		ExtHandle: make(map[string]string),
+	}
 	var pwd string
 	var err error
 	if runtime.GOOS == "windows" {
@@ -69,6 +77,9 @@ func LoadConfig() Config {
 	} else {
 		if err := json.Unmarshal(data, &config); err != nil {
 			log.Println("Load config error", err)
+		}
+		if config.ExtHandle == nil {
+			config.ExtHandle = make(map[string]string)
 		}
 	}
 
