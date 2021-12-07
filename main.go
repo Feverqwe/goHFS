@@ -27,6 +27,22 @@ type UploadSuccessResult struct {
 	Files  []string `json:"files"`
 }
 
+type SuccessResult struct {
+	Result string `json:"result"`
+}
+
+type SuccessJsonResult struct {
+	Result interface{} `json:"result"`
+}
+
+type FailJsonResult struct {
+	Error string `json:"error"`
+}
+
+type FailResult struct {
+	Error string `json:"error"`
+}
+
 type AddressedResult struct {
 	Result []string `json:"result"`
 }
@@ -39,6 +55,8 @@ func main() {
 	var config internal.Config
 
 	var powerControl = internal.GetPowerControl()
+
+	storage := internal.GetStorage()
 
 	callChan := make(chan string)
 
@@ -65,6 +83,7 @@ func main() {
 					fsServer(&config),
 					powerLock(powerControl),
 					handleUpload(&config),
+					handleStorage(storage),
 					handleInterfaces(&config),
 					handleDir(&config),
 				)
@@ -244,20 +263,63 @@ func handleInterfaces(config *internal.Config) func(http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" && request.URL.Path == "/~/addresses" {
 				addresses := internal.GetAddresses(config.Port)
-				result := AddressedResult{
-					Result: addresses,
-				}
-				json, err := json.Marshal(result)
-				if err != nil {
-					panic(err)
-				}
-				writer.Header().Set("Content-Type", "application/json")
-				writer.WriteHeader(200)
-				_, err = writer.Write([]byte(string(json)))
+				err := writeApiResult(writer, addresses, nil)
 				if err != nil {
 					panic(err)
 				}
 				return
+			}
+
+			next.ServeHTTP(writer, request)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func handleStorage(storage *internal.Storage) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, request *http.Request) {
+			if request.Method == "POST" {
+				if request.URL.Path == "/~/storage/get" {
+					decoder := json.NewDecoder(request.Body)
+					var keys []string
+					err := decoder.Decode(&keys)
+					var result interface{}
+					if err == nil {
+						result = storage.GetKeys(keys)
+					}
+					err = writeApiResult(writer, result, err)
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
+				if request.URL.Path == "/~/storage/set" {
+					decoder := json.NewDecoder(request.Body)
+					var keyValue map[string]interface{}
+					err := decoder.Decode(&keyValue)
+					if err == nil {
+						err = storage.SetObject(keyValue)
+					}
+					err = writeApiResult(writer, "ok", err)
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
+				if request.URL.Path == "/~/storage/del" {
+					decoder := json.NewDecoder(request.Body)
+					var keys []string
+					err := decoder.Decode(&keys)
+					if err == nil {
+						err = storage.DelKeys(keys)
+					}
+					err = writeApiResult(writer, "ok", err)
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
 			}
 
 			next.ServeHTTP(writer, request)
@@ -281,4 +343,27 @@ func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Hand
 
 func fsServer(config *internal.Config) http.Handler {
 	return http.FileServer(http.Dir(config.Public))
+}
+
+func writeApiResult(writer http.ResponseWriter, result interface{}, err error) error {
+	var statusCode int
+	var body interface{}
+	if err != nil {
+		statusCode = 500
+		body = FailJsonResult{
+			Error: err.Error(),
+		}
+	} else {
+		statusCode = 200
+		body = SuccessJsonResult{
+			Result: result,
+		}
+	}
+	json, err := json.Marshal(body)
+	if err == nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(statusCode)
+		_, err = writer.Write(json)
+	}
+	return err
 }
