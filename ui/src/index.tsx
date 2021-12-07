@@ -10,6 +10,7 @@ export interface FileInfo {
   ctime: number,
   name: string,
   isDir: boolean,
+  handleUrl: string,
 }
 
 export interface RootStore {
@@ -29,36 +30,49 @@ const rootStore = ('ROOT_STORE' in window && ROOT_STORE) || {
       isDir: true,
       ctime: Date.now(),
       size: 0,
+      handleUrl: '',
     },
     {
       name: 'text.txt',
       isDir: false,
       ctime: Date.now(),
       size: 10,
+      handleUrl: '',
     },
     {
       name: 'audio.mp3',
       isDir: false,
       ctime: Date.now(),
       size: 5 * 1024 * 1024,
+      handleUrl: '',
     },
     {
       name: 'image.png',
       isDir: false,
       ctime: Date.now(),
       size: 256 * 1024,
+      handleUrl: '',
     },
     {
       name: 'test.mp4',
       isDir: false,
       ctime: Date.now(),
       size: 550 * 1024 * 1024,
+      handleUrl: '',
     },
     {
       name: 'test2.mp4',
       isDir: false,
       ctime: Date.now(),
       size: 1545 * 1024 * 1024,
+      handleUrl: '',
+    },
+    {
+      name: 'playable.mp4',
+      isDir: false,
+      ctime: Date.now(),
+      size: 1545 * 1024 * 1024,
+      handleUrl: 'http://192.168.1.9/Player/player.html?url={url}',
     },
   ],
 };

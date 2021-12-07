@@ -13,7 +13,7 @@ import {
   Upload as UploadIcon,
   QrCode2 as QrCode2Icon
 } from "@mui/icons-material";
-import {makeStyles} from "@mui/styles";
+import {makeStyles, styled} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
 import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
@@ -165,7 +165,7 @@ const Folder = React.memo(({store}: FolderProps) => {
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={file.isDir + '_' + file.name} file={file}/>
+          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file}/>
         })}
       </List>
       {showSortDialog && (
@@ -193,9 +193,16 @@ const useStylesFile = makeStyles(() => ({
 
 interface FileProps {
   file: FileInfo,
+  dir: string,
 }
 
-const File = React.memo(({file: {size, ctime, name, isDir}}: FileProps) => {
+const MyIconButton = styled(IconButton)(() => {
+  return {
+    padding: 0,
+  };
+});
+
+const File = React.memo(({file: {size, ctime, name, isDir, handleUrl}, dir}: FileProps) => {
   const classes = useStylesFile();
 
   const sizeStr = React.useMemo(() => {
@@ -256,10 +263,26 @@ const File = React.memo(({file: {size, ctime, name, isDir}}: FileProps) => {
     }
   }, [name, isDir]);
 
+  const handleHandleClick = React.useCallback((e) => {
+    e.preventDefault();
+    const a = document.createElement('a');
+    a.href =  dir + encodeURIComponent(name);
+    const fileUrl = a.href;
+    const url = handleUrl.replace('{url}', encodeURIComponent(fileUrl));
+    const win = window.open(url, '_blank');
+    if (win) {
+      win.focus();
+    }
+  }, [handleUrl]);
+
   return (
     <ListItem button component={'a'} href={encodeURIComponent(name)}>
       <ListItemIcon style={iconStyle}>
-        {Icon}
+        {handleUrl ? (
+          <MyIconButton color="primary" onClick={handleHandleClick}>
+            {Icon}
+          </MyIconButton>
+        ) : Icon}
       </ListItemIcon>
       <ListItemText primary={name} secondary={<div className={classes.subLine}>
         <div>{dateStr}</div>
