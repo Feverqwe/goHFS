@@ -46,7 +46,7 @@ func (s *Storage) SaveQueue() {
 
 func (s *Storage) Save() error {
 	path := s.path
-	if data, err := json.MarshalIndent(s.keyValue, "", "  "); err == nil {
+	if data, err := json.Marshal(s.keyValue); err == nil {
 		err = ioutil.WriteFile(path, data, 0644)
 		return err
 	}
