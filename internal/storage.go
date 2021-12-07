@@ -83,7 +83,9 @@ func GetStorage() *Storage {
 		for {
 			<-storage.ch
 			err := storage.Save()
-			log.Println("Save storage error: ", err)
+			if err != nil {
+				log.Println("Save storage error: ", err)
+			}
 		}
 	}()
 	return storage
