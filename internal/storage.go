@@ -17,9 +17,13 @@ type Storage struct {
 
 func (s *Storage) GetKeys(keys []string) map[string]interface{} {
 	result := make(map[string]interface{})
-	for _, key := range keys {
-		if val, ok := s.keyValue[key]; ok {
-			result[key] = val
+	if keys == nil {
+		result = s.keyValue
+	} else {
+		for _, key := range keys {
+			if val, ok := s.keyValue[key]; ok {
+				result[key] = val
+			}
 		}
 	}
 	return result
