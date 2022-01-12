@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -40,20 +41,7 @@ func getNewConfig() Config {
 	var config = Config{
 		ExtHandle: make(map[string]string),
 	}
-	var pwd string
-	var err error
-	if runtime.GOOS == "windows" {
-		pwd, err = os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		ex, err := os.Executable()
-		if err != nil {
-			panic(err)
-		}
-		pwd = filepath.Dir(ex)
-	}
+	pwd := getProfilePath()
 	config.Port = 80
 	config.Public = pwd
 	config.Upload = filepath.Join(pwd, "upload")
@@ -96,6 +84,25 @@ func SaveConfig(config Config) error {
 }
 
 func getConfigPath() string {
+	place := getProfilePath()
+	return filepath.Join(place, "config.json")
+}
+
+func getProfilePath() string {
+	place := ""
+	for _, e := range os.Environ() {
+		pair := strings.SplitN(e, "=", 2)
+		if pair[0] == "PROFILE_PLACE" {
+			place = pair[1]
+		}
+	}
+	if place == "" {
+		place = getDefaultProfilePath()
+	}
+	return place
+}
+
+func getDefaultProfilePath() string {
 	place := ""
 	if runtime.GOOS == "windows" {
 		pwd, err := os.Getwd()
@@ -110,5 +117,5 @@ func getConfigPath() string {
 		}
 		place = filepath.Dir(ex)
 	}
-	return filepath.Join(place, "config.json")
+	return place
 }

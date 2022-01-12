@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 type Storage struct {
@@ -96,19 +95,6 @@ func GetStorage() *Storage {
 }
 
 func getStoragePath() string {
-	place := ""
-	if runtime.GOOS == "windows" {
-		pwd, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-		place = pwd
-	} else {
-		ex, err := os.Executable()
-		if err != nil {
-			panic(err)
-		}
-		place = filepath.Dir(ex)
-	}
+	place := getProfilePath()
 	return filepath.Join(place, "storage.json")
 }
