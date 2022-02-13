@@ -12,9 +12,10 @@ import (
 var template = ""
 
 type RootStore struct {
-	Dir    string `json:"dir"`
-	IsRoot bool   `json:"isRoot"`
-	Files  []File `json:"files"`
+	Dir         string `json:"dir"`
+	IsRoot      bool   `json:"isRoot"`
+	IsRemovable bool   `json:"isRemovable"`
+	Files       []File `json:"files"`
 }
 
 type File struct {
@@ -80,10 +81,13 @@ func GetFileIndex(config *Config) func(uri string, path string) string {
 
 		isRoot := root == path
 
+		isRemovable := config.IsRemovable(relativePath)
+
 		result := RootStore{
-			Dir:    relativePath,
-			IsRoot: isRoot,
-			Files:  files,
+			Dir:         relativePath,
+			IsRoot:      isRoot,
+			IsRemovable: isRemovable,
+			Files:       files,
 		}
 
 		var body string

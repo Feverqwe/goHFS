@@ -86,6 +86,7 @@ func main() {
 					handleUpload(&config),
 					handleStorage(storage),
 					handleInterfaces(&config),
+					handleAction(&config),
 					handleDir(&config),
 				)
 
@@ -316,6 +317,52 @@ func handleStorage(storage *internal.Storage) func(http.Handler) http.Handler {
 					err := decoder.Decode(&keys)
 					if err == nil {
 						err = storage.DelKeys(keys)
+					}
+					err = writeApiResult(writer, "ok", err)
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
+			}
+
+			next.ServeHTTP(writer, request)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func handleAction(config *internal.Config) func(http.Handler) http.Handler {
+	public := config.Public
+
+	type RemovePayload struct {
+		Place string `json:"place"`
+		Name  string `json:"name"`
+		IsDir bool   `json:"isDir"`
+	}
+
+	return func(next http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, request *http.Request) {
+			if request.Method == "POST" {
+				if request.URL.Path == "/~/remove" {
+					decoder := json.NewDecoder(request.Body)
+
+					var payload RemovePayload
+					err := decoder.Decode(&payload)
+					if err == nil {
+						relativePath := filepath.Clean(payload.Place)
+						path := filepath.Join(public, relativePath)
+						name := filepath.Clean(payload.Name)
+						isDir := payload.IsDir
+						isRemovable := config.IsRemovable(relativePath)
+						if isRemovable {
+							targetPath := filepath.Join(path, name)
+							if isDir {
+								err = os.RemoveAll(targetPath)
+							} else {
+								err = os.Remove(targetPath)
+							}
+						}
 					}
 					err = writeApiResult(writer, "ok", err)
 					if err != nil {

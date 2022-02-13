@@ -18,6 +18,7 @@ type Config struct {
 	Upload          string
 	ShowHiddenFiles bool
 	ExtHandle       map[string]string
+	RemoveblePlaces []string
 }
 
 func (s *Config) GetAddress() string {
@@ -37,9 +38,20 @@ func (s *Config) GetFileHandler(ext string) (string, bool) {
 	return val, ok
 }
 
+func (s *Config) IsRemovable(path string) bool {
+	for _, pattern := range s.RemoveblePlaces {
+		m, _ := filepath.Match(pattern, path)
+		if m {
+			return true
+		}
+	}
+	return false
+}
+
 func getNewConfig() Config {
 	var config = Config{
-		ExtHandle: make(map[string]string),
+		ExtHandle:       make(map[string]string),
+		RemoveblePlaces: make([]string, 0),
 	}
 	pwd := getProfilePath()
 	config.Port = 80
