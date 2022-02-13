@@ -350,8 +350,8 @@ func handleAction(config *internal.Config) func(http.Handler) http.Handler {
 					var payload RemovePayload
 					err := decoder.Decode(&payload)
 					if err == nil {
-						relativePath := filepath.Clean(payload.Place)
-						path := filepath.Join(public, relativePath)
+						relativePath := payload.Place
+						path := filepath.Join(public, filepath.Clean(relativePath))
 						name := filepath.Clean(payload.Name)
 						isDir := payload.IsDir
 						isRemovable := config.IsRemovable(relativePath)
@@ -362,6 +362,8 @@ func handleAction(config *internal.Config) func(http.Handler) http.Handler {
 							} else {
 								err = os.Remove(targetPath)
 							}
+						} else {
+							err = errors.New("file is not removable")
 						}
 					}
 					err = writeApiResult(writer, "ok", err)

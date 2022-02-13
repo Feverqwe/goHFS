@@ -69,9 +69,9 @@ const ActionBtn = React.memo(({action, file, dir}: ActionBtnProps) => {
     switch (action) {
       case 'remove': {
         if (isDir) {
-          label = 'Remove file';
-        } else {
           label = 'Remove directory';
+        } else {
+          label = 'Remove file';
         }
         icon = DeleteForeverIcon;
         url = '/~/remove';
