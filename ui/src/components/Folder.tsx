@@ -3,23 +3,16 @@ import SortChooseDialog from "./SortChooseDialog";
 import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Theme} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
-  Audiotrack as AudiotrackIcon,
-  Description as DescriptionIcon,
-  Folder as FolderIcon,
-  Image as ImageIcon,
-  InsertDriveFile as InsertDriveFileIcon,
-  Movie as MovieIcon,
+  QrCode2 as QrCode2Icon,
   Sort as SortIcon,
-  Upload as UploadIcon,
-  QrCode2 as QrCode2Icon
+  Upload as UploadIcon
 } from "@mui/icons-material";
-import {makeStyles, styled} from "@mui/styles";
+import {makeStyles} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
 import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
-
-const mime = require('mime');
-const filesize = require('filesize');
+import FileDialog from "./FileDialog";
+import File from "./File";
 
 const useStyles = makeStyles<Theme>((theme) => ({
   root: {
@@ -54,6 +47,7 @@ const Folder = React.memo(({store}: FolderProps) => {
   const [showUploadDialog, setShowUploadDialog] = React.useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
   const [uploadDialogError, setUploadDialogError] = React.useState<null | Error>(null);
+  const [fileDialog, setFileDialog] = React.useState<null | FileInfo>(null);
 
   const changeSort = React.useCallback((keyDir) => {
     setSortKey(keyDir);
@@ -134,6 +128,14 @@ const Folder = React.memo(({store}: FolderProps) => {
     setShowAddressesDialog(false);
   }, []);
 
+  const handleCloseFileDialog = React.useCallback(() => {
+    setFileDialog(null);
+  }, []);
+
+  const handleFileMenu = React.useCallback((file: FileInfo) => {
+    setFileDialog(file);
+  }, []);
+
   return (
     <>
       <List
@@ -165,7 +167,7 @@ const Folder = React.memo(({store}: FolderProps) => {
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file}/>
+          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file} removable={store.isRemovable} onFileMenu={handleFileMenu}/>
         })}
       </List>
       {showSortDialog && (
@@ -177,126 +179,12 @@ const Folder = React.memo(({store}: FolderProps) => {
       {showAddressesDialog && (
         <AddressesDialog onClose={handleCloseAddressesDialog} />
       )}
+      {fileDialog && (
+        <FileDialog onClose={handleCloseFileDialog} file={fileDialog} dir={store.dir} />
+      )}
     </>
   );
 });
-
-const useStylesFile = makeStyles(() => ({
-  name: {
-    wordBreak: 'break-word',
-  },
-  subLine: {
-    display: 'flex',
-    justifyContent: 'space-between',
-  }
-}));
-
-interface FileProps {
-  file: FileInfo,
-  dir: string,
-}
-
-const MyIconButton = styled(IconButton)(() => {
-  return {
-    padding: 0,
-  };
-});
-
-const File = React.memo(({file: {size, ctime, name, isDir, handleUrl}, dir}: FileProps) => {
-  const classes = useStylesFile();
-
-  const sizeStr = React.useMemo(() => {
-    let hSize = null;
-    try {
-      if (!isDir) {
-        const [value, symbol] = filesize(size, {
-          output: 'array'
-        });
-        hSize = `${Math.trunc(value * 10) / 10} ${symbol}`;
-      }
-    } catch (err) {
-      // pass
-    }
-    return hSize;
-  }, [size, isDir]);
-
-  const dateStr = React.useMemo(() => {
-    return dateToStr(new Date(ctime));
-  }, [ctime]);
-
-  const Icon = React.useMemo(() => {
-    if (isDir) {
-      return (
-        <FolderIcon/>
-      );
-    }
-
-    const mimeType = mime.getType(name);
-    const m = /^([^\/]+)/.exec(mimeType);
-    const generalType = m && m[1];
-    switch (generalType) {
-      case 'video': {
-        return (
-          <MovieIcon/>
-        );
-      }
-      case 'audio': {
-        return (
-          <AudiotrackIcon/>
-        );
-      }
-      case 'image': {
-        return (
-          <ImageIcon/>
-        );
-      }
-      case 'text': {
-        return (
-          <DescriptionIcon/>
-        );
-      }
-      default: {
-        return (
-          <InsertDriveFileIcon/>
-        );
-      }
-    }
-  }, [name, isDir]);
-
-  const handleHandleClick = React.useCallback((e) => {
-    e.preventDefault();
-    const a = document.createElement('a');
-    a.href =  dir + encodeURIComponent(name);
-    const fileUrl = a.href;
-    const url = handleUrl.replace('{url}', encodeURIComponent(fileUrl));
-    const win = window.open(url, '_blank');
-    if (win) {
-      win.focus();
-    }
-  }, [handleUrl]);
-
-  return (
-    <ListItem button component={'a'} href={encodeURIComponent(name)}>
-      <ListItemIcon style={iconStyle}>
-        {handleUrl ? (
-          <MyIconButton color="primary" onClick={handleHandleClick}>
-            {Icon}
-          </MyIconButton>
-        ) : Icon}
-      </ListItemIcon>
-      <ListItemText primary={name} secondary={<div className={classes.subLine}>
-        <div>{dateStr}</div>
-        <div>{sizeStr}</div>
-      </div>} secondaryTypographyProps={{component: 'div'}} className={classes.name}/>
-    </ListItem>
-  );
-});
-
-function dateToStr(date: Date) {
-  const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(v => (v < 10 ? '0' : '') + v).join('-');
-  const timeStr = [date.getHours(), date.getMinutes(), date.getSeconds()].map(v => (v < 10 ? '0' : '') + v).join(':');
-  return `${dateStr} ${timeStr}`;
-}
 
 function getOption<T>(key: string, defaultValue: T) {
   let value: T | null = null;

@@ -1,5 +1,15 @@
 import * as React from "react";
-import {Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, Input, LinearProgress, styled, Typography} from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Input,
+  LinearProgress,
+  styled,
+  Typography
+} from "@mui/material";
 
 const QRCode = require("qrcode");
 
