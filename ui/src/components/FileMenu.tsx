@@ -1,15 +1,13 @@
 import * as React from "react";
-import {Button, ButtonGroup, CircularProgress, Dialog, DialogContent, styled, Tooltip} from "@mui/material";
+import {CircularProgress, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from "@mui/material";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
 import {FileInfo} from "../index";
 
-const MyDialog = styled(Dialog)(({theme}) => {
+const MyListItemIcon = styled(ListItemIcon)(({theme}) => {
   return {
-    '.MuiPaper-root': {
-      backgroundImage: 'none',
-    }
+    justifyContent: 'flex-end',
   };
 });
 
@@ -17,30 +15,23 @@ interface FileDialogProps {
   file: FileInfo,
   dir: string,
   onClose: () => void,
+  anchorEl: Element,
 }
 
-const FileDialog = React.memo(({file, dir, onClose}: FileDialogProps) => {
-  const handleClose = React.useCallback((e, key) => {
-    onClose();
-  }, []);
-
+const FileMenu = React.memo(({anchorEl, file, dir, onClose}: FileDialogProps) => {
   return (
-    <MyDialog onClose={handleClose} open={true}>
-      <DialogContent>
-        <ButtonGroup orientation="vertical">
-          {['remove'].map((type) => {
-            return (
-              <ActionBtn
-                key={type}
-                action={type}
-                file={file}
-                dir={dir}
-              />
-            );
-          })}
-        </ButtonGroup>
-      </DialogContent>
-    </MyDialog>
+    <Menu anchorEl={anchorEl} open onClose={onClose}>
+      {['remove'].map((type) => {
+        return (
+          <ActionBtn
+            key={type}
+            action={type}
+            file={file}
+            dir={dir}
+          />
+        );
+      })}
+    </Menu>
   );
 });
 
@@ -103,20 +94,23 @@ const ActionBtn = React.memo(({action, file, dir}: ActionBtnProps) => {
   }, [url, payload]);
 
   return (
-    <Button
-      onClick={handleClick}
-      variant={'outlined'}
-      startIcon={<Icon/>}
-      endIcon={isLoading ? (
-        <CircularProgress size={20}/>
-      ) : error ? (
-        <Tooltip title={error.message}>
-          <ErrorIcon/>
-        </Tooltip>
-      ) : isDone ? (
-        <DoneIcon/>
-      ) : null}
-    >{label}</Button>
+    <MenuItem onClick={handleClick}>
+      <ListItemIcon>
+        <Icon/>
+      </ListItemIcon>
+      <ListItemText>{label}</ListItemText>
+      <MyListItemIcon>
+        {isLoading ? (
+          <CircularProgress size={20}/>
+        ) : error ? (
+          <Tooltip title={error.message}>
+            <ErrorIcon/>
+          </Tooltip>
+        ) : isDone ? (
+          <DoneIcon/>
+        ) : null}
+      </MyListItemIcon>
+    </MenuItem>
   );
 });
 
@@ -137,4 +131,4 @@ function doReq<T>(url: string, data: Record<string, any>) {
   });
 }
 
-export default FileDialog;
+export default FileMenu;

@@ -11,7 +11,6 @@ import {makeStyles} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
 import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
-import FileDialog from "./FileDialog";
 import File from "./File";
 
 const useStyles = makeStyles<Theme>((theme) => ({
@@ -47,7 +46,6 @@ const Folder = React.memo(({store}: FolderProps) => {
   const [showUploadDialog, setShowUploadDialog] = React.useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
   const [uploadDialogError, setUploadDialogError] = React.useState<null | Error>(null);
-  const [fileDialog, setFileDialog] = React.useState<null | FileInfo>(null);
 
   const changeSort = React.useCallback((keyDir) => {
     setSortKey(keyDir);
@@ -128,14 +126,6 @@ const Folder = React.memo(({store}: FolderProps) => {
     setShowAddressesDialog(false);
   }, []);
 
-  const handleCloseFileDialog = React.useCallback(() => {
-    setFileDialog(null);
-  }, []);
-
-  const handleFileMenu = React.useCallback((file: FileInfo) => {
-    setFileDialog(file);
-  }, []);
-
   return (
     <>
       <List
@@ -167,7 +157,7 @@ const Folder = React.memo(({store}: FolderProps) => {
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file} removable={store.isRemovable} onFileMenu={handleFileMenu}/>
+          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file} removable={store.isRemovable}/>
         })}
       </List>
       {showSortDialog && (
@@ -178,9 +168,6 @@ const Folder = React.memo(({store}: FolderProps) => {
       )}
       {showAddressesDialog && (
         <AddressesDialog onClose={handleCloseAddressesDialog} />
-      )}
-      {fileDialog && (
-        <FileDialog onClose={handleCloseFileDialog} file={fileDialog} dir={store.dir} />
       )}
     </>
   );

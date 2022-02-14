@@ -10,6 +10,7 @@ import {
 import {IconButton, ListItem, ListItemIcon, ListItemText} from "@mui/material";
 import {makeStyles, styled} from "@mui/styles";
 import {FileInfo} from "../index";
+import FileMenu from "./FileMenu";
 
 const mime = require('mime');
 const filesize = require('filesize');
@@ -32,12 +33,13 @@ interface FileProps {
   file: FileInfo,
   dir: string,
   removable: boolean,
-  onFileMenu: (file: FileInfo) => void,
 }
 
-const File = React.memo(({file, dir, removable, onFileMenu}: FileProps) => {
+const File = React.memo(({file, dir, removable}: FileProps) => {
   const {size, ctime, name, isDir, handleUrl} = file;
   const classes = useStylesFile();
+
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
   const sizeStr = React.useMemo(() => {
     let hSize = null;
@@ -100,25 +102,34 @@ const File = React.memo(({file, dir, removable, onFileMenu}: FileProps) => {
   const handleMenuClick = React.useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-    onFileMenu(file);
-  }, [onFileMenu]);
+    setMenuAnchorEl(e.currentTarget);
+  }, []);
+
+  const handleMenuClose = React.useCallback(() => {
+    setMenuAnchorEl(null);
+  }, []);
 
   return (
-    <ListItem button component={'a'} href={encodeURIComponent(name)}>
-      <ListItemIcon className={'no-click'} style={iconStyle} onContextMenu={removable && handleMenuClick || undefined}>
-        {handleUrl ? (
-          <MyIconButton color="primary" onClick={handleHandleClick}>
+    <>
+      <ListItem button component={'a'} href={encodeURIComponent(name)}>
+        <ListItemIcon className={'no-click'} style={iconStyle} onContextMenu={removable && handleMenuClick || undefined}>
+          {handleUrl ? (
+            <MyIconButton color="primary" onClick={handleHandleClick}>
+              <Icon/>
+            </MyIconButton>
+          ) : (
             <Icon/>
-          </MyIconButton>
-        ) : (
-          <Icon/>
-        )}
-      </ListItemIcon>
-      <ListItemText primary={name} secondary={<div className={classes.subLine}>
-        <div>{dateStr}</div>
-        <div>{sizeStr}</div>
-      </div>} secondaryTypographyProps={{component: 'div'}} className={classes.name}/>
-    </ListItem>
+          )}
+        </ListItemIcon>
+        <ListItemText primary={name} secondary={<div className={classes.subLine}>
+          <div>{dateStr}</div>
+          <div>{sizeStr}</div>
+        </div>} secondaryTypographyProps={{component: 'div'}} className={classes.name}/>
+      </ListItem>
+      {menuAnchorEl ? (
+        <FileMenu anchorEl={menuAnchorEl} onClose={handleMenuClose} file={file} dir={dir} />
+      ) : null}
+    </>
   );
 });
 
