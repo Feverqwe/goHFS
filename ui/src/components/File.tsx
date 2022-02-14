@@ -37,6 +37,7 @@ interface FileProps {
 
 const File = React.memo(({file, dir, removable}: FileProps) => {
   const {size, ctime, name, isDir, handleUrl} = file;
+  const [removed, setRemoved] = React.useState(false);
   const classes = useStylesFile();
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
@@ -109,6 +110,14 @@ const File = React.memo(({file, dir, removable}: FileProps) => {
     setMenuAnchorEl(null);
   }, []);
 
+  const handleRemoved = React.useCallback(() => {
+    setRemoved(true);
+  }, []);
+
+  if (removed) {
+    return null;
+  }
+
   return (
     <>
       <ListItem button component={'a'} href={encodeURIComponent(name)}>
@@ -127,7 +136,7 @@ const File = React.memo(({file, dir, removable}: FileProps) => {
         </div>} secondaryTypographyProps={{component: 'div'}} className={classes.name}/>
       </ListItem>
       {menuAnchorEl ? (
-        <FileMenu anchorEl={menuAnchorEl} onClose={handleMenuClose} file={file} dir={dir} />
+        <FileMenu anchorEl={menuAnchorEl} onRemoved={handleRemoved} onClose={handleMenuClose} file={file} dir={dir} />
       ) : null}
     </>
   );

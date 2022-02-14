@@ -15,10 +15,11 @@ interface FileDialogProps {
   file: FileInfo,
   dir: string,
   onClose: () => void,
+  onRemoved: () => void,
   anchorEl: Element,
 }
 
-const FileMenu = React.memo(({anchorEl, file, dir, onClose}: FileDialogProps) => {
+const FileMenu = React.memo(({anchorEl, file, dir, onRemoved, onClose}: FileDialogProps) => {
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
       {['remove'].map((type) => {
@@ -28,6 +29,7 @@ const FileMenu = React.memo(({anchorEl, file, dir, onClose}: FileDialogProps) =>
             action={type}
             file={file}
             dir={dir}
+            onSuccess={type === 'remove' && onRemoved || undefined}
           />
         );
       })}
@@ -39,9 +41,10 @@ interface ActionBtnProps {
   action: string,
   file: FileInfo,
   dir: string,
+  onSuccess?: () => void,
 }
 
-const ActionBtn = React.memo(({action, file, dir}: ActionBtnProps) => {
+const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) => {
   const [isLoading, setLoading] = React.useState(false);
   const [isDone, setDone] = React.useState(false);
   const [error, setError] = React.useState<null | Error>(null);
@@ -85,13 +88,15 @@ const ActionBtn = React.memo(({action, file, dir}: ActionBtnProps) => {
     e.preventDefault();
     if (scope.isLoading) return;
     setLoading(true);
-    doReq(url, payload).catch((err) => {
+    doReq(url, payload).then(() => {
+      onSuccess && onSuccess();
+    }, (err) => {
       setError(err);
     }).finally(() => {
       setLoading(false);
       setDone(true);
     });
-  }, [url, payload]);
+  }, [onSuccess, url, payload]);
 
   return (
     <MenuItem onClick={handleClick}>
