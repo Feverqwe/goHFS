@@ -15,7 +15,6 @@ type Config struct {
 	Port                  int
 	Address               string
 	Public                string
-	Upload                string
 	ShowHiddenFiles       bool
 	ExtHandle             map[string]string
 	WritablePlacePatterns []string
@@ -56,7 +55,6 @@ func getNewConfig() Config {
 	pwd := getProfilePath()
 	config.Port = 80
 	config.Public = pwd
-	config.Upload = filepath.Join(pwd, "upload")
 	config.ShowHiddenFiles = false
 	return config
 }

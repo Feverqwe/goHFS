@@ -29,11 +29,9 @@ func TrayIcon(config *Config, callChan chan string) {
 		systray.SetTooltip("GoHFS")
 
 		mOpen := systray.AddMenuItem("Open", "Open")
-		mOpenUpload := systray.AddMenuItem("Open upload path", "Open upload path")
 
 		subConfig := systray.AddMenuItem("Config", "Config")
 		mSetPublicPath := subConfig.AddSubMenuItem("Set public path", "Set public path")
-		mSetUploadPath := subConfig.AddSubMenuItem("Set upload path", "Set upload path")
 		mSetPort := subConfig.AddSubMenuItem("Set port", "Set port")
 		mSetAddress := subConfig.AddSubMenuItem("Set address", "Set address")
 		mShowHiddenFiles := subConfig.AddSubMenuItemCheckbox("Show hidden files", "Show hidden files", config.ShowHiddenFiles)
@@ -50,11 +48,6 @@ func TrayIcon(config *Config, callChan chan string) {
 					if err != nil {
 						log.Println("Open url error", err)
 					}
-				case <-mOpenUpload.ClickedCh:
-					err := open.Run(config.Upload)
-					if err != nil {
-						log.Println("Open path error", err)
-					}
 				case <-mSetPublicPath.ClickedCh:
 					result, err := ShowFolderSelection("Change public path", config.Public)
 					if err != nil {
@@ -63,18 +56,6 @@ func TrayIcon(config *Config, callChan chan string) {
 						}
 					} else {
 						config.Public = result
-						if err := SaveConfig(*config); err == nil {
-							callChan <- "reload"
-						}
-					}
-				case <-mSetUploadPath.ClickedCh:
-					result, err := ShowFolderSelection("Change upload path", config.Upload)
-					if err != nil {
-						if err.Error() != "Canceled" {
-							log.Println("Select folder error", err)
-						}
-					} else {
-						config.Upload = result
 						if err := SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
