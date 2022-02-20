@@ -16,7 +16,7 @@ export interface FileInfo {
 export interface RootStore {
   dir: string,
   isRoot: boolean,
-  isRemovable: boolean,
+  isWritable: boolean,
   files: FileInfo[]
 }
 
@@ -25,7 +25,7 @@ declare const ROOT_STORE: RootStore | undefined;
 const rootStore = ('ROOT_STORE' in window && ROOT_STORE) || {
   dir: '/',
   isRoot: true,
-  isRemovable: true,
+  isWritable: true,
   files: [
     {
       name: 'test',

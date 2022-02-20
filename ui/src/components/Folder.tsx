@@ -38,6 +38,15 @@ interface FolderProps {
   store: RootStore,
 }
 
+interface UploadResponse {
+  error?: string, 
+  result?: {
+    ok: boolean,
+    filename: string,
+    error: string,
+  }[],
+}
+
 const Folder = React.memo(({store}: FolderProps) => {
   const classes = useStyles();
   const [files] = React.useState(store.files);
@@ -45,7 +54,7 @@ const Folder = React.memo(({store}: FolderProps) => {
   const [showSortDialog, setShowSortDialog] = React.useState(false);
   const [showUploadDialog, setShowUploadDialog] = React.useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
-  const [uploadDialogError, setUploadDialogError] = React.useState<null | Error>(null);
+  const [uploadDialogError, setUploadDialogError] = React.useState<null | Error | Error[]>(null);
 
   const changeSort = React.useCallback((keyDir) => {
     setSortKey(keyDir);
@@ -88,11 +97,13 @@ const Folder = React.memo(({store}: FolderProps) => {
       }
 
       setShowUploadDialog(true);
-      fetch('/~/upload', {
+      fetch('/~/upload?' + new URLSearchParams({
+        place: store.dir,
+      }).toString(), {
         method: 'POST',
         body: data,
       }).then(async (response) => {
-        const body: null | {error?: string, result?: string, files: string[]} = await response.json().catch(err => null);
+        const body: null | UploadResponse = await response.json().catch(err => null);
         if (!response.ok) {
           console.error('Incorrect upload status: %s (%s)', response.status, response.statusText);
           let error;
@@ -102,6 +113,17 @@ const Folder = React.memo(({store}: FolderProps) => {
             error = new Error(`Response code ${response.status} (${response.statusText})`);
           }
           setUploadDialogError(error);
+          return;
+        }
+
+        const fileErrors: Error[] = [];
+        body?.result?.forEach((file) => {
+          if (!file.ok) {
+              fileErrors.push(new Error(file.filename + ': ' + file.error!));
+          }
+        });
+        if (fileErrors.length) {
+          setUploadDialogError(fileErrors);
           return;
         }
 
@@ -135,9 +157,11 @@ const Folder = React.memo(({store}: FolderProps) => {
             <Box className={classes.pathLinePath}>
               {store.dir}
             </Box>
-            <IconButton onClick={handleUploadBtn} size="small">
-              <UploadIcon fontSize="inherit" />
-            </IconButton>
+            {store.isWritable ? (
+              <IconButton onClick={handleUploadBtn} size="small">
+                <UploadIcon fontSize="inherit" />
+              </IconButton>
+            ) : null}
             <IconButton onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
             </IconButton>
@@ -157,7 +181,7 @@ const Folder = React.memo(({store}: FolderProps) => {
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file} removable={store.isRemovable}/>
+          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file} writable={store.isWritable}/>
         })}
       </List>
       {showSortDialog && (

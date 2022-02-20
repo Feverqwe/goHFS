@@ -32,10 +32,10 @@ const useStylesFile = makeStyles(() => ({
 interface FileProps {
   file: FileInfo,
   dir: string,
-  removable: boolean,
+  writable: boolean,
 }
 
-const File = React.memo(({file, dir, removable}: FileProps) => {
+const File = React.memo(({file, dir, writable}: FileProps) => {
   const {size, ctime, name, isDir, handleUrl} = file;
   const [removed, setRemoved] = React.useState(false);
   const classes = useStylesFile();
@@ -121,7 +121,7 @@ const File = React.memo(({file, dir, removable}: FileProps) => {
   return (
     <>
       <ListItem button component={'a'} href={encodeURIComponent(name)}>
-        <ListItemIcon className={'no-click'} style={iconStyle} onContextMenu={removable && handleMenuClick || undefined}>
+        <ListItemIcon className={'no-click'} style={iconStyle} onContextMenu={writable && handleMenuClick || undefined}>
           {handleUrl ? (
             <MyIconButton color="primary" onClick={handleHandleClick}>
               <Icon/>

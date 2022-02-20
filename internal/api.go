@@ -10,33 +10,82 @@ import (
 	"path/filepath"
 )
 
-type UploadFailResult struct {
-	Error string   `json:"error"`
-	Files []string `json:"files"`
+type UploadResultItem struct {
+	Ok       bool   `json:"ok"`
+	Filename string `json:"filename"`
+	Error    string `json:"error"`
 }
 
-type UploadSuccessResult struct {
-	Result string   `json:"result"`
-	Files  []string `json:"files"`
-}
-
-type FailJsonResult struct {
+type JsonFailResponse struct {
 	Error string `json:"error"`
 }
 
-type SuccessJsonResult struct {
+type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
 func HandleUpload(config *Config) func(http.Handler) http.Handler {
-	uploadPath := config.Upload
+	public := config.Public
+
+	saveFile := func(uploadPath string, filename string, part *multipart.Part) error {
+		var err error
+		target := filepath.Join(uploadPath, filepath.Clean(filename))
+
+		_, err = os.Stat(target)
+		if err == nil {
+			return errors.New("File exists")
+		}
+
+		var tmpFile *os.File
+		tmpFile, err = os.CreateTemp(uploadPath, "tmp")
+		source := tmpFile.Name()
+		if err != nil {
+			return errors.New("Create temp file error: " + err.Error())
+		}
+		defer tmpFile.Close()
+
+		_, err = io.Copy(tmpFile, part)
+		if err != nil {
+			os.Remove(source)
+			return errors.New("Write temp file error: " + err.Error())
+		}
+
+		err = os.Rename(source, target)
+		if err != nil {
+			return errors.New("Rename temp file error: " + err.Error())
+		}
+
+		return err
+	}
+
+	getFileResult := func(filename string, err error) UploadResultItem {
+		ok := err == nil
+		var errStr string
+		if err != nil {
+			errStr = err.Error()
+		}
+		return UploadResultItem{
+			Ok:       ok,
+			Filename: filename,
+			Error:    errStr,
+		}
+	}
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" && request.URL.Path == "/~/upload" {
 				reader, err := request.MultipartReader()
 
-				var files []string = make([]string, 0)
+				var relativePath = request.URL.Query().Get("place")
+				uploadPath := filepath.Join(public, filepath.Clean(relativePath))
+
+				isWritable := config.IsWritable(relativePath)
+				if err == nil && !isWritable {
+					err = errors.New("unable wite in this place")
+				}
+
+				var results []UploadResultItem = make([]UploadResultItem, 0)
+
 				for {
 					if err != nil {
 						break
@@ -48,71 +97,17 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 						err = nil
 						break
 					}
+					if err != nil {
+						break
+					}
 
 					filename := part.FileName()
 
-					target := filepath.Join(uploadPath, filepath.Clean(filename))
-
-					_, err = os.Stat(target)
-					if err == nil {
-						err = errors.New("File exists: " + filename)
-						break
-					}
-
-					err = os.MkdirAll(uploadPath, os.ModePerm)
-					if err != nil {
-						err = errors.New("Create upload path error: " + err.Error())
-						break
-					}
-
-					var tmpFile *os.File
-					tmpFile, err = os.CreateTemp(uploadPath, "tmp")
-					source := tmpFile.Name()
-					if err != nil {
-						err = errors.New("Create temp file error: " + err.Error())
-						break
-					}
-					defer tmpFile.Close()
-
-					_, err = io.Copy(tmpFile, part)
-					if err != nil {
-						os.Remove(source)
-						err = errors.New("Write temp file error: " + err.Error())
-						break
-					}
-
-					err = os.Rename(source, target)
-					if err != nil {
-						err = errors.New("Rename temp file error: " + err.Error())
-						break
-					}
-
-					files = append(files, filename)
+					saveErr := saveFile(uploadPath, filename, part)
+					results = append(results, getFileResult(filename, saveErr))
 				}
 
-				var result interface{}
-				var statusCode int
-				if err != nil {
-					result = UploadFailResult{
-						Error: err.Error(),
-						Files: files,
-					}
-					statusCode = 500
-				} else {
-					result = UploadSuccessResult{
-						Result: "ok",
-						Files:  files,
-					}
-					statusCode = 200
-				}
-
-				json, err := json.Marshal(result)
-				if err != nil {
-					panic(err)
-				}
-				writer.Header().Set("Content-Type", "application/json")
-				writer.WriteHeader(statusCode)
-				_, err = writer.Write([]byte(string(json)))
+				err = writeApiResult(writer, results, err)
 				if err != nil {
 					panic(err)
 				}
@@ -217,8 +212,8 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 						path := filepath.Join(public, filepath.Clean(relativePath))
 						name := filepath.Clean(payload.Name)
 						isDir := payload.IsDir
-						isRemovable := config.IsRemovable(relativePath)
-						if isRemovable {
+						isWritable := config.IsWritable(relativePath)
+						if isWritable {
 							targetPath := filepath.Join(path, name)
 							if isDir {
 								err = os.RemoveAll(targetPath)
@@ -226,7 +221,7 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 								err = os.Remove(targetPath)
 							}
 						} else {
-							err = errors.New("file is not removable")
+							err = errors.New("place is not writable")
 						}
 					}
 					err = writeApiResult(writer, "ok", err)
@@ -248,12 +243,12 @@ func writeApiResult(writer http.ResponseWriter, result interface{}, err error) e
 	var body interface{}
 	if err != nil {
 		statusCode = 500
-		body = FailJsonResult{
+		body = JsonFailResponse{
 			Error: err.Error(),
 		}
 	} else {
 		statusCode = 200
-		body = SuccessJsonResult{
+		body = JsonSuccessResponse{
 			Result: result,
 		}
 	}

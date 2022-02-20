@@ -12,13 +12,13 @@ import (
 )
 
 type Config struct {
-	Port              int
-	Address           string
-	Public            string
-	Upload            string
-	ShowHiddenFiles   bool
-	ExtHandle         map[string]string
-	RemovablePatterns []string
+	Port                  int
+	Address               string
+	Public                string
+	Upload                string
+	ShowHiddenFiles       bool
+	ExtHandle             map[string]string
+	WritablePlacePatterns []string
 }
 
 func (s *Config) GetAddress() string {
@@ -38,8 +38,8 @@ func (s *Config) GetFileHandler(ext string) (string, bool) {
 	return val, ok
 }
 
-func (s *Config) IsRemovable(path string) bool {
-	for _, pattern := range s.RemovablePatterns {
+func (s *Config) IsWritable(path string) bool {
+	for _, pattern := range s.WritablePlacePatterns {
 		m, _ := filepath.Match(pattern, path)
 		if m {
 			return true
@@ -50,8 +50,8 @@ func (s *Config) IsRemovable(path string) bool {
 
 func getNewConfig() Config {
 	var config = Config{
-		ExtHandle:         make(map[string]string),
-		RemovablePatterns: make([]string, 0),
+		ExtHandle:             make(map[string]string),
+		WritablePlacePatterns: make([]string, 0),
 	}
 	pwd := getProfilePath()
 	config.Port = 80

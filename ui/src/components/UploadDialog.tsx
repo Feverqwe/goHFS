@@ -10,7 +10,7 @@ const MyDialog = styled(Dialog)(({theme}) => {
 });
 
 interface UploadDialogProps {
-  error: null | Error,
+  error: null | Error | Error[],
   onClose: () => void,
 }
 
@@ -27,7 +27,11 @@ const UploadDialog = React.memo(({error, onClose}: UploadDialogProps) => {
         {error ? (
           <>
             <p>Upload error:</p>
-            <Input fullWidth={true} value={error.message} readOnly/>
+            {Array.isArray(error) ? (
+              <Input fullWidth={true} value={error.map(err => err.message).join('\n')} readOnly multiline/>
+            ) : (
+              <Input fullWidth={true} value={error.message} readOnly/>
+            )}
           </>
         ) : (
           <LinearProgress />
