@@ -28,8 +28,10 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 	public := config.Public
 
 	saveFile := func(uploadPath string, filename string, part *multipart.Part) error {
-		var err error
-		target := filepath.Join(uploadPath, filepath.Clean(filename))
+		target, err := GetInternalPath(uploadPath, filename)
+		if err != nil {
+			return errors.New("incorrect filename")
+		}
 
 		_, err = os.Stat(target)
 		if err == nil {
@@ -76,8 +78,14 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 			if request.Method == "POST" && request.URL.Path == "/~/upload" {
 				reader, err := request.MultipartReader()
 
-				var relativePath = request.URL.Query().Get("place")
-				uploadPath := filepath.Join(public, filepath.Clean(relativePath))
+				var place = request.URL.Query().Get("place")
+
+				var relativePath string
+				if err == nil {
+					relativePath, err = GetRelativePath(public, place)
+				}
+
+				uploadPath := filepath.Join(public, relativePath)
 
 				isWritable := config.IsWritable(relativePath)
 				if err == nil && !isWritable {
@@ -207,14 +215,20 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 
 					var payload RemovePayload
 					err := decoder.Decode(&payload)
+
+					var relativePath string
+
 					if err == nil {
-						relativePath := payload.Place
-						path := filepath.Join(public, filepath.Clean(relativePath))
-						name := filepath.Clean(payload.Name)
+						place := payload.Place
+						name := payload.Name
+						relativePath, err = GetRelativePath(public, filepath.Join(place, name))
+					}
+
+					if err == nil {
 						isDir := payload.IsDir
 						isWritable := config.IsWritable(relativePath)
 						if isWritable {
-							targetPath := filepath.Join(path, name)
+							targetPath := filepath.Join(public, relativePath)
 							if isDir {
 								err = os.RemoveAll(targetPath)
 							} else {

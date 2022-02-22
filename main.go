@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 
 	"github.com/go-pkgz/rest"
@@ -93,7 +92,13 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" {
 				urlPath := request.URL.Path
-				path := filepath.Join(public, filepath.Clean(urlPath))
+
+				path, err := internal.GetInternalPath(public, urlPath)
+				if err != nil {
+					writer.WriteHeader(403)
+					return
+				}
+
 				stat, err := os.Stat(path)
 				if err != nil {
 					if os.IsNotExist(err) {
