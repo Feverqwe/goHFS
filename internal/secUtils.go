@@ -52,3 +52,35 @@ func GetRelativePath(root string, path string) (string, error) {
 	path = "/" + path
 	return path, nil
 }
+
+/* func init() {
+	Test()
+}
+
+func Test() {
+	root := "/Users/Home"
+	paths := [...]string{
+		"/1/2",
+		"/1/2/",
+		"../1/2/",
+		"../../1/2",
+		"//1",
+		"/1/../2",
+		"",
+		".",
+		"/%",
+		"/users/../../todo.txt",
+		"/",
+		"//todo@txt",
+	}
+
+	for _, path := range paths {
+		log.Println("=========", path)
+		path, err := GetRelativePath(root, path)
+		if err != nil {
+			log.Println("error", err.Error())
+			continue
+		}
+		log.Println("result", path)
+	}
+} */
