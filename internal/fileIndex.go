@@ -3,6 +3,8 @@ package internal
 import (
 	"encoding/json"
 	"goHfs/assets"
+	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -26,8 +28,8 @@ type File struct {
 	HandleUrl string `json:"handleUrl"`
 }
 
-func GetFileIndex(config *Config) func(uri string, path string) string {
-	root := config.Public
+func GetFileIndex(config *Config, rootDir *http.Dir) func(uri string, path string, root http.File) string {
+	root := string(*rootDir)
 	showHiddenFiles := config.ShowHiddenFiles
 
 	if template == "" {
@@ -38,12 +40,18 @@ func GetFileIndex(config *Config) func(uri string, path string) string {
 		template = string(data)
 	}
 
-	return func(relativePath string, path string) string {
+	return func(relativePath string, path string, pathFile http.File) string {
+		var err error
 		files := make([]File, 0)
 
-		if dir, err := os.ReadDir(path); err == nil {
-			for i := 0; i < len(dir); i++ {
-				entity := dir[i]
+		var names []fs.DirEntry
+		if dir, ok := pathFile.(fs.ReadDirFile); ok {
+			names, err = dir.ReadDir(-1)
+		}
+
+		if err == nil {
+			for i := 0; i < len(names); i++ {
+				entity := names[i]
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()

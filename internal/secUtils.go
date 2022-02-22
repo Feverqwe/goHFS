@@ -2,6 +2,8 @@ package internal
 
 import (
 	"errors"
+	"net/http"
+	"path"
 	"path/filepath"
 	"regexp"
 )
@@ -51,6 +53,20 @@ func GetRelativePath(root string, path string) (string, error) {
 	}
 	path = "/" + path
 	return path, nil
+}
+
+func OpenPath(root *http.Dir, place string) (http.File, string, error) {
+	f, err := root.Open(place)
+	if err != nil {
+		return nil, "", err
+	}
+
+	dir := string(*root)
+	if dir == "" {
+		dir = "."
+	}
+	path := filepath.Join(dir, filepath.FromSlash(path.Clean("/"+place)))
+	return f, path, nil
 }
 
 /* func init() {
