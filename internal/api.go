@@ -84,7 +84,7 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 					place, err = GetRelativePath(public, rawPlace)
 				}
 
-				isWritable := config.IsWritable(place)
+				isWritable := config.IsWritable(place, true)
 				if err == nil && !isWritable {
 					err = errors.New("unable wite in this place")
 				}
@@ -229,7 +229,7 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 
 					if err == nil {
 						isDir := payload.IsDir
-						isWritable := config.IsWritable(place)
+						isWritable := config.IsWritable(place, true)
 						if isWritable {
 							if isDir {
 								err = os.RemoveAll(targetPath)

@@ -83,7 +83,7 @@ func GetFileIndex(config *Config) func(uri string, path string, root *os.File) s
 
 		isWritable := false
 		if place, err := GetRelativePath(root, urlPath); err == nil {
-			isWritable = config.IsWritable(place)
+			isWritable = config.IsWritable(place, true)
 		}
 
 		result := RootStore{

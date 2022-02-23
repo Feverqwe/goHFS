@@ -37,7 +37,11 @@ func (s *Config) GetFileHandler(ext string) (string, bool) {
 	return val, ok
 }
 
-func (s *Config) IsWritable(path string) bool {
+func (s *Config) IsWritable(path string, isDir bool) bool {
+	if isDir && path[len(path)-1:] != "/" {
+		path += "/"
+	}
+
 	for _, pattern := range s.WritablePlacePatterns {
 		m, _ := filepath.Match(pattern, path)
 		if m {
