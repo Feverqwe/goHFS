@@ -3,6 +3,7 @@ package internal
 import (
 	"errors"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -10,30 +11,26 @@ import (
 
 var UP_PATH_REGEXP = regexp.MustCompile(`(?:^|[\\/])\.\.(?:[\\/]|$)`)
 
-func HasUpPath(str string) bool {
+func hasUpPath(str string) bool {
 	return len(UP_PATH_REGEXP.FindStringIndex(str)) > 0
 }
 
-func IsSubPath(root string, subpath string) (bool, error) {
+func isSubPath(root string, subpath string) (bool, error) {
 	path, err := filepath.Rel(root, filepath.Join(root, subpath))
 	if err != nil {
 		return false, err
 	}
-	if HasUpPath(path) {
+	if hasUpPath(path) {
 		return false, nil
 	}
 	return true, nil
 }
 
-func NormalizePath(path string) string {
-	if len(path) > 0 {
-		path = filepath.Clean("./" + path)
-	}
-
-	return path
+func normalizePath(place string) string {
+	return filepath.FromSlash(path.Clean("/" + place))
 }
 
-func GetInternalPath(root string, path string) (string, error) {
+func GetFullPath(root string, path string) (string, error) {
 	path, err := GetRelativePath(root, path)
 	if err != nil {
 		return "", err
@@ -42,31 +39,32 @@ func GetInternalPath(root string, path string) (string, error) {
 	return path, nil
 }
 
-func GetRelativePath(root string, path string) (string, error) {
-	path = NormalizePath(path)
-	isSub, err := IsSubPath(root, path)
+func GetRelativePath(root string, place string) (string, error) {
+	place = normalizePath(place)
+	isSub, err := isSubPath(root, place)
 	if err != nil {
 		return "", err
 	}
 	if !isSub {
 		return "", errors.New("is parent path")
 	}
-	path = "/" + path
-	return path, nil
+	return place, nil
 }
 
-func OpenPath(root *http.Dir, place string) (http.File, string, error) {
-	f, err := root.Open(place)
+func OpenPath(root string, place string) (*os.File, string, error) {
+	httpDir := http.Dir(root)
+
+	f, err := httpDir.Open(place)
 	if err != nil {
 		return nil, "", err
 	}
 
-	dir := string(*root)
-	if dir == "" {
-		dir = "."
+	path, err := GetFullPath(root, place)
+	if err != nil {
+		return nil, "", err
 	}
-	path := filepath.Join(dir, filepath.FromSlash(path.Clean("/"+place)))
-	return f, path, nil
+
+	return f.(*os.File), path, nil
 }
 
 /* func init() {
@@ -88,15 +86,17 @@ func Test() {
 		"/users/../../todo.txt",
 		"/",
 		"//todo@txt",
+		"qwe\\qqe\\ewqe",
+		"a\\b",
 	}
 
 	for _, path := range paths {
-		log.Println("=========", path)
-		path, err := GetRelativePath(root, path)
-		if err != nil {
-			log.Println("error", err.Error())
-			continue
-		}
-		log.Println("result", path)
+		log.Println("==============", path)
+		norm := normalizePath(path)
+		log.Println("normalizePath", norm)
+		rel, _ := GetRelativePath(root, path)
+		log.Println("GetRelativePath", rel)
+		path, _ := GetFullPath(root, path)
+		log.Println("GetFullPath", path)
 	}
 } */

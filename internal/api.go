@@ -28,7 +28,7 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 	public := config.Public
 
 	saveFile := func(uploadPath string, filename string, part *multipart.Part) error {
-		target, err := GetInternalPath(uploadPath, filename)
+		target, err := GetFullPath(uploadPath, filename)
 		if err != nil {
 			return errors.New("incorrect filename")
 		}
@@ -78,19 +78,18 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 			if request.Method == "POST" && request.URL.Path == "/~/upload" {
 				reader, err := request.MultipartReader()
 
-				var place = request.URL.Query().Get("place")
-
-				var relativePath string
+				var place string
 				if err == nil {
-					relativePath, err = GetRelativePath(public, place)
+					rawPlace := request.URL.Query().Get("place")
+					place, err = GetRelativePath(public, rawPlace)
 				}
 
-				uploadPath := filepath.Join(public, relativePath)
-
-				isWritable := config.IsWritable(relativePath)
+				isWritable := config.IsWritable(place)
 				if err == nil && !isWritable {
 					err = errors.New("unable wite in this place")
 				}
+
+				uploadPath := filepath.Join(public, place)
 
 				var results []UploadResultItem = make([]UploadResultItem, 0)
 
@@ -216,19 +215,22 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 					var payload RemovePayload
 					err := decoder.Decode(&payload)
 
-					var relativePath string
-
+					var place string
 					if err == nil {
-						place := payload.Place
-						name := payload.Name
-						relativePath, err = GetRelativePath(public, filepath.Join(place, name))
+						rawPlace := payload.Place
+						place, err = GetRelativePath(public, rawPlace)
+					}
+
+					var targetPath string
+					if err == nil {
+						rawName := payload.Name
+						targetPath, err = GetFullPath(filepath.Join(public, place), rawName)
 					}
 
 					if err == nil {
 						isDir := payload.IsDir
-						isWritable := config.IsWritable(relativePath)
+						isWritable := config.IsWritable(place)
 						if isWritable {
-							targetPath := filepath.Join(public, relativePath)
 							if isDir {
 								err = os.RemoveAll(targetPath)
 							} else {

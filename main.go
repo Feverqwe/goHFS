@@ -45,16 +45,14 @@ func main() {
 					httpServer.Close()
 				}
 
-				root := http.Dir(config.Public)
-
 				handler := rest.Wrap(
-					fsServer(&root),
+					fsServer(&config),
 					powerLock(powerControl),
 					internal.HandleUpload(&config),
 					internal.HandleStorage(storage),
 					internal.HandleInterfaces(&config),
 					internal.HandleAction(&config),
-					handleDir(&root, &config),
+					handleDir(&config),
 				)
 
 				address := config.GetAddress()
@@ -86,21 +84,22 @@ func main() {
 	}
 }
 
-func handleDir(root *http.Dir, config *internal.Config) func(http.Handler) http.Handler {
-	fileIndex := internal.GetFileIndex(config, root)
+func handleDir(config *internal.Config) func(http.Handler) http.Handler {
+	root := config.Public
+	fileIndex := internal.GetFileIndex(config)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" {
 				urlPath := request.URL.Path
 
-				f, path, err := internal.OpenPath(root, urlPath)
+				file, path, err := internal.OpenPath(root, urlPath)
 				if err != nil {
 					writer.WriteHeader(403)
 					return
 				}
 
-				stat, err := f.Stat()
+				stat, err := file.Stat()
 				if err != nil {
 					if os.IsNotExist(err) {
 						writer.WriteHeader(404)
@@ -117,7 +116,7 @@ func handleDir(root *http.Dir, config *internal.Config) func(http.Handler) http.
 						return
 					}
 
-					content := []byte(fileIndex(urlPath, path, f))
+					content := []byte(fileIndex(urlPath, path, file))
 					writer.Header().Set("Content-Encoding", "gzip")
 					writer.Header().Set("Content-Length", strconv.Itoa(len(content)))
 					writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
@@ -150,6 +149,6 @@ func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Hand
 	}
 }
 
-func fsServer(root *http.Dir) http.Handler {
-	return http.FileServer(root)
+func fsServer(config *internal.Config) http.Handler {
+	return http.FileServer(http.Dir(config.Public))
 }

@@ -3,8 +3,6 @@ package internal
 import (
 	"encoding/json"
 	"goHfs/assets"
-	"io/fs"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -28,8 +26,8 @@ type File struct {
 	HandleUrl string `json:"handleUrl"`
 }
 
-func GetFileIndex(config *Config, rootDir *http.Dir) func(uri string, path string, root http.File) string {
-	root := string(*rootDir)
+func GetFileIndex(config *Config) func(uri string, path string, root *os.File) string {
+	root := config.Public
 	showHiddenFiles := config.ShowHiddenFiles
 
 	if template == "" {
@@ -40,18 +38,12 @@ func GetFileIndex(config *Config, rootDir *http.Dir) func(uri string, path strin
 		template = string(data)
 	}
 
-	return func(relativePath string, path string, pathFile http.File) string {
-		var err error
+	return func(urlPath string, path string, pathFile *os.File) string {
 		files := make([]File, 0)
 
-		var names []fs.DirEntry
-		if dir, ok := pathFile.(fs.ReadDirFile); ok {
-			names, err = dir.ReadDir(-1)
-		}
-
-		if err == nil {
-			for i := 0; i < len(names); i++ {
-				entity := names[i]
+		if dir, err := pathFile.ReadDir(-1); err == nil {
+			for i := 0; i < len(dir); i++ {
+				entity := dir[i]
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
@@ -89,10 +81,13 @@ func GetFileIndex(config *Config, rootDir *http.Dir) func(uri string, path strin
 
 		isRoot := root == path
 
-		isWritable := config.IsWritable(relativePath)
+		isWritable := false
+		if place, err := GetRelativePath(root, urlPath); err == nil {
+			isWritable = config.IsWritable(place)
+		}
 
 		result := RootStore{
-			Dir:        relativePath,
+			Dir:        urlPath,
 			IsRoot:     isRoot,
 			IsWritable: isWritable,
 			Files:      files,
@@ -101,7 +96,7 @@ func GetFileIndex(config *Config, rootDir *http.Dir) func(uri string, path strin
 		var body string
 		if resultJson, err := json.Marshal(result); err == nil {
 			body = template
-			body = strings.Replace(body, "{{TITLE}}", "Index of "+EscapeHtmlInJson(relativePath), 1)
+			body = strings.Replace(body, "{{TITLE}}", "Index of "+EscapeHtmlInJson(urlPath), 1)
 			body = strings.Replace(body, "<script id=\"root_store\"></script>", "<script id=\"root_store\">window.ROOT_STORE="+EscapeHtmlInJson(string(resultJson))+"</script>", 1)
 		} else {
 			body = "json.Marshal error: " + EscapeHtmlInJson(err.Error())
