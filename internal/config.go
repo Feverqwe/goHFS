@@ -12,12 +12,12 @@ import (
 )
 
 type Config struct {
-	Port                  int
-	Address               string
-	Public                string
-	ShowHiddenFiles       bool
-	ExtHandle             map[string]string
-	WritablePlacePatterns []string
+	Port             int
+	Address          string
+	Public           string
+	ShowHiddenFiles  bool
+	ExtHandle        map[string]string
+	WritablePatterns []string
 }
 
 func (s *Config) GetAddress() string {
@@ -42,7 +42,7 @@ func (s *Config) IsWritable(path string, isDir bool) bool {
 		path += "/"
 	}
 
-	for _, pattern := range s.WritablePlacePatterns {
+	for _, pattern := range s.WritablePatterns {
 		m, _ := filepath.Match(pattern, path)
 		if m {
 			return true
@@ -53,8 +53,8 @@ func (s *Config) IsWritable(path string, isDir bool) bool {
 
 func getNewConfig() Config {
 	var config = Config{
-		ExtHandle:             make(map[string]string),
-		WritablePlacePatterns: make([]string, 0),
+		ExtHandle:        make(map[string]string),
+		WritablePatterns: make([]string, 0),
 	}
 	pwd := getProfilePath()
 	config.Port = 80

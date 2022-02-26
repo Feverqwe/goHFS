@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -27,11 +28,23 @@ type JsonSuccessResponse struct {
 func HandleUpload(config *Config) func(http.Handler) http.Handler {
 	public := config.Public
 
-	saveFile := func(uploadPath string, filename string, part *multipart.Part) error {
-		target, err := GetFullPath(uploadPath, filename)
+	saveFile := func(rawPlace string, rawFilename string, part *multipart.Part) error {
+		uploadPath, err := GetFullPath(public, rawPlace)
+		if err != nil {
+			return errors.New("incorrect place")
+		}
+
+		rTarget, err := GetRelativePath(public, path.Join(rawPlace, rawFilename))
 		if err != nil {
 			return errors.New("incorrect filename")
 		}
+
+		isWritable := config.IsWritable(rTarget, false)
+		if !isWritable {
+			return errors.New("unable wite in this place")
+		}
+
+		target := filepath.Join(public, rTarget)
 
 		_, err = os.Stat(target)
 		if err == nil {
@@ -78,18 +91,7 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 			if request.Method == "POST" && request.URL.Path == "/~/upload" {
 				reader, err := request.MultipartReader()
 
-				var place string
-				if err == nil {
-					rawPlace := request.URL.Query().Get("place")
-					place, err = GetRelativePath(public, rawPlace)
-				}
-
-				isWritable := config.IsWritable(place, true)
-				if err == nil && !isWritable {
-					err = errors.New("unable wite in this place")
-				}
-
-				uploadPath := filepath.Join(public, place)
+				rawPlace := request.URL.Query().Get("place")
 
 				var results []UploadResultItem = make([]UploadResultItem, 0)
 
@@ -110,7 +112,7 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 
 					filename := part.FileName()
 
-					saveErr := saveFile(uploadPath, filename, part)
+					saveErr := saveFile(rawPlace, filename, part)
 					results = append(results, getFileResult(filename, saveErr))
 				}
 
@@ -215,21 +217,16 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 					var payload RemovePayload
 					err := decoder.Decode(&payload)
 
-					var place string
-					if err == nil {
-						rawPlace := payload.Place
-						place, err = GetRelativePath(public, rawPlace)
-					}
-
 					var targetPath string
 					if err == nil {
+						rawPlace := payload.Place
 						rawName := payload.Name
-						targetPath, err = GetFullPath(filepath.Join(public, place), rawName)
+						targetPath, err = GetFullPath(public, path.Join(rawPlace, rawName))
 					}
 
 					if err == nil {
 						isDir := payload.IsDir
-						isWritable := config.IsWritable(place, true)
+						isWritable := config.IsWritable(targetPath, false)
 						if isWritable {
 							if isDir {
 								err = os.RemoveAll(targetPath)
