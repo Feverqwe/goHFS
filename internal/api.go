@@ -217,17 +217,18 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 					var payload RemovePayload
 					err := decoder.Decode(&payload)
 
-					var targetPath string
+					var rTargetPath string
 					if err == nil {
 						rawPlace := payload.Place
 						rawName := payload.Name
-						targetPath, err = GetFullPath(public, path.Join(rawPlace, rawName))
+						rTargetPath, err = GetRelativePath(public, path.Join(rawPlace, rawName))
 					}
 
 					if err == nil {
 						isDir := payload.IsDir
-						isWritable := config.IsWritable(targetPath, false)
+						isWritable := config.IsWritable(rTargetPath, false)
 						if isWritable {
+							targetPath := filepath.Join(public, rTargetPath)
 							if isDir {
 								err = os.RemoveAll(targetPath)
 							} else {
