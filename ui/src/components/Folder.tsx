@@ -12,6 +12,7 @@ import {FileInfo, RootStore} from "../index";
 import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
 import File from "./File";
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 
 const useStyles = makeStyles<Theme>((theme) => ({
   root: {
@@ -148,6 +149,29 @@ const Folder = React.memo(({store}: FolderProps) => {
     setShowAddressesDialog(false);
   }, []);
 
+  const handlePlaylistBtn = React.useCallback(() => {
+    const lines = [];
+    lines.push('#EXTM3U');
+    sortedFiles.forEach((file) => {
+      if (!file.isDir) {
+        const url = new URL(store.dir + file.name, location.href).toString();
+        const name = file.name;
+        lines.push(`#EXTINF:-1,${name}`);
+        lines.push(url);
+      }
+    });
+
+    const m = /([^\/]+)\/$/.exec(store.dir);
+    const dirname = m && m[1] || 'root';
+    const blob = new Blob([lines.join('\n')], {type: "application/mpegurl"});
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dirname}.m3u8`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
+
   return (
     <>
       <List
@@ -162,6 +186,9 @@ const Folder = React.memo(({store}: FolderProps) => {
                 <UploadIcon fontSize="inherit" />
               </IconButton>
             ) : null}
+            <IconButton onClick={handlePlaylistBtn} size="small">
+              <PlaylistPlayIcon fontSize="inherit" />
+            </IconButton>
             <IconButton onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
             </IconButton>
