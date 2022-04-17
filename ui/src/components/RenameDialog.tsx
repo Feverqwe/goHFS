@@ -44,7 +44,9 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
         Rename `{file.name}`
       </DialogTitle>
       <DialogContent>
-        <Input inputRef={refInput} fullWidth={true} value={file.name} readOnly={isLoading}/>
+        <form onSubmit={handleRename}>
+          <Input inputRef={refInput} fullWidth={true} defaultValue={file.name} readOnly={isLoading}/>
+        </form>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
