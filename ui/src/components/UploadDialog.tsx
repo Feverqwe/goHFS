@@ -1,5 +1,21 @@
 import * as React from "react";
-import {Button, Dialog, DialogActions, DialogContent, Input, LinearProgress, styled} from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Input,
+  LinearProgress,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow
+} from "@mui/material";
+import CheckIcon from '@mui/icons-material/Check';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 const MyDialog = styled(Dialog)(({theme}) => {
   return {
@@ -9,12 +25,85 @@ const MyDialog = styled(Dialog)(({theme}) => {
   };
 });
 
+const UploadBox = styled(Button)(({theme}) => {
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '20px',
+    borderWidth: '2px',
+    borderStyle: 'dashed',
+    borderColor: theme.palette.grey.A700,
+    backgroundColor: theme.palette.background.paper,
+    outline: 'none',
+    ...theme.shape,
+    ...theme.typography.body1,
+    width: '100%',
+    '&:hover': {
+      borderColor: theme.palette.primary.main,
+    },
+    '&.dragover': {
+      borderColor: theme.palette.primary.main,
+    },
+  };
+});
+
+interface UploadResponse {
+  error?: string,
+  result?: {
+    ok: boolean,
+    filename: string,
+    error: string,
+  }[],
+}
+
 interface UploadDialogProps {
-  error: null | Error | Error[],
+  dir: string;
   onClose: () => void,
 }
 
-const UploadDialog = React.memo(({error, onClose}: UploadDialogProps) => {
+const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
+  const [isSubmit, setSubmit] = React.useState(false);
+  const [report, setReport] = React.useState<Required<UploadResponse>["result"] | null>(null);
+  const [error, setError] = React.useState<null | Error>(null);
+
+  const handleUpload = React.useCallback((files: FileList) => {
+    const data = new FormData();
+    for (let i = 0, file; file = files[i]; i++) {
+      data.append('file', files[i])
+    }
+
+    setSubmit(true);
+    fetch('/~/upload?' + new URLSearchParams({
+      place: dir,
+    }).toString(), {
+      method: 'POST',
+      body: data,
+    }).then(async (response) => {
+      const body: null | UploadResponse = await response.json().catch(err => null);
+      if (!response.ok) {
+        console.error('Incorrect upload status: %s (%s)', response.status, response.statusText);
+        let error;
+        if (body && body.error) {
+          error = new Error(body.error);
+        } else {
+          error = new Error(`Response code ${response.status} (${response.statusText})`);
+        }
+        setError(error);
+        return;
+      }
+
+      if (body?.error) {
+        setError(new Error(body.error));
+      } else {
+        setReport(body?.result!);
+      }
+    }, (err) => {
+      console.error('Upload error: %O', err);
+      setError(err);
+    });
+  }, [dir]);
+
   const handleClose = React.useCallback((e, reason?: string) => {
     e.preventDefault();
     if (reason === 'backdropClick') return;
@@ -23,27 +112,130 @@ const UploadDialog = React.memo(({error, onClose}: UploadDialogProps) => {
 
   return (
     <MyDialog fullWidth={true} onClose={handleClose} open={true}>
-      <DialogContent>
-        {error ? (
+        {!isSubmit ? (
+          <DialogContent>
+            <DropZone onUpload={handleUpload}/>
+          </DialogContent>
+        ) : report ? (
           <>
-            <p>Upload error:</p>
-            {Array.isArray(error) ? (
-              <Input fullWidth={true} value={error.map(err => err.message).join('\n')} readOnly multiline/>
-            ) : (
+            <DialogTitle>Upload status:</DialogTitle>
+            <DialogContent>
+              <Report report={report} />
+            </DialogContent>
+          </>
+        ) : error ? (
+          <>
+            <DialogTitle>Upload error:</DialogTitle>
+            <DialogContent>
               <Input fullWidth={true} value={error.message} readOnly/>
-            )}
+            </DialogContent>
           </>
         ) : (
-          <LinearProgress />
+          <DialogContent>
+            <LinearProgress />
+          </DialogContent>
         )}
-        {error ? (
+        {error || report ? (
           <DialogActions>
             <Button onClick={handleClose}>Close</Button>
           </DialogActions>
         ) : null}
-      </DialogContent>
     </MyDialog>
   );
 });
+
+interface DropZoneProps {
+  onUpload: (files: FileList) => void;
+}
+
+const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
+  const refDropZone = React.useRef<HTMLDivElement>(null);
+  const [dragOver, setDragOver] = React.useState(false);
+  const [scope] = React.useState({dragOver});
+  scope.dragOver = dragOver;
+
+  React.useEffect(() => {
+    let dragTimeout: NodeJS.Timeout | null = null;
+
+    const div = refDropZone.current!;
+    div.addEventListener('dragover', handleDragOver);
+    div.addEventListener('drop', handleDrop);
+
+    function handleDragOver(e: DragEvent) {
+      e.preventDefault();
+      if (!scope.dragOver) {
+        setDragOver(true);
+      }
+      dragTimeout && clearTimeout(dragTimeout);
+      dragTimeout = setTimeout(() => {
+        setDragOver(false);
+      }, 150);
+    }
+
+    function handleDrop(e: DragEvent) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (e.dataTransfer) {
+        const files = e.dataTransfer.files;
+        if (files.length) {
+          onUpload(files);
+        }
+      }
+    }
+
+    return () => {
+      dragTimeout && clearTimeout(dragTimeout);
+      div.removeEventListener('dragover', handleDragOver);
+      div.removeEventListener('drop', handleDrop);
+    };
+  }, []);
+
+  const handleUploadBtn = React.useCallback((e) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.addEventListener('change', (e) => {
+      const files = input.files!;
+      onUpload(files);
+    });
+    input.dispatchEvent(new MouseEvent('click'));
+  }, []);
+
+  return (
+    <div ref={refDropZone}>
+      <UploadBox className={dragOver && 'dragover' || ''} onClick={handleUploadBtn}>
+        Upload
+      </UploadBox>
+    </div>
+  );
+};
+
+interface ReportProps {
+  report: Required<UploadResponse>["result"];
+}
+
+const Report: React.FC<ReportProps> = ({report}) => {
+  return (
+    <Table>
+      <TableBody>
+        {report.map((file) => (
+          <TableRow key={file.filename}>
+            <TableCell>
+              {file.filename}
+              {!file.ok ? (
+                <Input fullWidth={true} value={file.error} readOnly/>
+              ) : null}
+            </TableCell>
+            <TableCell padding="none" align="right">
+              <Box textAlign="center">
+                {file.ok ? <CheckIcon/> : <ErrorOutlineIcon/>}
+              </Box>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+};
 
 export default UploadDialog;

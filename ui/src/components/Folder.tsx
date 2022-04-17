@@ -39,15 +39,6 @@ interface FolderProps {
   store: RootStore,
 }
 
-interface UploadResponse {
-  error?: string, 
-  result?: {
-    ok: boolean,
-    filename: string,
-    error: string,
-  }[],
-}
-
 const Folder = React.memo(({store}: FolderProps) => {
   const classes = useStyles();
   const [files] = React.useState(store.files);
@@ -55,7 +46,6 @@ const Folder = React.memo(({store}: FolderProps) => {
   const [showSortDialog, setShowSortDialog] = React.useState(false);
   const [showUploadDialog, setShowUploadDialog] = React.useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
-  const [uploadDialogError, setUploadDialogError] = React.useState<null | Error | Error[]>(null);
 
   const changeSort = React.useCallback((keyDir) => {
     setSortKey(keyDir);
@@ -86,55 +76,7 @@ const Folder = React.memo(({store}: FolderProps) => {
   }, []);
 
   const handleUploadBtn = React.useCallback((e) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.addEventListener('change', (e) => {
-      const files = input.files!;
-
-      const data = new FormData();
-      for (let i = 0, file; file = files[i]; i++) {
-        data.append('file', files[i])
-      }
-
-      setShowUploadDialog(true);
-      fetch('/~/upload?' + new URLSearchParams({
-        place: store.dir,
-      }).toString(), {
-        method: 'POST',
-        body: data,
-      }).then(async (response) => {
-        const body: null | UploadResponse = await response.json().catch(err => null);
-        if (!response.ok) {
-          console.error('Incorrect upload status: %s (%s)', response.status, response.statusText);
-          let error;
-          if (body && body.error) {
-            error = new Error(body.error);
-          } else {
-            error = new Error(`Response code ${response.status} (${response.statusText})`);
-          }
-          setUploadDialogError(error);
-          return;
-        }
-
-        const fileErrors: Error[] = [];
-        body?.result?.forEach((file) => {
-          if (!file.ok) {
-              fileErrors.push(new Error(file.filename + ': ' + file.error!));
-          }
-        });
-        if (fileErrors.length) {
-          setUploadDialogError(fileErrors);
-          return;
-        }
-
-        setShowUploadDialog(false);
-      }, (err) => {
-        console.error('Upload error: %O', err);
-        setUploadDialogError(err);
-      });
-    });
-    input.dispatchEvent(new MouseEvent('click'));
+    setShowUploadDialog(true);
   }, []);
 
   const handleCloseUploadDialog = React.useCallback(() => {
@@ -215,7 +157,7 @@ const Folder = React.memo(({store}: FolderProps) => {
         <SortChooseDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />
       )}
       {showUploadDialog && (
-        <UploadDialog error={uploadDialogError} onClose={handleCloseUploadDialog} />
+        <UploadDialog dir={store.dir} onClose={handleCloseUploadDialog} />
       )}
       {showAddressesDialog && (
         <AddressesDialog onClose={handleCloseAddressesDialog} />
