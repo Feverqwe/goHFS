@@ -1,9 +1,11 @@
 import * as React from "react";
 import {CircularProgress, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from "@mui/material";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
 import {FileInfo} from "../index";
+import {doReq} from "../tools/apiRequest";
 
 const MyListItemIcon = styled(ListItemIcon)(({theme}) => {
   return {
@@ -16,20 +18,21 @@ interface FileDialogProps {
   dir: string,
   onClose: () => void,
   onRemoved: () => void,
+  onRename: () => void,
   anchorEl: Element,
 }
 
-const FileMenu = React.memo(({anchorEl, file, dir, onRemoved, onClose}: FileDialogProps) => {
+const FileMenu = React.memo(({anchorEl, file, dir, onRemoved, onRename, onClose}: FileDialogProps) => {
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
-      {['remove'].map((type) => {
+      {['rename', 'remove'].map((type) => {
         return (
           <ActionBtn
             key={type}
             action={type}
             file={file}
             dir={dir}
-            onSuccess={type === 'remove' && onRemoved || undefined}
+            onSuccess={type === 'remove' && onRemoved || type === 'rename' && onRename || undefined}
           />
         );
       })}
@@ -76,6 +79,15 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
         };
         break;
       }
+      case 'rename': {
+        if (isDir) {
+          label = 'Rename directory';
+        } else {
+          label = 'Rename file';
+        }
+        icon = DriveFileRenameOutlineIcon;
+        break;
+      }
       default: {
         throw new Error('Action not found');
       }
@@ -87,15 +99,19 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
   const handleClick = React.useCallback((e) => {
     e.preventDefault();
     if (scope.isLoading) return;
-    setLoading(true);
-    doReq(url, payload).then(() => {
+    if (payload && url) {
+      setLoading(true);
+      doReq(url, payload).then(() => {
+        onSuccess && onSuccess();
+      }, (err) => {
+        setError(err);
+      }).finally(() => {
+        setLoading(false);
+        setDone(true);
+      });
+    } else {
       onSuccess && onSuccess();
-    }, (err) => {
-      setError(err);
-    }).finally(() => {
-      setLoading(false);
-      setDone(true);
-    });
+    }
   }, [onSuccess, url, payload]);
 
   return (
@@ -109,7 +125,7 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
           <CircularProgress size={20}/>
         ) : error ? (
           <Tooltip title={error.message}>
-            <ErrorIcon/>
+            <ErrorIcon color="error"/>
           </Tooltip>
         ) : isDone ? (
           <DoneIcon/>
@@ -118,22 +134,5 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
     </MenuItem>
   );
 });
-
-function doReq<T>(url: string, data: Record<string, any>) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error('Incorrect status code: ' + response.status + '(' + response.statusText + ')');
-    }
-    return response.json();
-  }).then((body: {error: string} | {result: T}) => {
-    if ('error' in body) {
-      throw new Error(body.error);
-    }
-    return body.result;
-  });
-}
 
 export default FileMenu;

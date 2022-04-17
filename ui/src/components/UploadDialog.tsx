@@ -2,7 +2,6 @@ import * as React from "react";
 import {
   Box,
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -16,14 +15,8 @@ import {
 } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-
-const MyDialog = styled(Dialog)(({theme}) => {
-  return {
-    '.MuiPaper-root': {
-      backgroundImage: 'none',
-    }
-  };
-});
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import MyDialog from "./MyDialog";
 
 const UploadBox = styled(Button)(({theme}) => {
   return {
@@ -204,7 +197,12 @@ const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
   return (
     <div ref={refDropZone}>
       <UploadBox className={dragOver && 'dragover' || ''} onClick={handleUploadBtn}>
-        Upload
+        <Box alignItems="center" display="flex">
+          <Box alignItems="center" display="flex" p={1}>
+            <UploadFileIcon color="primary"/>
+          </Box>
+          Upload
+        </Box>
       </UploadBox>
     </div>
   );
@@ -228,7 +226,7 @@ const Report: React.FC<ReportProps> = ({report}) => {
             </TableCell>
             <TableCell padding="none" align="right">
               <Box textAlign="center">
-                {file.ok ? <CheckIcon color="primary"/> : <ErrorOutlineIcon color="error"/>}
+                {file.ok ? <CheckIcon /> : <ErrorOutlineIcon />}
               </Box>
             </TableCell>
           </TableRow>

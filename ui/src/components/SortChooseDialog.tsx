@@ -1,6 +1,7 @@
 import * as React from "react";
-import {Button, ButtonGroup, Dialog, DialogContent, styled} from "@mui/material";
+import {Button, ButtonGroup, DialogContent} from "@mui/material";
 import {ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon} from "@mui/icons-material";
+import MyDialog from "./MyDialog";
 
 
 const keyName = {
@@ -14,14 +15,6 @@ interface SortChooseDialogProps {
   changeSort: (key: string) => void,
   onClose: () => void,
 }
-
-const MyDialog = styled(Dialog)(({theme}) => {
-  return {
-    '.MuiPaper-root': {
-      backgroundImage: 'none',
-    }
-  };
-});
 
 const SortChooseDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseDialogProps) => {
   const handleClose = React.useCallback((e, key) => {

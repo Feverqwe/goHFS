@@ -11,6 +11,7 @@ import {IconButton, ListItem, ListItemIcon, ListItemText} from "@mui/material";
 import {makeStyles, styled} from "@mui/styles";
 import {FileInfo} from "../index";
 import FileMenu from "./FileMenu";
+import RenameDialog from "./RenameDialog";
 
 const mime = require('mime');
 const filesize = require('filesize');
@@ -38,6 +39,7 @@ interface FileProps {
 const File = React.memo(({file, dir, writable}: FileProps) => {
   const {size, ctime, name, isDir, handleUrl} = file;
   const [removed, setRemoved] = React.useState(false);
+  const [renameDialog, setRenameDialog] = React.useState(false);
   const classes = useStylesFile();
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
@@ -114,6 +116,14 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
     setRemoved(true);
   }, []);
 
+  const handleRename = React.useCallback(() => {
+    setRenameDialog(true);
+  }, []);
+
+  const handleCloseRenameDialog = React.useCallback(() => {
+    setRenameDialog(false);
+  }, []);
+
   if (removed) {
     return null;
   }
@@ -136,7 +146,17 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
         </div>} secondaryTypographyProps={{component: 'div'}} className={classes.name}/>
       </ListItem>
       {menuAnchorEl ? (
-        <FileMenu anchorEl={menuAnchorEl} onRemoved={handleRemoved} onClose={handleMenuClose} file={file} dir={dir} />
+        <FileMenu
+          anchorEl={menuAnchorEl}
+          onRename={handleRename}
+          onRemoved={handleRemoved}
+          onClose={handleMenuClose}
+          file={file}
+          dir={dir}
+        />
+      ) : null}
+      {renameDialog ? (
+        <RenameDialog onClose={handleCloseRenameDialog} dir={dir} file={file}/>
       ) : null}
     </>
   );

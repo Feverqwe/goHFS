@@ -1,25 +1,8 @@
 import * as React from "react";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  Input,
-  LinearProgress,
-  styled,
-  Typography
-} from "@mui/material";
+import {Box, Button, DialogActions, DialogContent, Input, LinearProgress, Typography} from "@mui/material";
+import MyDialog from "./MyDialog";
 
 const QRCode = require("qrcode");
-
-const MyDialog = styled(Dialog)(({theme}) => {
-  return {
-    '.MuiPaper-root': {
-      backgroundImage: 'none',
-    }
-  };
-});
 
 interface AddressesDialogProps {
   onClose: () => void,
