@@ -1,5 +1,6 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import {createPortal} from "react-dom";
+import {createRoot} from 'react-dom/client';
 import Folder from "./components/Folder";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {CacheProvider} from '@emotion/react';
@@ -105,7 +106,7 @@ const theme = createTheme({
 });
 
 const Favicon = () => {
-  return ReactDOM.createPortal(<>
+  return createPortal(<>
     <link rel="icon" type="image/png" href={require('./assets/icons/16.png').default} sizes="16x16"/>
     <link rel="icon" type="image/png" href={require('./assets/icons/32.png').default} sizes="32x32"/>
     <link rel="icon" type="image/png" href={require('./assets/icons/96.png').default} sizes="96x96"/>
@@ -117,13 +118,14 @@ const cache = createCache({
     prepend: true,
 });
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('root')!);
+
+root.render(
   <CacheProvider value={cache}>
     <ThemeProvider theme={theme}>
       <CssBaseline/>
       <Favicon/>
       <Folder store={rootStore}/>
     </ThemeProvider>
-  </CacheProvider>,
-  document.getElementById('root')
+  </CacheProvider>
 );
