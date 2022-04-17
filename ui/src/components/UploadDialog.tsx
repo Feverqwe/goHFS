@@ -64,6 +64,7 @@ interface UploadDialogProps {
 
 const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
   const [isSubmit, setSubmit] = React.useState(false);
+  const [ok, setOk] = React.useState(false);
   const [report, setReport] = React.useState<Required<UploadResponse>["result"] | null>(null);
   const [error, setError] = React.useState<null | Error>(null);
 
@@ -93,10 +94,11 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
         return;
       }
 
-      if (body?.error) {
-        setError(new Error(body.error));
+      if (!body || body.error) {
+        setError(new Error(!body ? 'Empty body' : body.error));
       } else {
-        setReport(body?.result!);
+        setOk(body.result!.every(file => file.ok));
+        setReport(body.result!);
       }
     }, (err) => {
       console.error('Upload error: %O', err);
@@ -112,34 +114,32 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
 
   return (
     <MyDialog fullWidth={true} onClose={handleClose} open={true}>
+      {error || report ? (
+        <DialogTitle>
+          <Box alignItems="center" display="flex">
+            Upload {ok ? 'complete' : 'error'}
+            <Box alignItems="center" display="flex" p={1}>
+              {ok ? <CheckIcon color="primary"/> : <ErrorOutlineIcon color="error"/>}
+            </Box>
+          </Box>
+        </DialogTitle>
+      ) : null}
+      <DialogContent>
         {!isSubmit ? (
-          <DialogContent>
-            <DropZone onUpload={handleUpload}/>
-          </DialogContent>
+          <DropZone onUpload={handleUpload}/>
         ) : report ? (
-          <>
-            <DialogTitle>Upload status:</DialogTitle>
-            <DialogContent>
-              <Report report={report} />
-            </DialogContent>
-          </>
+          <Report report={report}/>
         ) : error ? (
-          <>
-            <DialogTitle>Upload error:</DialogTitle>
-            <DialogContent>
-              <Input fullWidth={true} value={error.message} readOnly/>
-            </DialogContent>
-          </>
+          <Input fullWidth={true} value={error.message} readOnly/>
         ) : (
-          <DialogContent>
-            <LinearProgress />
-          </DialogContent>
+          <LinearProgress/>
         )}
-        {error || report ? (
-          <DialogActions>
-            <Button onClick={handleClose}>Close</Button>
-          </DialogActions>
-        ) : null}
+      </DialogContent>
+      {error || report ? (
+        <DialogActions>
+          <Button onClick={handleClose}>Close</Button>
+        </DialogActions>
+      ) : null}
     </MyDialog>
   );
 });
@@ -228,7 +228,7 @@ const Report: React.FC<ReportProps> = ({report}) => {
             </TableCell>
             <TableCell padding="none" align="right">
               <Box textAlign="center">
-                {file.ok ? <CheckIcon/> : <ErrorOutlineIcon/>}
+                {file.ok ? <CheckIcon color="primary"/> : <ErrorOutlineIcon color="error"/>}
               </Box>
             </TableCell>
           </TableRow>
