@@ -208,9 +208,49 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 		IsDir bool   `json:"isDir"`
 	}
 
+	type RenamePayload struct {
+		Place   string `json:"place"`
+		Name    string `json:"name"`
+		NewName string `json:"newName"`
+	}
+
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" {
+				if request.URL.Path == "/~/rename" {
+					decoder := json.NewDecoder(request.Body)
+
+					var payload RenamePayload
+					err := decoder.Decode(&payload)
+
+					var rTargetPath string
+					var rNewPath string
+					var rawPlace = payload.Place
+					if err == nil {
+						rawName := payload.Name
+						rTargetPath, err = GetRelativePath(public, path.Join(rawPlace, rawName))
+					}
+					if err == nil {
+						rawNewName := payload.NewName
+						rNewPath, err = GetRelativePath(public, path.Join(rawPlace, rawNewName))
+					}
+
+					if err == nil {
+						isWritable := config.IsWritable(rTargetPath, false)
+						if isWritable {
+							targetPath := filepath.Join(public, rTargetPath)
+							newPath := filepath.Join(public, rNewPath)
+							err = os.Rename(targetPath, newPath)
+						} else {
+							err = errors.New("place is not writable")
+						}
+					}
+					err = writeApiResult(writer, "ok", err)
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
 				if request.URL.Path == "/~/remove" {
 					decoder := json.NewDecoder(request.Body)
 
