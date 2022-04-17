@@ -57,19 +57,13 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
   scope.isDone = isDone;
 
   const [Icon, label, url, payload] = React.useMemo(() => {
-    const {isDir} = file;
-
     let icon;
     let label;
     let url;
     let payload;
     switch (action) {
       case 'remove': {
-        if (isDir) {
-          label = 'Remove directory';
-        } else {
-          label = 'Remove file';
-        }
+        label = 'Delete';
         icon = DeleteForeverIcon;
         url = '/~/remove';
         payload = {
@@ -80,11 +74,7 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
         break;
       }
       case 'rename': {
-        if (isDir) {
-          label = 'Rename directory';
-        } else {
-          label = 'Rename file';
-        }
+        label = 'Rename';
         icon = DriveFileRenameOutlineIcon;
         break;
       }
