@@ -236,8 +236,9 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 					}
 
 					if err == nil {
-						isWritable := config.IsWritable(rTargetPath, false)
-						if isWritable {
+						isWritableSource := config.IsWritable(rTargetPath, false)
+						isWritableTarget := config.IsWritable(rNewPath, false)
+						if isWritableSource && isWritableTarget {
 							targetPath := filepath.Join(public, rTargetPath)
 							newPath := filepath.Join(public, rNewPath)
 							err = os.Rename(targetPath, newPath)
