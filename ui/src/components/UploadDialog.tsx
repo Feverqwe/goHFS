@@ -101,7 +101,7 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
 
   const handleClose = React.useCallback((e, reason?: string) => {
     e.preventDefault();
-    if ((isSubmit || ok) && reason === 'backdropClick') return;
+    if ((isSubmit && !ok) && reason === 'backdropClick') return;
     onClose();
   }, [isSubmit, ok]);
 
