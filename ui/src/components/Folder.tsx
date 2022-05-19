@@ -1,35 +1,37 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import SortChooseDialog from "./SortChooseDialog";
-import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Theme} from "@mui/material";
+import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, styled} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   QrCode2 as QrCode2Icon,
   Sort as SortIcon,
   Upload as UploadIcon
 } from "@mui/icons-material";
-import {makeStyles} from "@mui/styles";
 import {FileInfo, RootStore} from "../index";
 import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
-import File from "./File";
+import File from "./File/File";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 
-const useStyles = makeStyles<Theme>((theme) => ({
-  root: {
-    width: '100%',
-  },
-  pathLine: {
+const RootSx = {
+  width: '100%',
+};
+
+const PathLinePathSx = {
+  flexGrow: 1,
+};
+
+const ListSubheaderMy = styled<any>(ListSubheader)(({theme}) => {
+  return {
     display: 'flex',
     alignItems: 'center',
     lineHeight: 'normal',
     wordBreak: 'break-all',
     padding: '6px',
     backgroundColor: theme.palette.background.paper,
-  },
-  pathLinePath: {
-    flexGrow: 1,
-  }
-}));
+  };
+});
 
 const iconStyle = {
   minWidth: '42px',
@@ -40,15 +42,16 @@ interface FolderProps {
 }
 
 const Folder = React.memo(({store}: FolderProps) => {
-  const classes = useStyles();
   const [files] = React.useState(store.files);
-  const [sortKey, setSortKey] = React.useState(getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]));
+  const [sortKey, setSortKey] = React.useState(() => {
+    return getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]);
+  });
   const [showSortDialog, setShowSortDialog] = React.useState(false);
   const [showUploadDialog, setShowUploadDialog] = React.useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
 
-  const changeSort = React.useCallback((keyDir) => {
-    setSortKey(keyDir);
+  const changeSort = React.useCallback((keyDir: [string, boolean]) => {
+    setSortKey(keyDir as [keyof FileInfo, boolean]);
     setOption('sort', keyDir);
   }, []);
 
@@ -65,17 +68,17 @@ const Folder = React.memo(({store}: FolderProps) => {
     return result;
   }, [files, sortKey]);
 
-  const handleSortBtn = React.useCallback((e) => {
+  const handleSortBtn = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     setShowSortDialog(true);
   }, []);
 
-  const handleAddressesBtn = React.useCallback((e) => {
+  const handleAddressesBtn = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     setShowAddressesDialog(true);
   }, []);
 
-  const handleUploadBtn = React.useCallback((e) => {
+  const handleUploadBtn = React.useCallback((e: SyntheticEvent) => {
     setShowUploadDialog(true);
   }, []);
 
@@ -119,8 +122,8 @@ const Folder = React.memo(({store}: FolderProps) => {
       <List
         component="nav"
         subheader={
-          <ListSubheader component="div" className={classes.pathLine}>
-            <Box className={classes.pathLinePath}>
+          <ListSubheaderMy component="div">
+            <Box sx={PathLinePathSx}>
               {store.dir}
             </Box>
             {store.isWritable ? (
@@ -137,9 +140,9 @@ const Folder = React.memo(({store}: FolderProps) => {
             <IconButton onClick={handleAddressesBtn} size="small">
               <QrCode2Icon fontSize="inherit" />
             </IconButton>
-          </ListSubheader>
+          </ListSubheaderMy>
         }
-        className={classes.root}
+        sx={RootSx}
       >
         {!store.isRoot && (
           <ListItem button component={'a'} href={'../'}>

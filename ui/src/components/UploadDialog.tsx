@@ -1,4 +1,5 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {
   Box,
   Button,
@@ -99,7 +100,7 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
     });
   }, [dir]);
 
-  const handleClose = React.useCallback((e, reason?: string) => {
+  const handleClose = React.useCallback((e: SyntheticEvent, reason?: string) => {
     e.preventDefault();
     if ((isSubmit && !ok) && reason === 'backdropClick') return;
     onClose();
@@ -183,7 +184,7 @@ const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
     };
   }, []);
 
-  const handleUploadBtn = React.useCallback((e) => {
+  const handleUploadBtn = React.useCallback((e: SyntheticEvent) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;

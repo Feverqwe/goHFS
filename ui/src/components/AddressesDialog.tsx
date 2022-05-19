@@ -1,4 +1,5 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {Box, Button, DialogActions, DialogContent, Input, LinearProgress, Typography} from "@mui/material";
 import MyDialog from "./MyDialog";
 
@@ -44,7 +45,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
     }
   }, []);
 
-  const handleClose = React.useCallback((e, reason?: string) => {
+  const handleClose = React.useCallback((e: SyntheticEvent, reason?: string) => {
     e.preventDefault();
     onClose();
   }, []);

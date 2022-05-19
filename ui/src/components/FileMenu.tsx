@@ -1,4 +1,5 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {CircularProgress, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from "@mui/material";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
@@ -86,7 +87,7 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
     return [icon, label, url, payload];
   }, [file]);
 
-  const handleClick = React.useCallback((e) => {
+  const handleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     if (scope.isLoading) return;
     if (payload && url) {

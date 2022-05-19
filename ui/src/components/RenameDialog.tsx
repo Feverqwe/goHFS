@@ -1,7 +1,7 @@
 import {FileInfo} from "../index";
 import MyDialog from "./MyDialog";
 import * as React from "react";
-import {FormEvent} from "react";
+import {FormEvent, SyntheticEvent} from "react";
 import {
   Box,
   Button,
@@ -25,7 +25,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
   const [isLoading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<null | Error>(null);
 
-  const handleClose = React.useCallback((e) => {
+  const handleClose = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     onClose();
   }, []);

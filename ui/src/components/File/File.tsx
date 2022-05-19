@@ -1,4 +1,5 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
@@ -7,11 +8,10 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
   Movie as MovieIcon
 } from "@mui/icons-material";
-import {IconButton, ListItem, ListItemIcon, ListItemText} from "@mui/material";
-import {makeStyles, styled} from "@mui/styles";
-import {FileInfo} from "../index";
-import FileMenu from "./FileMenu";
-import RenameDialog from "./RenameDialog";
+import {IconButton, ListItem, ListItemIcon, ListItemText, styled} from "@mui/material";
+import {FileInfo} from "../../index";
+import FileMenu from "../FileMenu";
+import RenameDialog from "../RenameDialog";
 
 const mime = require('mime');
 const filesize = require('filesize');
@@ -20,15 +20,9 @@ const iconStyle = {
   minWidth: '42px',
 };
 
-const useStylesFile = makeStyles(() => ({
-  name: {
-    wordBreak: 'break-word',
-  },
-  subLine: {
-    display: 'flex',
-    justifyContent: 'space-between',
-  },
-}));
+const NameSx = {
+  wordBreak: 'break-word',
+};
 
 interface FileProps {
   file: FileInfo,
@@ -36,11 +30,17 @@ interface FileProps {
   writable: boolean,
 }
 
+const SubLine = styled('div')(() => {
+  return {
+    display: 'flex',
+    justifyContent: 'space-between',
+  };
+});
+
 const File = React.memo(({file, dir, writable}: FileProps) => {
   const {size, ctime, name, isDir, handleUrl} = file;
   const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
-  const classes = useStylesFile();
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
@@ -90,7 +90,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
     }
   }, [name, isDir]);
 
-  const handleHandleClick = React.useCallback((e) => {
+  const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     const a = document.createElement('a');
     a.href = dir + encodeURIComponent(name);
@@ -102,7 +102,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
     }
   }, [handleUrl]);
 
-  const handleMenuClick = React.useCallback((e) => {
+  const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setMenuAnchorEl(e.currentTarget);
@@ -141,10 +141,10 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
             <Icon/>
           )}
         </ListItemIcon>
-        <ListItemText primary={name} secondary={<div className={classes.subLine}>
+        <ListItemText primary={name} secondary={<SubLine>
           <div>{dateStr}</div>
           <div>{sizeStr}</div>
-        </div>} secondaryTypographyProps={{component: 'div'}} className={classes.name}/>
+        </SubLine>} secondaryTypographyProps={{component: 'div'}} sx={NameSx}/>
       </ListItem>
       {menuAnchorEl ? (
         <FileMenu

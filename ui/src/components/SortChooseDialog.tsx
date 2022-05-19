@@ -1,4 +1,5 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {Button, ButtonGroup, DialogContent} from "@mui/material";
 import {ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon} from "@mui/icons-material";
 import MyDialog from "./MyDialog";
@@ -10,18 +11,20 @@ const keyName = {
   size: 'Size',
 };
 
+type Key = [string, boolean];
+
 interface SortChooseDialogProps {
-  sortKey: [string, boolean],
-  changeSort: (key: string) => void,
+  sortKey: Key,
+  changeSort: (key: Key) => void,
   onClose: () => void,
 }
 
 const SortChooseDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseDialogProps) => {
-  const handleClose = React.useCallback((e, key) => {
+  const handleClose = React.useCallback((e: SyntheticEvent) => {
     onClose();
   }, []);
 
-  const handleChangeSort = React.useCallback((key) => {
+  const handleChangeSort = React.useCallback((key: Key) => {
     changeSort(key);
   }, []);
 
@@ -53,7 +56,7 @@ interface SortBtnProps {
   name: string,
   active: boolean,
   direction: boolean,
-  onClick: (prop: [string, boolean]) => void
+  onClick: (prop: Key) => void
 }
 
 const SortBtn = React.memo(({type, name, active, direction, onClick}: SortBtnProps) => {
@@ -68,7 +71,7 @@ const SortBtn = React.memo(({type, name, active, direction, onClick}: SortBtnPro
     );
   }
 
-  const handleClick = React.useCallback((e) => {
+  const handleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     if (active) {
       onClick([type, !direction]);
