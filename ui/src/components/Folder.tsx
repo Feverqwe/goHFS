@@ -115,7 +115,7 @@ const Folder = React.memo(({store}: FolderProps) => {
     a.download = `${dirname}.m3u8`;
     a.click();
     URL.revokeObjectURL(url);
-  }, []);
+  }, [sortedFiles, store]);
 
   return (
     <>
