@@ -1,4 +1,9 @@
 {
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "compilerOptions": {
     "experimentalDecorators": true,
     "allowJs": true,
@@ -9,6 +14,7 @@
     "jsx": "react",
     "moduleResolution": "Node",
     "skipLibCheck": true,
-    "outDir": "./dist/"
+    "outDir": "./dist/",
+    "allowSyntheticDefaultImports": true
   }
 }

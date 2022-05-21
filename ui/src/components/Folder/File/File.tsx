@@ -9,7 +9,7 @@ import {
   Movie as MovieIcon
 } from "@mui/icons-material";
 import {IconButton, ListItem, ListItemIcon, ListItemText, styled} from "@mui/material";
-import {FileInfo} from "../../index";
+import {FileInfo} from "../../../folder";
 import FileMenu from "../FileMenu";
 import RenameDialog from "../RenameDialog";
 

@@ -1,0 +1,23 @@
+.touch-lock {
+  position: fixed;
+  margin: 24px;
+  width: 24px;
+  height: 24px;
+  background-color: #ccc;
+  z-index: 1000;
+  opacity: 0.4;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  transition: opacity 0.25s;
+
+  &.locked {
+    opacity: 0.8;
+  }
+
+  &.invisible {
+    opacity: 0;
+  }
+}

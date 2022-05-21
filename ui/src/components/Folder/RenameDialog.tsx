@@ -1,4 +1,4 @@
-import {FileInfo} from "../index";
+import {FileInfo} from "../../folder";
 import MyDialog from "./MyDialog";
 import * as React from "react";
 import {FormEvent, SyntheticEvent} from "react";
@@ -12,7 +12,7 @@ import {
   TextField,
   Tooltip
 } from "@mui/material";
-import {doReq} from "../tools/apiRequest";
+import {doReq} from "../../tools/apiRequest";
 import ErrorIcon from "@mui/icons-material/Error";
 
 interface RenameDialogProps {

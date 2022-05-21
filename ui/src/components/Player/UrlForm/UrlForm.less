@@ -1,0 +1,37 @@
+.form-backdrop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  position: fixed;
+  inset: 0;
+
+  .form-container {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+
+    max-height: calc(100% - 64px);
+    max-width: 600px;
+    width: calc(100% - 64px);
+
+    padding: 20px 24px;
+
+    background-color: rgb(66, 66, 66);
+    border-radius: 4px;
+  }
+}
+
+.url-form {
+  display: flex;
+  flex-grow: 1;
+  justify-content: center;
+
+  max-height: calc(100% - 64px);
+  max-width: 600px;
+  width: calc(100% - 64px);
+
+  .url-input {
+    flex-grow: 1;
+  }
+}

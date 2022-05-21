@@ -8,7 +8,7 @@ import {
   Sort as SortIcon,
   Upload as UploadIcon
 } from "@mui/icons-material";
-import {FileInfo, RootStore} from "../index";
+import {FileInfo, RootStore} from "../../folder";
 import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
 import File from "./File/File";
