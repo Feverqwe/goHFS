@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"goHfs/assets"
@@ -10,7 +11,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/go-pkgz/rest"
 )
 
@@ -32,14 +35,14 @@ func HandleApi(config *Config, storage *Storage) func(http.Handler) http.Handler
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if len(request.URL.Path) > 3 && request.URL.Path[0:3] == "/~/" {
-				rest.Wrap(
+				gziphandler.GzipHandler(rest.Wrap(
 					handleFobidden(),
+					handleWww(),
 					handleUpload(config),
 					handleStorage(storage),
 					handleInterfaces(config),
 					handleAction(config),
-					handleWww(),
-				).ServeHTTP(writer, request)
+				)).ServeHTTP(writer, request)
 				return
 			}
 
@@ -324,21 +327,27 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 }
 
 func handleWww() func(http.Handler) http.Handler {
+	binTime := time.Now()
+	if binPath, err := os.Executable(); err == nil {
+		if binStat, err := os.Stat(binPath); err == nil {
+			binTime = binStat.ModTime()
+		}
+	}
+
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
-			if request.Method == "GET" && len(request.URL.Path) > 7 && request.URL.Path[0:7] == "/~/www/" {
+			if (request.Method == "GET" || request.Method == "HEAD") && len(request.URL.Path) > 7 && request.URL.Path[0:7] == "/~/www/" {
 				assetPath := request.URL.Path[3:]
 
-				file, err := assets.Asset(assetPath)
+				content, err := assets.Asset(assetPath)
 				if err != nil {
 					writer.WriteHeader(404)
 					return
 				}
 
-				_, err = writer.Write(file)
-				if err != nil {
-					panic(err)
-				}
+				reader := bytes.NewReader(content)
+				name := filepath.Base(assetPath)
+				http.ServeContent(writer, request, name, binTime, reader)
 				return
 			}
 

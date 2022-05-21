@@ -1,15 +1,16 @@
 package main
 
 import (
-	"compress/gzip"
+	"bytes"
 	"flag"
 	"fmt"
 	"goHfs/internal"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
+	"time"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/go-pkgz/rest"
 )
 
@@ -87,7 +88,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
-			if request.Method == "GET" {
+			if request.Method == "GET" || request.Method == "HEAD" {
 				urlPath := request.URL.Path
 
 				file, path, err := internal.OpenPath(root, urlPath)
@@ -107,22 +108,18 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 				}
 
 				if stat.IsDir() {
-					if urlPath[len(urlPath)-1:] != "/" {
-						writer.Header().Set("Location", urlPath+"/")
-						writer.WriteHeader(301)
-						return
-					}
+					gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+						if urlPath[len(urlPath)-1:] != "/" {
+							writer.Header().Set("Location", urlPath+"/")
+							writer.WriteHeader(301)
+							return
+						}
 
-					content := []byte(fileIndex(urlPath, path, file))
-					writer.Header().Set("Content-Encoding", "gzip")
-					writer.Header().Set("Content-Length", strconv.Itoa(len(content)))
-					writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
-					gz := gzip.NewWriter(writer)
-					defer gz.Close()
-					_, err := gz.Write(content)
-					if err != nil {
-						panic(err)
-					}
+						content := []byte(fileIndex(urlPath, path, file))
+						reader := bytes.NewReader(content)
+
+						http.ServeContent(writer, request, "index.html", time.Now(), reader)
+					})).ServeHTTP(writer, request)
 					return
 				}
 			}
