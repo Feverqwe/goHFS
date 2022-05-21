@@ -52,6 +52,7 @@ func main() {
 					internal.HandleStorage(storage),
 					internal.HandleInterfaces(&config),
 					internal.HandleAction(&config),
+					internal.HandleWww(),
 					handleDir(&config),
 				)
 

@@ -31,7 +31,7 @@ func GetFileIndex(config *Config) func(uri string, path string, root *os.File) s
 	showHiddenFiles := config.ShowHiddenFiles
 
 	if template == "" {
-		data, err := assets.Asset("folder.html")
+		data, err := assets.Asset("www/folder.html")
 		if err != nil {
 			panic(err)
 		}

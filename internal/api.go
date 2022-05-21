@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"goHfs/assets"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -285,6 +286,31 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 					}
 					return
 				}
+			}
+
+			next.ServeHTTP(writer, request)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func HandleWww() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, request *http.Request) {
+			if request.Method == "GET" && len(request.URL.Path) > 7 && request.URL.Path[0:7] == "/~/www/" {
+				assetPath := request.URL.Path[3:]
+
+				file, err := assets.Asset(assetPath)
+				if err != nil {
+					writer.WriteHeader(404)
+					return
+				}
+
+				_, err = writer.Write(file)
+				if err != nil {
+					panic(err)
+				}
+				return
 			}
 
 			next.ServeHTTP(writer, request)

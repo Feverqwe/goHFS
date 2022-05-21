@@ -60,6 +60,7 @@ func getNewConfig() Config {
 	config.Port = 80
 	config.Public = pwd
 	config.ShowHiddenFiles = false
+	config.ExtHandle[".mp4"] = "/~/www/player.html?url={url}"
 	return config
 }
 
