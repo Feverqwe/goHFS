@@ -48,11 +48,7 @@ func main() {
 				handler := rest.Wrap(
 					fsServer(&config),
 					powerLock(powerControl),
-					internal.HandleUpload(&config),
-					internal.HandleStorage(storage),
-					internal.HandleInterfaces(&config),
-					internal.HandleAction(&config),
-					internal.HandleWww(),
+					internal.HandleApi(&config, storage),
 					handleDir(&config),
 				)
 

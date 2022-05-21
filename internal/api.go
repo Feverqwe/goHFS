@@ -10,6 +10,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/go-pkgz/rest"
 )
 
 type UploadResultItem struct {
@@ -26,7 +28,34 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleUpload(config *Config) func(http.Handler) http.Handler {
+func HandleApi(config *Config, storage *Storage) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, request *http.Request) {
+			if len(request.URL.Path) > 3 && request.URL.Path[0:3] == "/~/" {
+				rest.Wrap(
+					handleFobidden(),
+					handleUpload(config),
+					handleStorage(storage),
+					handleInterfaces(config),
+					handleAction(config),
+					handleWww(),
+				).ServeHTTP(writer, request)
+				return
+			}
+
+			next.ServeHTTP(writer, request)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func handleFobidden() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(403)
+	})
+}
+
+func handleUpload(config *Config) func(http.Handler) http.Handler {
 	public := config.Public
 
 	saveFile := func(rawPlace string, rawFilename string, part *multipart.Part) error {
@@ -130,7 +159,7 @@ func HandleUpload(config *Config) func(http.Handler) http.Handler {
 	}
 }
 
-func HandleInterfaces(config *Config) func(http.Handler) http.Handler {
+func handleInterfaces(config *Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" && request.URL.Path == "/~/addresses" {
@@ -148,7 +177,7 @@ func HandleInterfaces(config *Config) func(http.Handler) http.Handler {
 	}
 }
 
-func HandleStorage(storage *Storage) func(http.Handler) http.Handler {
+func handleStorage(storage *Storage) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" {
@@ -200,7 +229,7 @@ func HandleStorage(storage *Storage) func(http.Handler) http.Handler {
 	}
 }
 
-func HandleAction(config *Config) func(http.Handler) http.Handler {
+func handleAction(config *Config) func(http.Handler) http.Handler {
 	public := config.Public
 
 	type RemovePayload struct {
@@ -294,7 +323,7 @@ func HandleAction(config *Config) func(http.Handler) http.Handler {
 	}
 }
 
-func HandleWww() func(http.Handler) http.Handler {
+func handleWww() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" && len(request.URL.Path) > 7 && request.URL.Path[0:7] == "/~/www/" {
