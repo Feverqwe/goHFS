@@ -57,11 +57,13 @@ export default (env: Record<string, any>, arg: Record<string, any>): Configurati
         filename: 'folder.html',
         template: './src/assets/folder.html',
         chunks: ['folder'],
+        scriptLoading: 'blocking',
       }),
       new HtmlWebpackPlugin({
         filename: 'player.html',
         template: './src/assets/player.html',
         chunks: ['player'],
+        scriptLoading: 'blocking',
       }),
       new CopyPlugin({
         patterns: [
