@@ -1,14 +1,23 @@
 import * as React from "react";
 import {useRef} from "react";
-import "./Video.less";
 import addEvent from "../../../tools/addEvent";
 import UrlFormContext from "../UrlForm/UrlFormContext";
 import Storage from "../../../tools/storage";
+import {styled} from "@mui/material";
 
 interface PlayerProps {
   url: string,
   starTime: number,
 }
+
+const VideoTag = styled('video')(() => {
+  return {
+    width: '100%',
+    height: '100%',
+
+    outline: 'none',
+  };
+});
 
 const Video = React.memo(({url, starTime}: PlayerProps) => {
   const showUrlForm = React.useContext(UrlFormContext);
@@ -79,7 +88,7 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
     }, true), disposers);
 
     addEvent(window, on => on('keydown', (e: KeyboardEvent) => {
-      console.log('keydown: %s', e.code);
+      // console.log('keydown: %s', e.code);
 
       const code = e.code;
       const isRepeat = e.code === lastKey;
@@ -218,7 +227,7 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
   return (
     <>
       {/*<TouchLock onClick={handleLockClick} isLock={isLock}/>*/}
-      <video className={"player-element"} ref={refVideo} controls={!isLock} />
+      <VideoTag ref={refVideo} controls={!isLock} />
     </>
   );
 });

@@ -1,6 +1,6 @@
 import * as React from "react";
 import {SyntheticEvent} from "react";
-import "./UrlForm.less";
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, TextField} from "@mui/material";
 
 interface UrlFormProps {
   onCancel?: () => void,
@@ -15,24 +15,33 @@ const UrlForm = React.memo(({onCancel, onSubmit}: UrlFormProps) => {
       const url = urlInput.value;
       onSubmit(url);
     }
-  }, []);
+  }, [onSubmit]);
 
   const handleCancel = React.useCallback(() => {
     onCancel && onCancel()
-  }, []);
+  }, [onCancel]);
 
   return (
-    <div className={"form-backdrop"}>
-      <div className={"form-container"}>
-        <form className={"url-form"} method={"GET"} onSubmit={handleSubmit}>
-          <input name={"url"} className={"url-input"} type="text" required autoFocus />
-          <button type="submit">Open</button>
+    <Dialog
+      open={true}
+      onClose={handleCancel}
+      fullWidth
+    >
+      <Paper component={'form'} method={"GET"} onSubmit={handleSubmit}>
+        <DialogTitle>
+          Enter url:
+        </DialogTitle>
+        <DialogContent>
+          <TextField fullWidth size="small" name={"url"} type="text" required autoFocus/>
+        </DialogContent>
+        <DialogActions>
           {onCancel && (
-            <button type={"button"} onClick={handleCancel}>Close</button>
+            <Button variant="outlined" type="button" onClick={handleCancel}>Close</Button>
           )}
-        </form>
-      </div>
-    </div>
+          <Button variant="contained" type="submit">Open</Button>
+        </DialogActions>
+      </Paper>
+    </Dialog>
   );
 });
 

@@ -1,10 +1,10 @@
 import * as React from "react";
-import {createPortal} from "react-dom";
 import {createRoot} from 'react-dom/client';
 import Folder from "./components/Folder/Folder";
-import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import {CssBaseline, ThemeProvider} from "@mui/material";
 import {CacheProvider} from '@emotion/react';
-import createCache from '@emotion/cache';
+import theme from "./tools/muiTheme";
+import cache from "./tools/muiCache";
 
 export interface FileInfo {
   size: number,
@@ -75,40 +75,10 @@ const rootStore = ('ROOT_STORE' in window && ROOT_STORE) || {
       isDir: false,
       ctime: Date.now(),
       size: 1545 * 1024 * 1024,
-      handleUrl: 'http://192.168.1.9/Player/player.html?url={url}',
+      handleUrl: '/~/www/player.html?url={url}',
     },
   ],
 };
-
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    ...{
-      text: {
-        primary: '#fff',
-        secondary: 'rgba(255, 255, 255, 0.7)',
-        disabled: 'rgba(255, 255, 255, 0.5)',
-      },
-      action: {
-        active: '#fff',
-        hover: 'rgba(255, 255, 255, 0.08)',
-        selected: 'rgba(255, 255, 255, 0.16)',
-        disabled: 'rgba(255, 255, 255, 0.3)',
-        disabledBackground: 'rgba(255, 255, 255, 0.12)',
-      },
-      background: {
-        default: '#303030',
-        paper: '#424242',
-      },
-      divider: 'rgba(255, 255, 255, 0.12)',
-    },
-  }
-});
-
-const cache = createCache({
-    key: 'css',
-    prepend: true,
-});
 
 const root = createRoot(document.getElementById('root')!);
 

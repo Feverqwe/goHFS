@@ -30,15 +30,19 @@ const Root = React.memo(() => {
   const handleUrlFormSubmit = React.useCallback((url: string) => {
     setUrl(url);
     setTime(0);
+    handleClose();
+  }, []);
+
+  const handleClose = React.useCallback(() => {
     setShowForm(false);
   }, []);
 
   return (
     <UrlFormContext.Provider value={handleShowForm}>
       <Video url={url} starTime={time}/>
-      {!isShowForm ? null : (
-        <UrlForm onSubmit={handleUrlFormSubmit}/>
-      )}
+      {isShowForm ? (
+        <UrlForm onCancel={url && handleClose || undefined} onSubmit={handleUrlFormSubmit}/>
+      ) : null}
     </UrlFormContext.Provider>
   );
 });
