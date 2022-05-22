@@ -17,6 +17,17 @@ export default (env: Record<string, any>, arg: Record<string, any>): Configurati
       publicPath: isProduction ? '/~/www' : '',
       path: Path.resolve(__dirname, './dist'),
     },
+    optimization: {
+      splitChunks: {
+        cacheGroups: {
+          commons: {
+            name: 'commons',
+            chunks: 'initial',
+            minChunks: 2,
+          },
+        },
+      },
+    },
     module: {
       rules: [
         {
