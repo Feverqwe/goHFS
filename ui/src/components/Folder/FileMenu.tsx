@@ -27,13 +27,21 @@ const FileMenu = React.memo(({anchorEl, file, dir, onRemoved, onRename, onClose}
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
       {['rename', 'remove'].map((type) => {
+        let onSuccess;
+        if (type === 'remove') {
+          onSuccess = onRemoved;
+        } else
+        if (type === 'rename') {
+          onSuccess = onRename;
+        }
+
         return (
           <ActionBtn
             key={type}
             action={type}
             file={file}
             dir={dir}
-            onSuccess={type === 'remove' && onRemoved || type === 'rename' && onRename || undefined}
+            onSuccess={onSuccess}
           />
         );
       })}

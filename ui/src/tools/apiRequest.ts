@@ -1,4 +1,4 @@
-export function doReq<T>(url: string, data: Record<string, any>) {
+export function doReq<T>(url: string, data: string[] | Record<string, any>) {
   return fetch(url, {
     method: 'POST',
     body: JSON.stringify(data),

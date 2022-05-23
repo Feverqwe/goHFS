@@ -121,7 +121,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
     setRenameDialog(true);
   }, []);
 
-  const handleCloseRenameDialog = React.useCallback(() => {
+  const handleCloseDialog = React.useCallback(() => {
     setRenameDialog(false);
   }, []);
 
@@ -157,7 +157,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
         />
       ) : null}
       {renameDialog ? (
-        <RenameDialog onClose={handleCloseRenameDialog} dir={dir} file={file}/>
+        <RenameDialog onClose={handleCloseDialog} dir={dir} file={file}/>
       ) : null}
     </>
   );
