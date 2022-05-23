@@ -1,8 +1,26 @@
 import * as React from "react";
-import "./Root.less";
 import Video from "../Video/Video";
 import UrlForm from "../UrlForm/UrlForm";
 import UrlFormContext from "../UrlForm/UrlFormContext";
+import {GlobalStyles} from "@mui/material";
+
+const RootStyles = {
+  html: {
+    backgroundColor: '#000',
+    width: '100%',
+    height: '100%',
+  },
+  body: {
+    backgroundColor: 'inherit',
+    margin: 0,
+    width: '100%',
+    height: '100%',
+  },
+  '#root': {
+    width: '100%',
+    height: '100%',
+  }
+};
 
 const Root = React.memo(() => {
   const [url, setUrl] = React.useState('');
@@ -39,6 +57,7 @@ const Root = React.memo(() => {
 
   return (
     <UrlFormContext.Provider value={handleShowForm}>
+      <GlobalStyles styles={RootStyles} />
       <Video url={url} starTime={time}/>
       {isShowForm ? (
         <UrlForm onCancel={url && handleClose || undefined} onSubmit={handleUrlFormSubmit}/>
