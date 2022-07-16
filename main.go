@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -120,6 +121,9 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 
 						http.ServeContent(writer, request, "index.html", time.Now(), reader)
 					})).ServeHTTP(writer, request)
+					return
+				} else if strings.HasSuffix(urlPath, "/index.html") {
+					http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
 					return
 				}
 			}
