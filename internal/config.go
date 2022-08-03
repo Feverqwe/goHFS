@@ -21,6 +21,8 @@ type Config struct {
 	WritablePatterns []string
 }
 
+var APP_ID = "com.rndnm.gohfs"
+
 func (s *Config) GetAddress() string {
 	return s.Address + ":" + strconv.Itoa(s.Port)
 }
@@ -78,7 +80,10 @@ func getNewConfig() Config {
 	config.Public = pwd
 	config.Name = "HFS"
 	config.ShowHiddenFiles = false
+	config.ExtHandle[".mov"] = "/~/www/player.html?url={url}"
 	config.ExtHandle[".mp4"] = "/~/www/player.html?url={url}"
+	config.ExtHandle[".aac"] = "/~/www/player.html?url={url}"
+	config.ExtHandle[".mp3"] = "/~/www/player.html?url={url}"
 	return config
 }
 
@@ -90,6 +95,10 @@ func LoadConfig() Config {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
+			if err := os.MkdirAll(getProfilePath(), 0750); err != nil {
+				log.Println("Chreate profile path error", err)
+			}
+
 			err := SaveConfig(config)
 			if err != nil {
 				log.Println("Write new config error", err)
@@ -143,6 +152,8 @@ func getDefaultProfilePath() string {
 			panic(err)
 		}
 		place = pwd
+	} else if runtime.GOOS == "darwin" {
+		place = os.Getenv("HOME") + "/Library/Application Support/" + APP_ID
 	} else {
 		ex, err := os.Executable()
 		if err != nil {
