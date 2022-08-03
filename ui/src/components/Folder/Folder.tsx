@@ -13,6 +13,7 @@ import UploadDialog from "./UploadDialog";
 import AddressesDialog from "./AddressesDialog";
 import File from "./File/File";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import Path from "path-browserify";
 
 const RootSx = {
   width: '100%',
@@ -99,15 +100,15 @@ const Folder = React.memo(({store}: FolderProps) => {
     lines.push('#EXTM3U');
     sortedFiles.forEach((file) => {
       if (!file.isDir) {
-        const url = new URL(store.dir + file.name, location.href).toString();
+        const url = new URL(Path.join(store.dir, file.name), location.href).toString();
         const name = file.name;
         lines.push(`#EXTINF:-1,${name}`);
         lines.push(url);
       }
     });
 
-    const m = /([^\/]+)\/$/.exec(store.dir);
-    const dirname = m && m[1] || 'root';
+    const dirname = store.isRoot ? 'root' : Path.dirname(store.dir);
+
     const blob = new Blob([lines.join('\n')], {type: "application/mpegurl"});
     const url  = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -145,7 +146,7 @@ const Folder = React.memo(({store}: FolderProps) => {
         sx={RootSx}
       >
         {!store.isRoot && (
-          <ListItem button component={'a'} href={'../'}>
+          <ListItem button component={'a'} href={Path.join(store.dir, '/', '..')}>
             <ListItemIcon style={iconStyle}>
               <ArrowBackIcon/>
             </ListItemIcon>

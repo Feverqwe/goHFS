@@ -12,6 +12,7 @@ import {IconButton, ListItem, ListItemIcon, ListItemText, styled} from "@mui/mat
 import {FileInfo} from "../../../folder";
 import FileMenu from "../FileMenu";
 import RenameDialog from "../RenameDialog";
+import Path from "path-browserify";
 
 const mime = require('mime');
 const filesize = require('filesize');
@@ -93,7 +94,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
   const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     const a = document.createElement('a');
-    a.href = dir + encodeURIComponent(name);
+    a.href = Path.join(dir, encodeURIComponent(name));
     const fileUrl = a.href;
     const url = handleUrl.replace('{url}', encodeURIComponent(fileUrl));
     const win = window.open(url, '_blank');
@@ -131,7 +132,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
 
   return (
     <>
-      <ListItem button component={'a'} href={encodeURIComponent(name)}>
+      <ListItem button component={'a'} href={Path.join(dir, encodeURIComponent(name))}>
         <ListItemIcon className={'no-click'} style={iconStyle} onContextMenu={writable && handleMenuClick || undefined}>
           {handleUrl ? (
             <MyIconButton color="primary" onClick={handleHandleClick}>
