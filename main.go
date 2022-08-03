@@ -84,7 +84,7 @@ func main() {
 }
 
 func handleDir(config *internal.Config) func(http.Handler) http.Handler {
-	root := config.Public
+	public := config.Public
 	fileIndex := internal.GetFileIndex(config)
 
 	return func(next http.Handler) http.Handler {
@@ -92,7 +92,11 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 			if request.Method == "GET" || request.Method == "HEAD" {
 				urlPath := request.URL.Path
 
-				file, path, err := internal.OpenPath(root, urlPath)
+				fullPath, err := internal.GetFullPath(public, urlPath)
+				var file *os.File
+				if err == nil {
+					file, err = os.Open(fullPath)
+				}
 				if err != nil {
 					writer.WriteHeader(403)
 					return
@@ -116,7 +120,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 							return
 						}
 
-						content := []byte(fileIndex(urlPath, path, file))
+						content := []byte(fileIndex(urlPath, fullPath, file))
 						reader := bytes.NewReader(content)
 
 						http.ServeContent(writer, request, "index.html", time.Now(), reader)

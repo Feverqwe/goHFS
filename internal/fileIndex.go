@@ -26,7 +26,7 @@ type File struct {
 	HandleUrl string `json:"handleUrl"`
 }
 
-func GetFileIndex(config *Config) func(uri string, path string, root *os.File) string {
+func GetFileIndex(config *Config) func(uri string, fullPath string, root *os.File) string {
 	root := config.Public
 	showHiddenFiles := config.ShowHiddenFiles
 
@@ -38,7 +38,7 @@ func GetFileIndex(config *Config) func(uri string, path string, root *os.File) s
 		template = string(data)
 	}
 
-	return func(urlPath string, path string, pathFile *os.File) string {
+	return func(urlPath string, fullPath string, pathFile *os.File) string {
 		files := make([]File, 0)
 
 		if dir, err := pathFile.ReadDir(-1); err == nil {
@@ -67,7 +67,7 @@ func GetFileIndex(config *Config) func(uri string, path string, root *os.File) s
 					file.Size = info.Size()
 					file.Ctime = UnixMilli(info.ModTime())
 					if info.Mode()&os.ModeSymlink != 0 {
-						if stat, err := os.Stat(filepath.Join(path, file.Name)); err == nil {
+						if stat, err := os.Stat(filepath.Join(fullPath, file.Name)); err == nil {
 							file.IsDir = stat.IsDir()
 							file.Size = stat.Size()
 							file.Ctime = UnixMilli(stat.ModTime())
@@ -79,12 +79,10 @@ func GetFileIndex(config *Config) func(uri string, path string, root *os.File) s
 			}
 		}
 
-		isRoot := root == path
+		isRoot := root == fullPath
 
-		isWritable := false
-		if place, err := GetRelativePath(root, urlPath); err == nil {
-			isWritable = config.IsWritable(place, true)
-		}
+		place := NormalizePath(urlPath)
+		isWritable := config.IsWritable(place, true)
 
 		result := RootStore{
 			Dir:        urlPath,
@@ -96,7 +94,7 @@ func GetFileIndex(config *Config) func(uri string, path string, root *os.File) s
 		var body string
 		if resultJson, err := json.Marshal(result); err == nil {
 			body = template
-			body = strings.Replace(body, "{{TITLE}}", "Index of "+EscapeHtmlInJson(urlPath), 1)
+			body = strings.Replace(body, "{{TITLE}}", EscapeHtmlInJson(urlPath)+" – "+EscapeHtmlInJson(config.Name), 1)
 			body = strings.Replace(body, "<script id=\"root_store\"></script>", "<script id=\"root_store\">window.ROOT_STORE="+EscapeHtmlInJson(string(resultJson))+"</script>", 1)
 		} else {
 			body = "json.Marshal error: " + EscapeHtmlInJson(err.Error())

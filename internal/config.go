@@ -15,6 +15,7 @@ type Config struct {
 	Port             int
 	Address          string
 	Public           string
+	Name             string
 	ShowHiddenFiles  bool
 	ExtHandle        map[string]string
 	WritablePatterns []string
@@ -38,12 +39,28 @@ func (s *Config) GetFileHandler(ext string) (string, bool) {
 }
 
 func (s *Config) IsWritable(path string, isDir bool) bool {
-	if isDir && path[len(path)-1:] != "/" {
-		path += "/"
+	lowPath := strings.ToLower(path)
+	if isDir && lowPath[len(lowPath)-1:] != "/" {
+		lowPath += "/"
 	}
 
 	for _, pattern := range s.WritablePatterns {
-		m, _ := filepath.Match(pattern, path)
+		lowPattern := strings.ToLower(pattern)
+
+		// like /a/b/c/**
+		if lowPattern[len(lowPattern)-2:] == "**" {
+			lowPattern = lowPattern[0 : len(lowPattern)-1]
+
+			slashCount := strings.Count(lowPattern, "/")
+			pathParts := strings.Split(lowPath, "/")
+			lastIndex := slashCount + 1
+			if len(pathParts) < lastIndex {
+				continue
+			}
+			lowPath = strings.Join(pathParts[0:lastIndex], "/")
+		}
+
+		m, _ := filepath.Match(lowPattern, lowPath)
 		if m {
 			return true
 		}
@@ -59,6 +76,7 @@ func getNewConfig() Config {
 	pwd := getProfilePath()
 	config.Port = 80
 	config.Public = pwd
+	config.Name = "HFS"
 	config.ShowHiddenFiles = false
 	config.ExtHandle[".mp4"] = "/~/www/player.html?url={url}"
 	return config

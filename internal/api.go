@@ -67,10 +67,7 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 			return errors.New("incorrect place")
 		}
 
-		rTarget, err := GetRelativePath(public, path.Join(rawPlace, rawFilename))
-		if err != nil {
-			return errors.New("incorrect filename")
-		}
+		rTarget := NormalizePath(path.Join(rawPlace, rawFilename))
 
 		isWritable := config.IsWritable(rTarget, false)
 		if !isWritable {
@@ -261,11 +258,9 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 					var rawPlace = payload.Place
 					if err == nil {
 						rawName := payload.Name
-						rTargetPath, err = GetRelativePath(public, path.Join(rawPlace, rawName))
-					}
-					if err == nil {
 						rawNewName := payload.NewName
-						rNewPath, err = GetRelativePath(public, path.Join(rawPlace, rawNewName))
+						rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
+						rNewPath = NormalizePath(path.Join(rawPlace, rawNewName))
 					}
 
 					if err == nil {
@@ -292,13 +287,12 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 					err := decoder.Decode(&payload)
 
 					var rTargetPath string
+
 					if err == nil {
 						rawPlace := payload.Place
 						rawName := payload.Name
-						rTargetPath, err = GetRelativePath(public, path.Join(rawPlace, rawName))
-					}
+						rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
 
-					if err == nil {
 						isDir := payload.IsDir
 						isWritable := config.IsWritable(rTargetPath, false)
 						if isWritable {
