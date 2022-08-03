@@ -26,7 +26,7 @@ type File struct {
 	HandleUrl string `json:"handleUrl"`
 }
 
-func GetFileIndex(config *Config) func(uri string, fullPath string, root *os.File) string {
+func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os.File) string {
 	root := config.Public
 	showHiddenFiles := config.ShowHiddenFiles
 

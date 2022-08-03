@@ -114,12 +114,6 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 
 				if stat.IsDir() {
 					gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-						if urlPath[len(urlPath)-1:] != "/" {
-							writer.Header().Set("Location", urlPath+"/")
-							writer.WriteHeader(301)
-							return
-						}
-
 						content := []byte(fileIndex(urlPath, fullPath, file))
 						reader := bytes.NewReader(content)
 
