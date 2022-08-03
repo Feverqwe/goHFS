@@ -39,6 +39,18 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 	}
 
 	return func(urlPath string, fullPath string, pathFile *os.File) string {
+		place := NormalizePath(urlPath)
+
+		placeName := place
+		if len(place) > 0 && place[0:1] == "/" {
+			placeName = place[1:]
+		}
+		if len(placeName) > 0 {
+			placeName += " – " + config.Name
+		} else {
+			placeName = config.Name
+		}
+
 		files := make([]File, 0)
 
 		if dir, err := pathFile.ReadDir(-1); err == nil {
@@ -80,12 +92,10 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 		}
 
 		isRoot := root == fullPath
-
-		place := NormalizePath(urlPath)
 		isWritable := config.IsWritable(place, true)
 
 		result := RootStore{
-			Dir:        urlPath,
+			Dir:        place,
 			IsRoot:     isRoot,
 			IsWritable: isWritable,
 			Files:      files,
@@ -94,7 +104,7 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 		var body string
 		if resultJson, err := json.Marshal(result); err == nil {
 			body = template
-			body = strings.Replace(body, "{{TITLE}}", EscapeHtmlInJson(urlPath)+" – "+EscapeHtmlInJson(config.Name), 1)
+			body = strings.Replace(body, "{{TITLE}}", EscapeHtmlInJson(placeName), 1)
 			body = strings.Replace(body, "<script id=\"root_store\"></script>", "<script id=\"root_store\">window.ROOT_STORE="+EscapeHtmlInJson(string(resultJson))+"</script>", 1)
 		} else {
 			body = "json.Marshal error: " + EscapeHtmlInJson(err.Error())

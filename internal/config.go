@@ -96,11 +96,10 @@ func LoadConfig() Config {
 	if err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(getProfilePath(), 0750); err != nil {
-				log.Println("Chreate profile path error", err)
+				log.Println("Create profile path error", err)
 			}
 
-			err := SaveConfig(config)
-			if err != nil {
+			if err := SaveConfig(config); err != nil {
 				log.Println("Write new config error", err)
 			}
 		}

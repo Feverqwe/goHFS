@@ -13,7 +13,7 @@ func NormalizePath(place string) string {
 
 func GetFullPath(public string, path string) (string, error) {
 	if filepath.Separator != '/' && strings.ContainsRune(path, filepath.Separator) {
-		return "", errors.New("http: invalid character in file path")
+		return "", errors.New("invalid character in file path")
 	}
 	dir := public
 	if dir == "" {
