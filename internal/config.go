@@ -50,7 +50,7 @@ func (s *Config) IsWritable(path string, isDir bool) bool {
 		lowPattern := strings.ToLower(pattern)
 
 		// like /a/b/c/**
-		if lowPattern[len(lowPattern)-2:] == "**" {
+		if len(lowPattern) > 1 && lowPattern[len(lowPattern)-2:] == "**" {
 			lowPattern = lowPattern[0 : len(lowPattern)-1]
 
 			slashCount := strings.Count(lowPattern, "/")
