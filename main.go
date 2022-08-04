@@ -7,7 +7,6 @@ import (
 	"goHfs/internal"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -49,6 +48,7 @@ func main() {
 
 				handler := rest.Wrap(
 					fsServer(&config),
+					handleIndex(&config),
 					powerLock(powerControl),
 					internal.HandleApi(&config, storage),
 					handleDir(&config),
@@ -93,22 +93,14 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 				urlPath := request.URL.Path
 
 				fullPath, err := internal.GetFullPath(public, urlPath)
-				var file *os.File
-				if err == nil {
-					file, err = os.Open(fullPath)
-				}
 				if err != nil {
 					writer.WriteHeader(403)
 					return
 				}
 
-				stat, err := file.Stat()
+				file, stat, err := internal.OpenFile(fullPath)
 				if err != nil {
-					if os.IsNotExist(err) {
-						writer.WriteHeader(404)
-					} else {
-						writer.WriteHeader(403)
-					}
+					internal.HandleOpenFileError(err, writer)
 					return
 				}
 
@@ -119,9 +111,6 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 
 						http.ServeContent(writer, request, "index.html", time.Now(), reader)
 					})).ServeHTTP(writer, request)
-					return
-				} else if strings.HasSuffix(urlPath, "/index.html") {
-					http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
 					return
 				}
 			}
@@ -139,6 +128,36 @@ func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Hand
 				powerControl.Inc()
 				defer powerControl.Dec()
 			}
+			next.ServeHTTP(writer, request)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func handleIndex(config *internal.Config) func(http.Handler) http.Handler {
+	public := config.Public
+
+	return func(next http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, request *http.Request) {
+			urlPath := request.URL.Path
+
+			if strings.HasSuffix(urlPath, "/index.html") {
+				fullPath, err := internal.GetFullPath(public, urlPath)
+				if err != nil {
+					writer.WriteHeader(403)
+					return
+				}
+
+				file, stat, err := internal.OpenFile(fullPath)
+				if err != nil {
+					internal.HandleOpenFileError(err, writer)
+					return
+				}
+
+				http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
+				return
+			}
+
 			next.ServeHTTP(writer, request)
 		}
 		return http.HandlerFunc(fn)
