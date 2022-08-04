@@ -41,16 +41,6 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 	return func(urlPath string, fullPath string, pathFile *os.File) string {
 		place := NormalizePath(urlPath)
 
-		placeName := place
-		if len(place) > 0 && place[0:1] == "/" {
-			placeName = place[1:]
-		}
-		if len(placeName) > 0 {
-			placeName += " – " + config.Name
-		} else {
-			placeName = config.Name
-		}
-
 		files := make([]File, 0)
 
 		if dir, err := pathFile.ReadDir(-1); err == nil {
@@ -93,6 +83,11 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 
 		isRoot := root == fullPath
 		isWritable := config.IsWritable(place, true)
+
+		placeName := config.Name
+		if !isRoot {
+			placeName = place + " – " + placeName
+		}
 
 		result := RootStore{
 			Dir:        place,
