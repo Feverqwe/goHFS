@@ -19,6 +19,7 @@ require (
 	github.com/gookit/color v1.5.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/natefinch/atomic v1.0.1

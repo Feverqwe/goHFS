@@ -12,18 +12,18 @@ import (
 var template = ""
 
 type RootStore struct {
-	Dir        string `json:"dir"`
-	IsRoot     bool   `json:"isRoot"`
-	IsWritable bool   `json:"isWritable"`
-	Files      []File `json:"files"`
+	Dir        string            `json:"dir"`
+	IsRoot     bool              `json:"isRoot"`
+	IsWritable bool              `json:"isWritable"`
+	Files      []File            `json:"files"`
+	ExtHandle  map[string]string `json:"extHandle"`
 }
 
 type File struct {
-	Name      string `json:"name"`
-	IsDir     bool   `json:"isDir"`
-	Ctime     int64  `json:"ctime"` // ms
-	Size      int64  `json:"size"`  // bytes
-	HandleUrl string `json:"handleUrl"`
+	Name  string `json:"name"`
+	IsDir bool   `json:"isDir"`
+	Ctime int64  `json:"ctime"` // ms
+	Size  int64  `json:"size"`  // bytes
 }
 
 func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os.File) string {
@@ -49,10 +49,6 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
-				ext := strings.ToLower(filepath.Ext(file.Name))
-				if handleUrl, ok := config.GetFileHandler(ext); ok {
-					file.HandleUrl = handleUrl
-				}
 				if !showHiddenFiles {
 					if file.Name == "System Volume Information" {
 						continue
@@ -94,6 +90,7 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 			IsRoot:     isRoot,
 			IsWritable: isWritable,
 			Files:      files,
+			ExtHandle:  config.ExtHandle,
 		}
 
 		var body string
