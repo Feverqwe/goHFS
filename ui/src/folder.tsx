@@ -11,14 +11,14 @@ export interface FileInfo {
   ctime: number,
   name: string,
   isDir: boolean,
-  handleUrl: string,
 }
 
 export interface RootStore {
   dir: string,
   isRoot: boolean,
   isWritable: boolean,
-  files: FileInfo[]
+  files: FileInfo[],
+  extHandle: Partial<Record<string, string>>,
 }
 
 declare const ROOT_STORE: RootStore | undefined;
@@ -33,51 +33,47 @@ const rootStore = ('ROOT_STORE' in window && ROOT_STORE) || {
       isDir: true,
       ctime: Date.now(),
       size: 0,
-      handleUrl: '',
     },
     {
       name: 'text.txt',
       isDir: false,
       ctime: Date.now(),
       size: 10,
-      handleUrl: '',
     },
     {
       name: 'audio.mp3',
       isDir: false,
       ctime: Date.now(),
       size: 5 * 1024 * 1024,
-      handleUrl: '',
     },
     {
       name: 'image.png',
       isDir: false,
       ctime: Date.now(),
       size: 256 * 1024,
-      handleUrl: '',
     },
     {
       name: 'test.mp4',
       isDir: false,
       ctime: Date.now(),
       size: 550 * 1024 * 1024,
-      handleUrl: '',
     },
     {
       name: 'test2.mp4',
       isDir: false,
       ctime: Date.now(),
       size: 1545 * 1024 * 1024,
-      handleUrl: '',
     },
     {
       name: 'playable.mp4',
       isDir: false,
       ctime: Date.now(),
       size: 1545 * 1024 * 1024,
-      handleUrl: '/~/www/player.html?url={url}',
     },
   ],
+  extHandle: {
+    '.mp4': '/~/www/player.html?url={url}',
+  },
 };
 
 const root = createRoot(document.getElementById('root')!);

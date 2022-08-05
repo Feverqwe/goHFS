@@ -1,5 +1,5 @@
 import * as React from "react";
-import {SyntheticEvent} from "react";
+import {SyntheticEvent, useMemo} from "react";
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
@@ -9,7 +9,7 @@ import {
   Movie as MovieIcon
 } from "@mui/icons-material";
 import {IconButton, ListItem, ListItemIcon, ListItemText, styled} from "@mui/material";
-import {FileInfo} from "../../../folder";
+import {FileInfo, RootStore} from "../../../folder";
 import FileMenu from "../FileMenu";
 import RenameDialog from "../RenameDialog";
 import Path from "path-browserify";
@@ -26,6 +26,7 @@ const NameSx = {
 };
 
 interface FileProps {
+  store: RootStore,
   file: FileInfo,
   dir: string,
   writable: boolean,
@@ -38,10 +39,14 @@ const SubLine = styled('div')(() => {
   };
 });
 
-const File = React.memo(({file, dir, writable}: FileProps) => {
-  const {size, ctime, name, isDir, handleUrl} = file;
+const File = React.memo(({store, file, dir, writable}: FileProps) => {
+  const {size, ctime, name, isDir} = file;
   const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
+  const handleUrl = useMemo(() => {
+    const ext = Path.extname(name);
+    return store.extHandle[ext];
+  }, [store, name]);
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
@@ -92,6 +97,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
   }, [name, isDir]);
 
   const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
+    if (!handleUrl) return;
     e.preventDefault();
     const a = document.createElement('a');
     a.href = Path.join(dir, encodeURIComponent(name));

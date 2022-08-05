@@ -154,7 +154,7 @@ const Folder = React.memo(({store}: FolderProps) => {
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={file.isDir + '_' + file.name} dir={store.dir} file={file} writable={store.isWritable}/>
+          return <File key={file.isDir + '_' + file.name} store={store} dir={store.dir} file={file} writable={store.isWritable}/>
         })}
       </List>
       {showSortDialog && (
