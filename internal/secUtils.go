@@ -8,7 +8,7 @@ import (
 )
 
 func NormalizePath(place string) string {
-	return filepath.FromSlash(path.Clean("/" + place))
+	return path.Clean("/" + place)
 }
 
 func GetFullPath(public string, path string) (string, error) {
@@ -19,7 +19,7 @@ func GetFullPath(public string, path string) (string, error) {
 	if dir == "" {
 		dir = "."
 	}
-	return filepath.Join(dir, NormalizePath(path)), nil
+	return filepath.Join(dir, filepath.FromSlash(NormalizePath(path))), nil
 }
 
 /*
