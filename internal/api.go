@@ -86,13 +86,16 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 
 		var tmpFile *os.File
 		tmpFile, err = os.CreateTemp(uploadPath, "tmp")
-		source := tmpFile.Name()
 		if err != nil {
 			return errors.New("Create temp file error: " + err.Error())
 		}
-		defer tmpFile.Close()
+
+		source := tmpFile.Name()
 
 		_, err = io.Copy(tmpFile, part)
+
+		tmpFile.Close()
+
 		if err != nil {
 			os.Remove(source)
 			return errors.New("Write temp file error: " + err.Error())
