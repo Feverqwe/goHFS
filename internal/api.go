@@ -74,7 +74,11 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 			return errors.New("unable wite in this place")
 		}
 
-		target := filepath.Join(public, rTarget)
+		var target string
+		target, err = GetFullPath(public, rTarget)
+		if err != nil {
+			return err
+		}
 
 		_, err = os.Stat(target)
 		if err == nil {
@@ -256,19 +260,24 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 					var rTargetPath string
 					var rNewPath string
 					var rawPlace = payload.Place
+					var targetPath string
+					var newPath string
 					if err == nil {
 						rawName := payload.Name
 						rawNewName := payload.NewName
 						rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
 						rNewPath = NormalizePath(path.Join(rawPlace, rawNewName))
+
+						targetPath, err = GetFullPath(public, rTargetPath)
+						if err == nil {
+							newPath, err = GetFullPath(public, rNewPath)
+						}
 					}
 
 					if err == nil {
 						isWritableSource := config.IsWritable(rTargetPath, false)
 						isWritableTarget := config.IsWritable(rNewPath, false)
 						if isWritableSource && isWritableTarget {
-							targetPath := filepath.Join(public, rTargetPath)
-							newPath := filepath.Join(public, rNewPath)
 							err = os.Rename(targetPath, newPath)
 						} else {
 							err = errors.New("place is not writable")
@@ -287,16 +296,18 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 					err := decoder.Decode(&payload)
 
 					var rTargetPath string
-
+					var targetPath string
 					if err == nil {
 						rawPlace := payload.Place
 						rawName := payload.Name
 						rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
+						targetPath, err = GetFullPath(public, rTargetPath)
+					}
 
+					if err == nil {
 						isDir := payload.IsDir
 						isWritable := config.IsWritable(rTargetPath, false)
 						if isWritable {
-							targetPath := filepath.Join(public, rTargetPath)
 							if isDir {
 								err = os.RemoveAll(targetPath)
 							} else {
