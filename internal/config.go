@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -40,8 +41,8 @@ func (s *Config) GetFileHandler(ext string) (string, bool) {
 	return val, ok
 }
 
-func (s *Config) IsWritable(path string, isDir bool) bool {
-	lowPath := strings.ToLower(path)
+func (s *Config) IsWritable(targetPath string, isDir bool) bool {
+	lowPath := strings.ToLower(targetPath)
 	if isDir && lowPath[len(lowPath)-1:] != "/" {
 		lowPath += "/"
 	}
@@ -62,7 +63,7 @@ func (s *Config) IsWritable(path string, isDir bool) bool {
 			lowPath = strings.Join(pathParts[0:lastIndex], "/")
 		}
 
-		m, _ := filepath.Match(lowPattern, lowPath)
+		m, _ := path.Match(lowPattern, lowPath)
 		if m {
 			return true
 		}

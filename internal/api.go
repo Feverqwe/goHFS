@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -351,7 +350,7 @@ func handleWww() func(http.Handler) http.Handler {
 				}
 
 				reader := bytes.NewReader(content)
-				name := filepath.Base(assetPath)
+				name := path.Base(assetPath)
 				http.ServeContent(writer, request, name, binTime, reader)
 				return
 			}
