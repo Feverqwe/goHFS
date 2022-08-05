@@ -1,8 +1,8 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/natefinch/atomic"
 )
 
 type Config struct {
@@ -119,7 +121,8 @@ func LoadConfig() Config {
 func SaveConfig(config Config) error {
 	path := getConfigPath()
 	if data, err := json.MarshalIndent(config, "", "  "); err == nil {
-		err = ioutil.WriteFile(path, data, 0644)
+		reader := bytes.NewReader(data)
+		err = atomic.WriteFile(path, reader)
 		return err
 	}
 	return nil

@@ -5,11 +5,11 @@ package internal
 import (
 	"errors"
 
-	"github.com/gen2brain/dlgs"
+	"github.com/ncruces/zenity"
 )
 
 func ShowFolderSelection(title string, root string) (string, error) {
-	path, success, err := dlgs.File(title, "", true)
+	path, success, err := zenity.File(title, "", true)
 	if err != nil {
 		return "", err
 	} else if success {
@@ -19,7 +19,7 @@ func ShowFolderSelection(title string, root string) (string, error) {
 }
 
 func ShowEntry(title string, text string, defaultValue string) (string, error) {
-	address, success, err := dlgs.Entry(title, text, defaultValue)
+	address, success, err := zenity.Entry(title, text, defaultValue)
 	if err != nil {
 		return "", err
 	} else if success {

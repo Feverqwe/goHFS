@@ -1,11 +1,13 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/natefinch/atomic"
 )
 
 type Storage struct {
@@ -50,7 +52,8 @@ func (s *Storage) SaveQueue() {
 func (s *Storage) Save() error {
 	path := s.path
 	if data, err := json.Marshal(s.keyValue); err == nil {
-		err = ioutil.WriteFile(path, data, 0644)
+		reader := bytes.NewReader(data)
+		err = atomic.WriteFile(path, reader)
 		return err
 	}
 	return nil
