@@ -9,21 +9,31 @@ import (
 )
 
 func ShowFolderSelection(title string, root string) (string, error) {
-	path, success, err := zenity.File(title, "", true)
+	path, err := zenity.SelectFile(
+		zenity.Title(title),
+		zenity.Directory(),
+	)
 	if err != nil {
+		if err.Error() == "dialog canceled" {
+			return "", errors.New("Canceled")
+		}
 		return "", err
-	} else if success {
+	} else {
 		return path, nil
 	}
-	return "", errors.New("Canceled")
 }
 
 func ShowEntry(title string, text string, defaultValue string) (string, error) {
-	address, success, err := zenity.Entry(title, text, defaultValue)
+	address, err := zenity.Entry(text,
+		zenity.Title(text),
+		zenity.EntryText(defaultValue),
+	)
 	if err != nil {
+		if err.Error() == "dialog canceled" {
+			return "", errors.New("Canceled")
+		}
 		return "", err
-	} else if success {
+	} else {
 		return address, nil
 	}
-	return "", errors.New("Canceled")
 }
