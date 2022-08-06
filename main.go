@@ -86,7 +86,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 	public := config.Public
 	fileIndex := internal.GetFileIndex(config)
 
-	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next internal.NextFn) {
 		if request.Method == "GET" || request.Method == "HEAD" {
 			urlPath := request.URL.Path
 
@@ -112,25 +112,24 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 				return
 			}
 		}
-
-		next.ServeHTTP(writer, request)
+		next()
 	})
 }
 
 func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Handler {
-	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next internal.NextFn) {
 		if powerControl != nil {
 			powerControl.Inc()
 			defer powerControl.Dec()
 		}
-		next.ServeHTTP(writer, request)
+		next()
 	})
 }
 
 func handleIndex(config *internal.Config) func(http.Handler) http.Handler {
 	public := config.Public
 
-	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next internal.NextFn) {
 		switch true {
 		case strings.HasSuffix(request.URL.Path, "/index.html"):
 			fullPath, err := internal.GetFullPath(public, request.URL.Path)
@@ -147,7 +146,7 @@ func handleIndex(config *internal.Config) func(http.Handler) http.Handler {
 
 			http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }

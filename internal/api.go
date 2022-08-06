@@ -27,7 +27,7 @@ type JsonSuccessResponse struct {
 }
 
 func HandleApi(config *Config, storage *Storage) func(http.Handler) http.Handler {
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
 		switch true {
 		case strings.HasPrefix(request.URL.Path, "/~/"):
 			rest.Gzip("")(rest.Wrap(
@@ -39,7 +39,7 @@ func HandleApi(config *Config, storage *Storage) func(http.Handler) http.Handler
 				handleAction(config),
 			)).ServeHTTP(writer, request)
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }
@@ -176,7 +176,7 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 		return isFinish, nil
 	}
 
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
 		switch true {
 		case isMatch(request, "POST", "/~/upload/init"):
 			apiCall(writer, func() (*UploadInit, error) {
@@ -272,13 +272,13 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 				return result, err
 			})
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }
 
 func handleInterfaces(config *Config) func(http.Handler) http.Handler {
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
 		switch true {
 		case isMatch(request, "GET", "/~/addresses"):
 			apiCall(writer, func() ([]string, error) {
@@ -286,13 +286,13 @@ func handleInterfaces(config *Config) func(http.Handler) http.Handler {
 				return addresses, nil
 			})
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }
 
 func handleStorage(storage *Storage) func(http.Handler) http.Handler {
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
 		switch true {
 		case isMatch(request, "POST", "/~/storage/get"):
 			apiCall(writer, func() (map[string]interface{}, error) {
@@ -326,7 +326,7 @@ func handleStorage(storage *Storage) func(http.Handler) http.Handler {
 				return "ok", err
 			})
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }
@@ -346,7 +346,7 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 		NewName string `json:"newName"`
 	}
 
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
 		switch true {
 		case isMatch(request, "POST", "/~/rename"):
 			apiCall(writer, func() (string, error) {
@@ -415,7 +415,7 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 				return "ok", err
 			})
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }
@@ -428,7 +428,7 @@ func handleWww() func(http.Handler) http.Handler {
 		}
 	}
 
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
 		switch true {
 		case (request.Method == "GET" || request.Method == "HEAD") && strings.HasPrefix(request.URL.Path, "/~/www/"):
 			assetPath := request.URL.Path[3:]
@@ -443,7 +443,7 @@ func handleWww() func(http.Handler) http.Handler {
 			name := path.Base(assetPath)
 			http.ServeContent(writer, request, name, binTime, reader)
 		default:
-			next.ServeHTTP(writer, request)
+			next()
 		}
 	})
 }
@@ -481,12 +481,16 @@ func writeApiResult(writer http.ResponseWriter, result interface{}, err error) e
 	return err
 }
 
-type HandlerWithNext func(writer http.ResponseWriter, request *http.Request, next http.Handler)
+type NextFn func()
+
+type HandlerWithNext func(writer http.ResponseWriter, request *http.Request, next NextFn)
 
 func GetHandler(handler HandlerWithNext) func(next http.Handler) http.Handler {
 	return func(n http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handler(w, r, n)
+			handler(w, r, func() {
+				n.ServeHTTP(w, r)
+			})
 		})
 	}
 }
