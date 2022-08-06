@@ -2,6 +2,8 @@ package internal
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"goHfs/assets"
@@ -10,6 +12,9 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -59,105 +64,291 @@ func handleFobidden() http.Handler {
 
 func handleUpload(config *Config) func(http.Handler) http.Handler {
 	public := config.Public
+	salt := config.Salt
 
-	saveFile := func(rawPlace string, rawFilename string, part *multipart.Part) error {
-		uploadPath, err := GetFullPath(public, rawPlace)
+	chunkSize := 16 * 1024 * 1024
+
+	type UploadInitPayload struct {
+		FileName string `json:"fileName"`
+		Size     int64  `json:"size"`
+		Place    string `json:"place"`
+	}
+
+	type UploadInit struct {
+		Key       string `json:"key"`
+		ChunkSize int    `json:"chunkSize"`
+	}
+
+	type UploadFinishPayload struct {
+		Key string `json:"key"`
+	}
+
+	type Key struct {
+		FileName    string `json:"fileName"`
+		Size        int64  `json:"size"`
+		Place       string `json:"place"`
+		TmpFileName string `json:"tmpFileName"`
+	}
+
+	getHash := func(json string, salt string, time string) string {
+		hashBytes := sha256.Sum256([]byte(time + json + salt))
+		return hex.EncodeToString(hashBytes[:])[0:7]
+	}
+
+	buildKey := func(rawFilename string, size int64, rawPlace string, tmpFile *os.File) (string, error) {
+		key := Key{
+			FileName:    rawFilename,
+			Size:        size,
+			Place:       rawPlace,
+			TmpFileName: filepath.Base(tmpFile.Name()),
+		}
+
+		keyJsonByte, err := json.Marshal(key)
 		if err != nil {
-			return errors.New("incorrect place")
+			return "", err
+		}
+		keyJson := string(keyJsonByte)
+		time := strconv.FormatInt(time.Now().Unix(), 10)
+
+		hash := getHash(keyJson, salt, time)
+
+		sigKey := time + ":" + hash + ":" + string(keyJson)
+
+		return sigKey, nil
+	}
+
+	readKey := func(sigKey string) (*Key, error) {
+		sepPos := strings.Index(sigKey, ":")
+		if sepPos == -1 {
+			return nil, errors.New("Incorrect_key")
 		}
 
-		rTarget := NormalizePath(path.Join(rawPlace, rawFilename))
+		time := sigKey[0:sepPos]
+		sigKey = sigKey[sepPos+1:]
 
-		isWritable := config.IsWritable(rTarget, false)
-		if !isWritable {
-			return errors.New("unable wite in this place")
+		sepPos = strings.Index(sigKey, ":")
+		if sepPos == -1 {
+			return nil, errors.New("Incorrect_key")
 		}
 
-		var target string
-		target, err = GetFullPath(public, rTarget)
+		sig := sigKey[0:sepPos]
+		keyJson := sigKey[sepPos+1:]
+		hash := getHash(keyJson, salt, time)
+
+		if hash != sig {
+			return nil, errors.New("Incorrect_signature")
+		}
+
+		decoder := json.NewDecoder(strings.NewReader(keyJson))
+
+		var payload Key
+		err := decoder.Decode(&payload)
+		if err != nil {
+			return nil, err
+		}
+
+		return &payload, nil
+	}
+
+	readAsString := func(part *multipart.Part) (string, error) {
+		buf := new(strings.Builder)
+		_, err := io.Copy(buf, part)
+		if err != nil {
+			return "", err
+		}
+		return buf.String(), nil
+	}
+
+	saveChunk := func(sigKey string, rawPos string, rawSize string, part *multipart.Part) error {
+		key, err := readKey(sigKey)
 		if err != nil {
 			return err
 		}
 
-		_, err = os.Stat(target)
-		if err == nil {
-			return errors.New("File exists")
+		pos, err := strconv.ParseInt(rawPos, 10, 64)
+		if err != nil {
+			return err
 		}
 
-		var tmpFile *os.File
-		tmpFile, err = os.CreateTemp(uploadPath, "tmp")
+		size, err := strconv.ParseInt(rawSize, 10, 64)
 		if err != nil {
-			return errors.New("Create temp file error: " + err.Error())
+			return err
+		}
+
+		rawPlace := key.Place
+		rawTmpFileName := key.TmpFileName
+
+		osTmpFilePath, err := GetFullPath(public, path.Join(rawPlace, rawTmpFileName))
+		if err != nil {
+			return err
+		}
+
+		tmpFile, err := os.OpenFile(osTmpFilePath, os.O_WRONLY, 0600)
+		if err != nil {
+			return err
 		}
 		defer tmpFile.Close()
 
-		source := tmpFile.Name()
-
-		_, err = io.Copy(tmpFile, part)
-
-		tmpFile.Close()
-
+		_, err = tmpFile.Seek(pos, 0)
 		if err != nil {
-			os.Remove(source)
-			return errors.New("Write temp file error: " + err.Error())
+			return err
 		}
 
-		err = os.Rename(source, target)
+		written, err := io.Copy(tmpFile, part)
 		if err != nil {
-			return errors.New("Rename temp file error: " + err.Error())
+			return err
 		}
 
-		return err
-	}
+		if written != size {
+			return errors.New("written_size_missmatch")
+		}
 
-	getFileResult := func(filename string, err error) UploadResultItem {
-		ok := err == nil
-		var errStr string
-		if err != nil {
-			errStr = err.Error()
-		}
-		return UploadResultItem{
-			Ok:       ok,
-			Filename: filename,
-			Error:    errStr,
-		}
+		return nil
 	}
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
-			if request.Method == "POST" && request.URL.Path == "/~/upload" {
-				reader, err := request.MultipartReader()
+			if request.Method == "POST" {
+				var result interface{}
+				var err error
+				isMatch := false
+				if request.URL.Path == "/~/uploadInit" {
+					isMatch = true
+					err = func() error {
+						decoder := json.NewDecoder(request.Body)
+						var payload UploadInitPayload
+						err = decoder.Decode(&payload)
+						if err != nil {
+							return err
+						}
 
-				rawPlace := request.URL.Query().Get("place")
+						rawPlace := payload.Place
+						rawFilename := payload.FileName
+						size := payload.Size
 
-				var results []UploadResultItem = make([]UploadResultItem, 0)
+						osUploadPath, err := GetFullPath(public, rawPlace)
+						if err != nil {
+							return errors.New("incorrect place")
+						}
 
-				for {
-					if err != nil {
-						break
+						filePath := NormalizePath(path.Join(rawPlace, rawFilename))
+
+						isWritable := config.IsWritable(filePath, false)
+						if !isWritable {
+							return errors.New("unable wite in this place")
+						}
+
+						var osFilePath string
+						osFilePath, err = GetFullPath(public, filePath)
+						if err != nil {
+							return err
+						}
+
+						_, err = os.Stat(osFilePath)
+						if err == nil {
+							return errors.New("File exists")
+						}
+
+						var tmpFile *os.File
+						tmpFile, err = os.CreateTemp(osUploadPath, "tmp")
+						if err != nil {
+							return errors.New("Create temp file error: " + err.Error())
+						}
+						defer tmpFile.Close()
+
+						// tmpFile.Truncate(size)
+
+						keyJson, err := buildKey(rawFilename, size, rawPlace, tmpFile)
+						if err != nil {
+							return err
+						}
+
+						result = UploadInit{
+							Key:       keyJson,
+							ChunkSize: chunkSize,
+						}
+						return nil
+					}()
+				} else if request.URL.Path == "/~/uploadChunk" {
+					isMatch = true
+					reader, err := request.MultipartReader()
+
+					var sigKey string
+					var rawPos string
+					var rawSize string
+
+					for {
+						if err != nil {
+							break
+						}
+
+						var part *multipart.Part
+						part, err = reader.NextPart()
+						if err == io.EOF {
+							err = nil
+							break
+						}
+						if err != nil {
+							break
+						}
+
+						formName := part.FormName()
+						switch formName {
+						case "key":
+							sigKey, err = readAsString(part)
+						case "pos":
+							rawPos, err = readAsString(part)
+						case "size":
+							rawSize, err = readAsString(part)
+						case "chunk":
+							err = saveChunk(sigKey, rawPos, rawSize, part)
+						}
 					}
+				} else if request.URL.Path == "/~/uploadFinish" {
+					isMatch = true
+					err = func() error {
+						decoder := json.NewDecoder(request.Body)
+						var payload UploadFinishPayload
+						err = decoder.Decode(&payload)
+						if err != nil {
+							return err
+						}
 
-					var part *multipart.Part
-					part, err = reader.NextPart()
-					if err == io.EOF {
-						err = nil
-						break
-					}
-					if err != nil {
-						break
-					}
+						key, err := readKey(payload.Key)
+						if err != nil {
+							return err
+						}
 
-					filename := part.FileName()
+						rawPlace := key.Place
+						rawTmpFileName := key.TmpFileName
+						rawFilename := key.FileName
 
-					saveErr := saveFile(rawPlace, filename, part)
-					results = append(results, getFileResult(filename, saveErr))
+						osTmpFilePath, err := GetFullPath(public, path.Join(rawPlace, rawTmpFileName))
+						if err != nil {
+							return err
+						}
+
+						osFilePath, err := GetFullPath(public, path.Join(rawPlace, rawFilename))
+						if err != nil {
+							return err
+						}
+
+						err = os.Rename(osTmpFilePath, osFilePath)
+						if err != nil {
+							return errors.New("Rename temp file error: " + err.Error())
+						}
+
+						return nil
+					}()
 				}
 
-				err = writeApiResult(writer, results, err)
-				if err != nil {
-					panic(err)
+				if isMatch {
+					err = writeApiResult(writer, result, err)
+					if err != nil {
+						panic(err)
+					}
+					return
 				}
-				return
 			}
 
 			next.ServeHTTP(writer, request)

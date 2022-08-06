@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/natefinch/atomic"
 )
@@ -22,6 +23,7 @@ type Config struct {
 	ShowHiddenFiles  bool
 	ExtHandle        map[string]string
 	WritablePatterns []string
+	Salt             string
 }
 
 var APP_ID = "com.rndnm.gohfs"
@@ -107,6 +109,9 @@ func LoadConfig() Config {
 		}
 		if config.ExtHandle == nil {
 			config.ExtHandle = make(map[string]string)
+		}
+		if len(config.Salt) == 0 {
+			config.Salt = strconv.FormatInt(time.Now().Unix(), 10)
 		}
 	}
 
