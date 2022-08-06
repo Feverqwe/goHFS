@@ -111,11 +111,7 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 
 		var payload Key
 		err = decoder.Decode(&payload)
-		if err != nil {
-			return nil, err
-		}
-
-		return &payload, nil
+		return &payload, err
 	}
 
 	readAsString := func(part *multipart.Part) (string, error) {
@@ -127,22 +123,16 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 		return buf.String(), nil
 	}
 
-	saveChunk := func(sigKey string, rawPos string, rawSize string, part *multipart.Part) (bool, error) {
-		key, err := readKey(sigKey)
-		if err != nil {
-			return false, err
+	readAsInt64 := func(part *multipart.Part) (int64, error) {
+		var num int64
+		str, err := readAsString(part)
+		if err == nil {
+			num, err = strconv.ParseInt(str, 10, 64)
 		}
+		return num, err
+	}
 
-		pos, err := strconv.ParseInt(rawPos, 10, 64)
-		if err != nil {
-			return false, err
-		}
-
-		size, err := strconv.ParseInt(rawSize, 10, 64)
-		if err != nil {
-			return false, err
-		}
-
+	saveChunk := func(key *Key, pos int64, size int64, part *multipart.Part) (bool, error) {
 		rawPlace := key.Place
 		rawTmpFileName := key.TmpFileName
 
@@ -157,7 +147,7 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 		}
 		defer tmpFile.Close()
 
-		_, err = tmpFile.Seek(pos, 0)
+		offset, err := tmpFile.Seek(pos, 0)
 		if err != nil {
 			return false, err
 		}
@@ -171,11 +161,11 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 			return false, errors.New("written_size_missmatch")
 		}
 
-		if pos+written > key.Size {
+		if offset+written > key.Size {
 			return false, errors.New("file_size_missmatch")
 		}
 
-		isFinish := pos+written == key.Size
+		isFinish := offset+written == key.Size
 
 		if isFinish {
 			tmpFile.Close()
@@ -243,15 +233,12 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 						tmpFile.Truncate(size)
 
 						keyJson, err := buildKey(rawFileName, size, rawPlace, tmpFile)
-						if err != nil {
-							return nil, err
-						}
 
 						result := UploadInit{
 							Key:       keyJson,
 							ChunkSize: chunkSize,
 						}
-						return &result, nil
+						return &result, err
 					})
 					return
 				} else if request.URL.Path == "/~/upload/chunk" {
@@ -259,9 +246,9 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 						var reader *multipart.Reader
 						reader, err := request.MultipartReader()
 
-						var sigKey string
-						var rawPos string
-						var rawSize string
+						var key *Key
+						var pos int64
+						var size int64
 						var result bool
 
 						for {
@@ -282,13 +269,17 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 							formName := part.FormName()
 							switch formName {
 							case "key":
+								var sigKey string
 								sigKey, err = readAsString(part)
+								if err == nil {
+									key, err = readKey(sigKey)
+								}
 							case "pos":
-								rawPos, err = readAsString(part)
+								pos, err = readAsInt64(part)
 							case "size":
-								rawSize, err = readAsString(part)
+								size, err = readAsInt64(part)
 							case "chunk":
-								result, err = saveChunk(sigKey, rawPos, rawSize, part)
+								result, err = saveChunk(key, pos, size, part)
 							}
 						}
 
