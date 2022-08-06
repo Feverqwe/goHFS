@@ -230,8 +230,6 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 						}
 						defer tmpFile.Close()
 
-						tmpFile.Truncate(size)
-
 						keyJson, err := buildKey(rawFileName, size, rawPlace, tmpFile)
 
 						result := UploadInit{
