@@ -1,5 +1,5 @@
 import * as React from "react";
-import {SyntheticEvent} from "react";
+import {SyntheticEvent, useCallback, useState} from "react";
 import {
   Box,
   Button,
@@ -18,6 +18,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MyDialog from "./MyDialog";
+import {ApiError, doReq, handleApiResponse} from "../../tools/apiRequest";
 
 const UploadBox = styled(Button)(({theme}) => {
   return {
@@ -42,13 +43,15 @@ const UploadBox = styled(Button)(({theme}) => {
   };
 });
 
+interface UploadFileResult {
+  ok: boolean,
+  filename: string,
+  error: string,
+}
+
 interface UploadResponse {
   error?: string,
-  result?: {
-    ok: boolean,
-    filename: string,
-    error: string,
-  }[],
+  result?: UploadFileResult[],
 }
 
 interface UploadDialogProps {
@@ -61,39 +64,91 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
   const [ok, setOk] = React.useState(false);
   const [report, setReport] = React.useState<Required<UploadResponse>["result"] | null>(null);
   const [error, setError] = React.useState<null | Error>(null);
+  const [progress, setProgress] = useState(0);
+  const [isRetry, setRetry] = useState(false);
 
-  const handleUpload = React.useCallback((files: FileList) => {
-    const data = new FormData();
+  const upload = useCallback(async (files: File[]) => {
+    const sumBytes = files.reduce((r, file) => r += file.size, 0);
+    let uploadedBytes = 0;
+    const updateProgress = (bytes: number) => {
+      uploadedBytes += bytes;
+      setProgress(100 / sumBytes * uploadedBytes);
+    };
+
+    const sendChunk = async (key: string, chunk: Blob, pos: number) => {
+      const data = new FormData();
+      data.append("key", key);
+      data.append("pos", String(pos));
+      data.append("size", String(chunk.size));
+      data.append("chunk", chunk);
+
+      await fetch('/~/uploadChunk', {
+        method: 'POST',
+        body: data,
+      }).then(handleApiResponse);
+
+      updateProgress(chunk.size);
+    };
+
+    const uploadFile = async (file: File) => {
+      const {key, chunkSize} = await doReq<{key: string, chunkSize: number}>('/~/uploadInit', {
+        fileName: file.name,
+        size: file.size,
+        place: dir,
+      });
+
+      const blob = new Blob([file]);
+      let pos = 0;
+      while (pos < blob.size) {
+        const chunk = blob.slice(pos, pos + chunkSize);
+
+        while (true) {
+          try {
+            await sendChunk(key, chunk, pos);
+
+            break;
+          } catch (error) {
+            const err = error as Error | ApiError;
+            if (['ApiError', 'HTTPError'].includes(err.name)) {
+              throw err;
+            }
+            setRetry(true);
+            await new Promise(r => setTimeout(r, 5 * 1000));
+          }
+        }
+        setRetry(false);
+
+        pos += chunkSize;
+      }
+
+      await doReq('/~/uploadFinish', {key});
+    };
+
+    const results: UploadFileResult[] = [];
+
     for (let i = 0, file; file = files[i]; i++) {
-      data.append('file', files[i])
+      let error = '';
+      try {
+        await uploadFile(file);
+      } catch (err) {
+        error = (err as Error).message;
+      }
+
+      results.push({
+        ok: !error,
+        filename: file.name,
+        error: error,
+      });
     }
 
-    setSubmit(true);
-    fetch('/~/upload?' + new URLSearchParams({
-      place: dir,
-    }).toString(), {
-      method: 'POST',
-      body: data,
-    }).then(async (response) => {
-      const body: null | UploadResponse = await response.json().catch(err => null);
-      if (!response.ok) {
-        console.error('Incorrect upload status: %s (%s)', response.status, response.statusText);
-        let error;
-        if (body && body.error) {
-          error = new Error(body.error);
-        } else {
-          error = new Error(`Response code ${response.status} (${response.statusText})`);
-        }
-        setError(error);
-        return;
-      }
+    return results;
+  }, [dir]);
 
-      if (!body || body.error) {
-        setError(new Error(!body ? 'Empty body' : body.error));
-      } else {
-        setOk(body.result!.every(file => file.ok));
-        setReport(body.result!);
-      }
+  const handleUpload = React.useCallback((files: File[]) => {
+    setSubmit(true);
+    upload(files).then((results) => {
+      setOk(results.every(file => file.ok));
+      setReport(results);
     }, (err) => {
       console.error('Upload error: %O', err);
       setError(err);
@@ -126,7 +181,7 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
         ) : error ? (
           <Input fullWidth={true} value={error.message} readOnly/>
         ) : (
-          <LinearProgress/>
+          <LinearProgress color={isRetry ? "warning" : "primary"} variant={"determinate"} value={progress}/>
         )}
       </DialogContent>
       {error || report ? (
@@ -139,7 +194,7 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
 });
 
 interface DropZoneProps {
-  onUpload: (files: FileList) => void;
+  onUpload: (files: File[]) => void;
 }
 
 const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
@@ -172,7 +227,7 @@ const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
       if (e.dataTransfer) {
         const files = e.dataTransfer.files;
         if (files.length) {
-          onUpload(files);
+          onUpload(Array.from(files));
         }
       }
     }
@@ -189,7 +244,7 @@ const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
     input.type = 'file';
     input.multiple = true;
     input.addEventListener('change', (e) => {
-      const files = input.files!;
+      const files = Array.from(input.files!);
       onUpload(files);
     });
     input.dispatchEvent(new MouseEvent('click'));

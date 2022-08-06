@@ -1,16 +1,37 @@
+export class ApiError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ApiError'
+  }
+}
+
+export class HTTPError extends Error {
+  constructor(private statusCode: number, private statusMessage: string) {
+    super(`Response code ${statusCode} (${statusMessage!})`);
+    this.name = 'HTTPError';
+  }
+}
+
 export function doReq<T>(url: string, data: string[] | Record<string, any>) {
   return fetch(url, {
     method: 'POST',
     body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error('Incorrect status code: ' + response.status + '(' + response.statusText + ')');
-    }
-    return response.json();
-  }).then((body: {error: string} | {result: T}) => {
-    if ('error' in body) {
-      throw new Error(body.error);
-    }
-    return body.result;
-  });
+  }).then(handleApiResponse<T>);
+}
+
+export async function handleApiResponse<T>(response: Response) {
+  const body: {error: string} | {result: T} | null = await response.json().catch((err) => null);
+
+  if (body !== null && ('error' in body)) {
+    throw new ApiError(body.error);
+  }
+
+  if (!response.ok) {
+    throw new HTTPError(response.status, response.statusText);
+  }
+
+  if (!body) {
+    throw new Error('Empty body');
+  }
+  return body.result;
 }
