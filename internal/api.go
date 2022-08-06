@@ -18,12 +18,6 @@ import (
 	"github.com/go-pkgz/rest"
 )
 
-type UploadResultItem struct {
-	Ok       bool   `json:"ok"`
-	Filename string `json:"filename"`
-	Error    string `json:"error"`
-}
-
 type JsonFailResponse struct {
 	Error string `json:"error"`
 }
