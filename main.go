@@ -86,81 +86,70 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 	public := config.Public
 	fileIndex := internal.GetFileIndex(config)
 
-	return func(next http.Handler) http.Handler {
-		fn := func(writer http.ResponseWriter, request *http.Request) {
-			if request.Method == "GET" || request.Method == "HEAD" {
-				urlPath := request.URL.Path
+	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+		if request.Method == "GET" || request.Method == "HEAD" {
+			urlPath := request.URL.Path
 
-				fullPath, err := internal.GetFullPath(public, urlPath)
-				if err != nil {
-					writer.WriteHeader(403)
-					return
-				}
-
-				file, stat, err := internal.OpenFile(fullPath)
-				if err != nil {
-					internal.HandleOpenFileError(err, writer)
-					return
-				}
-
-				if stat.IsDir() {
-					rest.Gzip("")(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-						content := []byte(fileIndex(urlPath, fullPath, file))
-						reader := bytes.NewReader(content)
-
-						http.ServeContent(writer, request, "index.html", time.Now(), reader)
-					})).ServeHTTP(writer, request)
-					return
-				}
+			fullPath, err := internal.GetFullPath(public, urlPath)
+			if err != nil {
+				writer.WriteHeader(403)
+				return
 			}
 
-			next.ServeHTTP(writer, request)
+			file, stat, err := internal.OpenFile(fullPath)
+			if err != nil {
+				internal.HandleOpenFileError(err, writer)
+				return
+			}
+
+			if stat.IsDir() {
+				rest.Gzip("")(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+					content := []byte(fileIndex(urlPath, fullPath, file))
+					reader := bytes.NewReader(content)
+
+					http.ServeContent(writer, request, "index.html", time.Now(), reader)
+				})).ServeHTTP(writer, request)
+				return
+			}
 		}
-		return http.HandlerFunc(fn)
-	}
+
+		next.ServeHTTP(writer, request)
+	})
 }
 
 func powerLock(powerControl *internal.PowerControl) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(writer http.ResponseWriter, request *http.Request) {
-			if powerControl != nil {
-				powerControl.Inc()
-				defer powerControl.Dec()
-			}
-			next.ServeHTTP(writer, request)
+	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+		if powerControl != nil {
+			powerControl.Inc()
+			defer powerControl.Dec()
 		}
-		return http.HandlerFunc(fn)
-	}
+		next.ServeHTTP(writer, request)
+	})
 }
 
 func handleIndex(config *internal.Config) func(http.Handler) http.Handler {
 	public := config.Public
 
-	return func(next http.Handler) http.Handler {
-		fn := func(writer http.ResponseWriter, request *http.Request) {
-			urlPath := request.URL.Path
-
-			if strings.HasSuffix(urlPath, "/index.html") {
-				fullPath, err := internal.GetFullPath(public, urlPath)
-				if err != nil {
-					writer.WriteHeader(403)
-					return
-				}
-
-				file, stat, err := internal.OpenFile(fullPath)
-				if err != nil {
-					internal.HandleOpenFileError(err, writer)
-					return
-				}
-
-				http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
+	return internal.GetHandler(func(writer http.ResponseWriter, request *http.Request, next http.Handler) {
+		switch true {
+		case strings.HasSuffix(request.URL.Path, "/index.html"):
+			fullPath, err := internal.GetFullPath(public, request.URL.Path)
+			if err != nil {
+				writer.WriteHeader(403)
 				return
 			}
 
+			file, stat, err := internal.OpenFile(fullPath)
+			if err != nil {
+				internal.HandleOpenFileError(err, writer)
+				return
+			}
+
+			http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
+		default:
 			next.ServeHTTP(writer, request)
 		}
-		return http.HandlerFunc(fn)
-	}
+	})
 }
 
 func fsServer(config *internal.Config) http.Handler {
