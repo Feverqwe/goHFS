@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NYTimes/gziphandler"
 	"github.com/go-pkgz/rest"
 )
 
@@ -105,7 +104,7 @@ func handleDir(config *internal.Config) func(http.Handler) http.Handler {
 				}
 
 				if stat.IsDir() {
-					gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+					rest.Gzip("")(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
 						content := []byte(fileIndex(urlPath, fullPath, file))
 						reader := bytes.NewReader(content)
 

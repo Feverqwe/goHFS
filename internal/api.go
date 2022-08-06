@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NYTimes/gziphandler"
 	"github.com/go-pkgz/rest"
 )
 
@@ -37,7 +36,7 @@ func HandleApi(config *Config, storage *Storage) func(http.Handler) http.Handler
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if strings.HasPrefix(request.URL.Path, "/~/") {
-				gziphandler.GzipHandler(rest.Wrap(
+				rest.Gzip("")(rest.Wrap(
 					handleFobidden(),
 					handleWww(),
 					handleUpload(config),
