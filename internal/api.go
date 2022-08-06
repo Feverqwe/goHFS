@@ -127,20 +127,20 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 		return buf.String(), nil
 	}
 
-	saveChunk := func(sigKey string, rawPos string, rawSize string, part *multipart.Part) error {
+	saveChunk := func(sigKey string, rawPos string, rawSize string, part *multipart.Part) (bool, error) {
 		key, err := readKey(sigKey)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		pos, err := strconv.ParseInt(rawPos, 10, 64)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		size, err := strconv.ParseInt(rawSize, 10, 64)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		rawPlace := key.Place
@@ -148,64 +148,64 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 
 		osTmpFilePath, err := GetFullPath(public, path.Join(rawPlace, rawTmpFileName))
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		tmpFile, err := os.OpenFile(osTmpFilePath, os.O_WRONLY, 0600)
 		if err != nil {
-			return err
+			return false, err
 		}
 		defer tmpFile.Close()
 
 		_, err = tmpFile.Seek(pos, 0)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		written, err := io.Copy(tmpFile, part)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if written != size {
-			return errors.New("written_size_missmatch")
+			return false, errors.New("written_size_missmatch")
 		}
 
 		if pos+written > key.Size {
-			return errors.New("file_size_missmatch")
+			return false, errors.New("file_size_missmatch")
 		}
 
-		if pos+written == key.Size {
+		isFinish := pos+written == key.Size
+
+		if isFinish {
 			tmpFile.Close()
 
 			rawFileName := key.FileName
 
 			osFilePath, err := GetFullPath(public, path.Join(rawPlace, rawFileName))
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			err = os.Rename(osTmpFilePath, osFilePath)
 			if err != nil {
-				return errors.New("Rename temp file error: " + err.Error())
+				return false, errors.New("Rename temp file error: " + err.Error())
 			}
 		}
 
-		return nil
+		return isFinish, nil
 	}
 
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" && strings.HasPrefix(request.URL.Path, "/~/upload/") {
-				var result interface{}
-				var err error
 				if request.URL.Path == "/~/upload/init" {
-					err = func() error {
+					apiCall(writer, func() (*UploadInit, error) {
 						decoder := json.NewDecoder(request.Body)
 						var payload UploadInitPayload
 						err := decoder.Decode(&payload)
 						if err != nil {
-							return err
+							return nil, err
 						}
 
 						rawPlace := payload.Place
@@ -214,29 +214,29 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 
 						osUploadPath, err := GetFullPath(public, rawPlace)
 						if err != nil {
-							return errors.New("incorrect place")
+							return nil, errors.New("incorrect place")
 						}
 
 						filePath := NormalizePath(path.Join(rawPlace, rawFileName))
 
 						isWritable := config.IsWritable(filePath, false)
 						if !isWritable {
-							return errors.New("unable wite in this place")
+							return nil, errors.New("unable wite in this place")
 						}
 
 						osFilePath, err := GetFullPath(public, filePath)
 						if err != nil {
-							return err
+							return nil, err
 						}
 
 						_, err = os.Stat(osFilePath)
 						if err == nil {
-							return errors.New("File exists")
+							return nil, errors.New("File exists")
 						}
 
 						tmpFile, err := os.CreateTemp(osUploadPath, "tmp")
 						if err != nil {
-							return errors.New("Create temp file error: " + err.Error())
+							return nil, errors.New("Create temp file error: " + err.Error())
 						}
 						defer tmpFile.Close()
 
@@ -244,57 +244,58 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 
 						keyJson, err := buildKey(rawFileName, size, rawPlace, tmpFile)
 						if err != nil {
-							return err
+							return nil, err
 						}
 
-						result = UploadInit{
+						result := UploadInit{
 							Key:       keyJson,
 							ChunkSize: chunkSize,
 						}
-						return nil
-					}()
+						return &result, nil
+					})
+					return
 				} else if request.URL.Path == "/~/upload/chunk" {
-					var reader *multipart.Reader
-					reader, err = request.MultipartReader()
+					apiCall(writer, func() (bool, error) {
+						var reader *multipart.Reader
+						reader, err := request.MultipartReader()
 
-					var sigKey string
-					var rawPos string
-					var rawSize string
+						var sigKey string
+						var rawPos string
+						var rawSize string
+						var result bool
 
-					for {
-						if err != nil {
-							break
+						for {
+							if err != nil {
+								break
+							}
+
+							var part *multipart.Part
+							part, err = reader.NextPart()
+							if err == io.EOF {
+								err = nil
+								break
+							}
+							if err != nil {
+								break
+							}
+
+							formName := part.FormName()
+							switch formName {
+							case "key":
+								sigKey, err = readAsString(part)
+							case "pos":
+								rawPos, err = readAsString(part)
+							case "size":
+								rawSize, err = readAsString(part)
+							case "chunk":
+								result, err = saveChunk(sigKey, rawPos, rawSize, part)
+							}
 						}
 
-						var part *multipart.Part
-						part, err = reader.NextPart()
-						if err == io.EOF {
-							err = nil
-							break
-						}
-						if err != nil {
-							break
-						}
-
-						formName := part.FormName()
-						switch formName {
-						case "key":
-							sigKey, err = readAsString(part)
-						case "pos":
-							rawPos, err = readAsString(part)
-						case "size":
-							rawSize, err = readAsString(part)
-						case "chunk":
-							err = saveChunk(sigKey, rawPos, rawSize, part)
-						}
-					}
+						return result, err
+					})
+					return
 				}
-
-				err = writeApiResult(writer, result, err)
-				if err != nil {
-					panic(err)
-				}
-				return
 			}
 
 			next.ServeHTTP(writer, request)
@@ -307,11 +308,10 @@ func handleInterfaces(config *Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "GET" && request.URL.Path == "/~/addresses" {
-				addresses := GetAddresses(config.Port)
-				err := writeApiResult(writer, addresses, nil)
-				if err != nil {
-					panic(err)
-				}
+				apiCall(writer, func() ([]string, error) {
+					addresses := GetAddresses(config.Port)
+					return addresses, nil
+				})
 				return
 			}
 
@@ -325,36 +325,39 @@ func handleStorage(storage *Storage) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" && strings.HasPrefix(request.URL.Path, "/~/storage/") {
-				var err error
-				var result interface{}
 				decoder := json.NewDecoder(request.Body)
 
 				if request.URL.Path == "/~/storage/get" {
-					var keys []string
-					err = decoder.Decode(&keys)
-					if err == nil {
-						result = storage.GetKeys(keys)
-					}
+					apiCall(writer, func() (map[string]interface{}, error) {
+						var keys []string
+						err := decoder.Decode(&keys)
+						if err != nil {
+							return nil, err
+						}
+						result := storage.GetKeys(keys)
+						return result, nil
+					})
 					return
 				} else if request.URL.Path == "/~/storage/set" {
-					var keyValue map[string]interface{}
-					err = decoder.Decode(&keyValue)
-					if err == nil {
-						err = storage.SetObject(keyValue)
-					}
-					result = "ok"
+					apiCall(writer, func() (string, error) {
+						var keyValue map[string]interface{}
+						err := decoder.Decode(&keyValue)
+						if err == nil {
+							err = storage.SetObject(keyValue)
+						}
+						return "ok", err
+					})
+					return
 				} else if request.URL.Path == "/~/storage/del" {
-					var keys []string
-					err = decoder.Decode(&keys)
-					if err == nil {
-						err = storage.DelKeys(keys)
-					}
-					result = "ok"
-				}
-
-				err = writeApiResult(writer, result, err)
-				if err != nil {
-					panic(err)
+					apiCall(writer, func() (string, error) {
+						var keys []string
+						err := decoder.Decode(&keys)
+						if err == nil {
+							err = storage.DelKeys(keys)
+						}
+						return "ok", err
+					})
+					return
 				}
 			}
 
@@ -382,78 +385,72 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
 			if request.Method == "POST" {
-				var isMatch = false
-				var err error
-				var result interface{}
-				decoder := json.NewDecoder(request.Body)
 				if request.URL.Path == "/~/rename" {
-					isMatch = true
+					apiCall(writer, func() (string, error) {
+						decoder := json.NewDecoder(request.Body)
+						var payload RenamePayload
+						err := decoder.Decode(&payload)
 
-					var payload RenamePayload
-					err = decoder.Decode(&payload)
-
-					var rTargetPath string
-					var rNewPath string
-					var rawPlace = payload.Place
-					var targetPath string
-					var newPath string
-					if err == nil {
-						rawName := payload.Name
-						rawNewName := payload.NewName
-						rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
-						rNewPath = NormalizePath(path.Join(rawPlace, rawNewName))
-
-						targetPath, err = GetFullPath(public, rTargetPath)
+						var rTargetPath string
+						var rNewPath string
+						var rawPlace = payload.Place
+						var targetPath string
+						var newPath string
 						if err == nil {
-							newPath, err = GetFullPath(public, rNewPath)
-						}
-					}
+							rawName := payload.Name
+							rawNewName := payload.NewName
+							rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
+							rNewPath = NormalizePath(path.Join(rawPlace, rawNewName))
 
-					if err == nil {
-						isWritableSource := config.IsWritable(rTargetPath, false)
-						isWritableTarget := config.IsWritable(rNewPath, false)
-						if isWritableSource && isWritableTarget {
-							err = os.Rename(targetPath, newPath)
-						} else {
-							err = errors.New("place is not writable")
-						}
-					}
-					result = "ok"
-				} else if request.URL.Path == "/~/remove" {
-					isMatch = true
-
-					var payload RemovePayload
-					err = decoder.Decode(&payload)
-
-					var rTargetPath string
-					var targetPath string
-					if err == nil {
-						rawPlace := payload.Place
-						rawName := payload.Name
-						rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
-						targetPath, err = GetFullPath(public, rTargetPath)
-					}
-
-					if err == nil {
-						isDir := payload.IsDir
-						isWritable := config.IsWritable(rTargetPath, false)
-						if isWritable {
-							if isDir {
-								err = os.RemoveAll(targetPath)
-							} else {
-								err = os.Remove(targetPath)
+							targetPath, err = GetFullPath(public, rTargetPath)
+							if err == nil {
+								newPath, err = GetFullPath(public, rNewPath)
 							}
-						} else {
-							err = errors.New("place is not writable")
 						}
-					}
-					result = "ok"
-				}
-				if isMatch {
-					err = writeApiResult(writer, result, err)
-					if err != nil {
-						panic(err)
-					}
+
+						if err == nil {
+							isWritableSource := config.IsWritable(rTargetPath, false)
+							isWritableTarget := config.IsWritable(rNewPath, false)
+							if isWritableSource && isWritableTarget {
+								err = os.Rename(targetPath, newPath)
+							} else {
+								err = errors.New("place is not writable")
+							}
+						}
+
+						return "ok", err
+					})
+					return
+				} else if request.URL.Path == "/~/remove" {
+					apiCall(writer, func() (string, error) {
+						decoder := json.NewDecoder(request.Body)
+						var payload RemovePayload
+						err := decoder.Decode(&payload)
+
+						var rTargetPath string
+						var targetPath string
+						if err == nil {
+							rawPlace := payload.Place
+							rawName := payload.Name
+							rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
+							targetPath, err = GetFullPath(public, rTargetPath)
+						}
+
+						if err == nil {
+							isDir := payload.IsDir
+							isWritable := config.IsWritable(rTargetPath, false)
+							if isWritable {
+								if isDir {
+									err = os.RemoveAll(targetPath)
+								} else {
+									err = os.Remove(targetPath)
+								}
+							} else {
+								err = errors.New("place is not writable")
+							}
+						}
+						return "ok", err
+					})
 					return
 				}
 			}
@@ -492,6 +489,16 @@ func handleWww() func(http.Handler) http.Handler {
 			next.ServeHTTP(writer, request)
 		}
 		return http.HandlerFunc(fn)
+	}
+}
+
+type ActionAny[T any] func() (T, error)
+
+func apiCall[T any](writer http.ResponseWriter, action ActionAny[T]) {
+	result, err := action()
+	err = writeApiResult(writer, result, err)
+	if err != nil {
+		panic(err)
 	}
 }
 
