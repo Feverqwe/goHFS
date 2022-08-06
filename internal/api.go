@@ -390,33 +390,33 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 						decoder := json.NewDecoder(request.Body)
 						var payload RenamePayload
 						err := decoder.Decode(&payload)
-
-						var rTargetPath string
-						var rNewPath string
-						var rawPlace = payload.Place
-						var targetPath string
-						var newPath string
-						if err == nil {
-							rawName := payload.Name
-							rawNewName := payload.NewName
-							rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
-							rNewPath = NormalizePath(path.Join(rawPlace, rawNewName))
-
-							targetPath, err = GetFullPath(public, rTargetPath)
-							if err == nil {
-								newPath, err = GetFullPath(public, rNewPath)
-							}
+						if err != nil {
+							return "", err
 						}
 
-						if err == nil {
-							isWritableSource := config.IsWritable(rTargetPath, false)
-							isWritableTarget := config.IsWritable(rNewPath, false)
-							if isWritableSource && isWritableTarget {
-								err = os.Rename(targetPath, newPath)
-							} else {
-								err = errors.New("place is not writable")
-							}
+						rawPlace := payload.Place
+						rawName := payload.Name
+						rawNewName := payload.NewName
+						rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
+						rNewPath := NormalizePath(path.Join(rawPlace, rawNewName))
+
+						targetPath, err := GetFullPath(public, rTargetPath)
+						if err != nil {
+							return "", err
 						}
+
+						newPath, err := GetFullPath(public, rNewPath)
+						if err != nil {
+							return "", err
+						}
+
+						isWritableSource := config.IsWritable(rTargetPath, false)
+						isWritableTarget := config.IsWritable(rNewPath, false)
+						if !isWritableSource || !isWritableTarget {
+							return "", errors.New("place is not writable")
+						}
+
+						err = os.Rename(targetPath, newPath)
 
 						return "ok", err
 					})
@@ -426,29 +426,30 @@ func handleAction(config *Config) func(http.Handler) http.Handler {
 						decoder := json.NewDecoder(request.Body)
 						var payload RemovePayload
 						err := decoder.Decode(&payload)
-
-						var rTargetPath string
-						var targetPath string
-						if err == nil {
-							rawPlace := payload.Place
-							rawName := payload.Name
-							rTargetPath = NormalizePath(path.Join(rawPlace, rawName))
-							targetPath, err = GetFullPath(public, rTargetPath)
+						if err != nil {
+							return "", err
 						}
 
-						if err == nil {
-							isDir := payload.IsDir
-							isWritable := config.IsWritable(rTargetPath, false)
-							if isWritable {
-								if isDir {
-									err = os.RemoveAll(targetPath)
-								} else {
-									err = os.Remove(targetPath)
-								}
-							} else {
-								err = errors.New("place is not writable")
-							}
+						rawPlace := payload.Place
+						rawName := payload.Name
+						rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
+						targetPath, err := GetFullPath(public, rTargetPath)
+						if err != nil {
+							return "", err
 						}
+
+						isWritable := config.IsWritable(rTargetPath, false)
+						if !isWritable {
+							return "", errors.New("place is not writable")
+						}
+
+						isDir := payload.IsDir
+						if isDir {
+							err = os.RemoveAll(targetPath)
+						} else {
+							err = os.Remove(targetPath)
+						}
+
 						return "ok", err
 					})
 					return
