@@ -82,7 +82,7 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
       data.append("size", String(chunk.size));
       data.append("chunk", chunk);
 
-      await fetch('/~/uploadChunk', {
+      await fetch('/~/upload/chunk', {
         method: 'POST',
         body: data,
       }).then(handleApiResponse);
@@ -91,7 +91,7 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
     };
 
     const uploadFile = async (file: File) => {
-      const {key, chunkSize} = await doReq<{key: string, chunkSize: number}>('/~/uploadInit', {
+      const {key, chunkSize} = await doReq<{key: string, chunkSize: number}>('/~/upload/init', {
         fileName: file.name,
         size: file.size,
         place: dir,
@@ -120,8 +120,6 @@ const UploadDialog = React.memo(({dir, onClose}: UploadDialogProps) => {
 
         pos += chunkSize;
       }
-
-      await doReq('/~/uploadFinish', {key});
     };
 
     const results: UploadFileResult[] = [];
