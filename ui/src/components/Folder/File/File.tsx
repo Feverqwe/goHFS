@@ -44,7 +44,7 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
   const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
   const handleUrl = useMemo(() => {
-    const ext = Path.extname(name);
+    const ext = Path.extname(name).toLowerCase();
     return store.extHandle[ext];
   }, [store, name]);
 
