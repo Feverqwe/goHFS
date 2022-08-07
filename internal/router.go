@@ -50,19 +50,18 @@ func (s *Router) All(path string, handlers ...RouteHandler) {
 }
 
 func (s *Router) Custom(methods []string, paths []string, handlers ...RouteHandler) {
+	if len(methods) == 0 {
+		methods = append(methods, "")
+	}
+
+	if len(paths) == 0 {
+		paths = append(paths, "")
+	}
+
 	for _, handler := range handlers {
-		if len(methods) == 0 {
-			methods = append(methods, "")
-		}
-
-		if len(paths) == 0 {
-			paths = append(paths, "")
-		}
-
 		for _, method := range methods {
-			method, methodType := getMethodType(method)
-
 			for _, path := range paths {
+				method, methodType := getMethodType(method)
 				path, pathType := getPathType(path)
 
 				route := Route{
