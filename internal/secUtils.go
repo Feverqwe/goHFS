@@ -26,7 +26,7 @@ func GetFullPath(public string, path string) (string, error) {
 	return filepath.Join(dir, filepath.FromSlash(NormalizePath(path))), nil
 }
 
-func SigDate(data string, salt string) string {
+func SigData(data string, salt string) string {
 	time := strconv.FormatInt(time.Now().Unix(), 10)
 
 	hash := getSha256Hash(data, salt, time)

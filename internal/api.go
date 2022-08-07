@@ -88,7 +88,7 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 		}
 		keyJson := string(keyJsonByte)
 
-		return SigDate(keyJson, salt), nil
+		return SigData(keyJson, salt), nil
 	}
 
 	readKey := func(sigKey string) (*Key, error) {
