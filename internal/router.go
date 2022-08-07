@@ -49,6 +49,10 @@ func (s *Router) All(path string, handlers ...RouteHandler) {
 	s.Custom([]string{}, []string{path}, handlers...)
 }
 
+func (s *Router) Use(handlers ...RouteHandler) {
+	s.Custom([]string{}, []string{}, handlers...)
+}
+
 func (s *Router) Custom(methods []string, paths []string, handlers ...RouteHandler) {
 	if len(methods) == 0 {
 		methods = append(methods, "")

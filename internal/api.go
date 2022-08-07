@@ -54,7 +54,7 @@ func HandleApi(router *Router, config *Config, storage *Storage) {
 }
 
 func handleFobidden(router *Router) {
-	router.All("", func(w http.ResponseWriter, r *http.Request, n RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request, n RouteNextFn) {
 		w.WriteHeader(403)
 	})
 }

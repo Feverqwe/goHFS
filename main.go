@@ -115,7 +115,7 @@ func handleDir(router *internal.Router, config *internal.Config) {
 }
 
 func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
-	router.All("", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
 		if powerControl != nil {
 			powerControl.Inc()
 			defer powerControl.Dec()
@@ -145,7 +145,7 @@ func handleIndex(router *internal.Router, config *internal.Config) {
 }
 
 func fsServer(router *internal.Router, config *internal.Config) {
-	router.All("", func(w http.ResponseWriter, r *http.Request, n internal.RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request, n internal.RouteNextFn) {
 		http.FileServer(http.Dir(config.Public)).ServeHTTP(w, r)
 	})
 }
