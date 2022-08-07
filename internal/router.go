@@ -58,9 +58,9 @@ func (s *Router) Custom(methods []string, paths []string, handlers ...RouteHandl
 		paths = append(paths, "")
 	}
 
-	for _, handler := range handlers {
-		for _, method := range methods {
-			for _, path := range paths {
+	for _, method := range methods {
+		for _, path := range paths {
+			for _, handler := range handlers {
 				method, methodType := getMethodType(method)
 				path, pathType := getPathType(path)
 
@@ -74,7 +74,6 @@ func (s *Router) Custom(methods []string, paths []string, handlers ...RouteHandl
 				s.routes = append(s.routes, route)
 			}
 		}
-
 	}
 }
 
