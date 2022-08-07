@@ -15,8 +15,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-pkgz/rest"
+	"github.com/NYTimes/gziphandler"
 )
+
+type RemovePayload struct {
+	Place string `json:"place"`
+	Name  string `json:"name"`
+	IsDir bool   `json:"isDir"`
+}
+
+type RenamePayload struct {
+	Place   string `json:"place"`
+	Name    string `json:"name"`
+	NewName string `json:"newName"`
+}
 
 type JsonFailResponse struct {
 	Error string `json:"error"`
@@ -26,31 +38,28 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(config *Config, storage *Storage) func(http.Handler) http.Handler {
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
-		switch true {
-		case strings.HasPrefix(request.URL.Path, "/~/"):
-			rest.Gzip("")(rest.Wrap(
-				handleFobidden(),
-				handleWww(),
-				handleUpload(config),
-				handleStorage(storage),
-				handleInterfaces(config),
-				handleAction(config),
-			)).ServeHTTP(writer, request)
-		default:
-			next()
-		}
+func HandleApi(router *Router, config *Config, storage *Storage) {
+	apiRouter := &Router{}
+
+	handleUpload(apiRouter, config)
+	handleWww(apiRouter)
+	handleStorage(apiRouter, storage)
+	handleAction(apiRouter, config)
+	handleInterfaces(apiRouter, config)
+	handleFobidden(apiRouter)
+
+	router.All("^/~/", func(w http.ResponseWriter, r *http.Request, n RouteNextFn) {
+		gziphandler.GzipHandler(apiRouter).ServeHTTP(w, r)
 	})
 }
 
-func handleFobidden() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func handleFobidden(router *Router) {
+	router.All("", func(w http.ResponseWriter, r *http.Request, n RouteNextFn) {
 		w.WriteHeader(403)
 	})
 }
 
-func handleUpload(config *Config) func(http.Handler) http.Handler {
+func handleUpload(router *Router, config *Config) {
 	public := config.Public
 	salt := config.Salt
 
@@ -176,251 +185,227 @@ func handleUpload(config *Config) func(http.Handler) http.Handler {
 		return isFinish, nil
 	}
 
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
-		switch true {
-		case isMatch(request, "POST", "/~/upload/init"):
-			apiCall(writer, func() (*UploadInit, error) {
-				decoder := json.NewDecoder(request.Body)
-				var payload UploadInitPayload
-				err := decoder.Decode(&payload)
+	router.Post("/~/upload/init", func(writer http.ResponseWriter, request *http.Request, n RouteNextFn) {
+		apiCall(writer, func() (*UploadInit, error) {
+			decoder := json.NewDecoder(request.Body)
+			var payload UploadInitPayload
+			err := decoder.Decode(&payload)
+			if err != nil {
+				return nil, err
+			}
+
+			rawPlace := payload.Place
+			rawFileName := payload.FileName
+			size := payload.Size
+
+			osUploadPath, err := GetFullPath(public, rawPlace)
+			if err != nil {
+				return nil, errors.New("incorrect place")
+			}
+
+			filePath := NormalizePath(path.Join(rawPlace, rawFileName))
+
+			isWritable := config.IsWritable(filePath, false)
+			if !isWritable {
+				return nil, errors.New("unable wite in this place")
+			}
+
+			osFilePath, err := GetFullPath(public, filePath)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = os.Stat(osFilePath)
+			if err == nil {
+				return nil, errors.New("File exists")
+			}
+
+			tmpFile, err := os.CreateTemp(osUploadPath, "tmp")
+			if err != nil {
+				return nil, errors.New("Create temp file error: " + err.Error())
+			}
+			defer tmpFile.Close()
+
+			keyJson, err := buildKey(rawFileName, size, rawPlace, tmpFile)
+
+			result := UploadInit{
+				Key:       keyJson,
+				ChunkSize: chunkSize,
+			}
+			return &result, err
+		})
+	})
+
+	router.Post("/~/upload/chunk", func(writer http.ResponseWriter, request *http.Request, n RouteNextFn) {
+		apiCall(writer, func() (bool, error) {
+			var reader *multipart.Reader
+			reader, err := request.MultipartReader()
+
+			var key *Key
+			var pos int64
+			var size int64
+			var result bool
+
+			for {
 				if err != nil {
-					return nil, err
+					break
 				}
 
-				rawPlace := payload.Place
-				rawFileName := payload.FileName
-				size := payload.Size
-
-				osUploadPath, err := GetFullPath(public, rawPlace)
+				var part *multipart.Part
+				part, err = reader.NextPart()
+				if err == io.EOF {
+					err = nil
+					break
+				}
 				if err != nil {
-					return nil, errors.New("incorrect place")
+					break
 				}
 
-				filePath := NormalizePath(path.Join(rawPlace, rawFileName))
-
-				isWritable := config.IsWritable(filePath, false)
-				if !isWritable {
-					return nil, errors.New("unable wite in this place")
-				}
-
-				osFilePath, err := GetFullPath(public, filePath)
-				if err != nil {
-					return nil, err
-				}
-
-				_, err = os.Stat(osFilePath)
-				if err == nil {
-					return nil, errors.New("File exists")
-				}
-
-				tmpFile, err := os.CreateTemp(osUploadPath, "tmp")
-				if err != nil {
-					return nil, errors.New("Create temp file error: " + err.Error())
-				}
-				defer tmpFile.Close()
-
-				keyJson, err := buildKey(rawFileName, size, rawPlace, tmpFile)
-
-				result := UploadInit{
-					Key:       keyJson,
-					ChunkSize: chunkSize,
-				}
-				return &result, err
-			})
-		case isMatch(request, "POST", "/~/upload/chunk"):
-			apiCall(writer, func() (bool, error) {
-				var reader *multipart.Reader
-				reader, err := request.MultipartReader()
-
-				var key *Key
-				var pos int64
-				var size int64
-				var result bool
-
-				for {
-					if err != nil {
-						break
+				formName := part.FormName()
+				switch formName {
+				case "key":
+					var sigKey string
+					sigKey, err = readAsString(part)
+					if err == nil {
+						key, err = readKey(sigKey)
 					}
-
-					var part *multipart.Part
-					part, err = reader.NextPart()
-					if err == io.EOF {
-						err = nil
-						break
-					}
-					if err != nil {
-						break
-					}
-
-					formName := part.FormName()
-					switch formName {
-					case "key":
-						var sigKey string
-						sigKey, err = readAsString(part)
-						if err == nil {
-							key, err = readKey(sigKey)
-						}
-					case "pos":
-						pos, err = readAsInt64(part)
-					case "size":
-						size, err = readAsInt64(part)
-					case "chunk":
-						result, err = saveChunk(key, pos, size, part)
-					}
+				case "pos":
+					pos, err = readAsInt64(part)
+				case "size":
+					size, err = readAsInt64(part)
+				case "chunk":
+					result, err = saveChunk(key, pos, size, part)
 				}
+			}
 
-				return result, err
-			})
-		default:
-			next()
-		}
+			return result, err
+		})
 	})
 }
 
-func handleInterfaces(config *Config) func(http.Handler) http.Handler {
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
-		switch true {
-		case isMatch(request, "GET", "/~/addresses"):
-			apiCall(writer, func() ([]string, error) {
-				addresses := GetAddresses(config.Port)
-				return addresses, nil
-			})
-		default:
-			next()
-		}
+func handleInterfaces(router *Router, config *Config) {
+	router.Get("/~/addresses", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		apiCall(writer, func() ([]string, error) {
+			addresses := GetAddresses(config.Port)
+			return addresses, nil
+		})
 	})
 }
 
-func handleStorage(storage *Storage) func(http.Handler) http.Handler {
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
-		switch true {
-		case isMatch(request, "POST", "/~/storage/get"):
-			apiCall(writer, func() (map[string]interface{}, error) {
-				decoder := json.NewDecoder(request.Body)
-				var keys []string
-				err := decoder.Decode(&keys)
-				if err != nil {
-					return nil, err
-				}
-				result := storage.GetKeys(keys)
-				return result, nil
-			})
-		case isMatch(request, "POST", "/~/storage/set"):
-			apiCall(writer, func() (string, error) {
-				decoder := json.NewDecoder(request.Body)
-				var keyValue map[string]interface{}
-				err := decoder.Decode(&keyValue)
-				if err == nil {
-					err = storage.SetObject(keyValue)
-				}
-				return "ok", err
-			})
-		case isMatch(request, "POST", "/~/storage/del"):
-			apiCall(writer, func() (string, error) {
-				decoder := json.NewDecoder(request.Body)
-				var keys []string
-				err := decoder.Decode(&keys)
-				if err == nil {
-					err = storage.DelKeys(keys)
-				}
-				return "ok", err
-			})
-		default:
-			next()
-		}
+func handleStorage(router *Router, storage *Storage) {
+	router.Post("/~/storage/get", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		apiCall(writer, func() (map[string]interface{}, error) {
+			decoder := json.NewDecoder(request.Body)
+			var keys []string
+			err := decoder.Decode(&keys)
+			if err != nil {
+				return nil, err
+			}
+			result := storage.GetKeys(keys)
+			return result, nil
+		})
+	})
+
+	router.Post("/~/storage/set", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		apiCall(writer, func() (string, error) {
+			decoder := json.NewDecoder(request.Body)
+			var keyValue map[string]interface{}
+			err := decoder.Decode(&keyValue)
+			if err == nil {
+				err = storage.SetObject(keyValue)
+			}
+			return "ok", err
+		})
+	})
+
+	router.Post("/~/storage/del", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		apiCall(writer, func() (string, error) {
+			decoder := json.NewDecoder(request.Body)
+			var keys []string
+			err := decoder.Decode(&keys)
+			if err == nil {
+				err = storage.DelKeys(keys)
+			}
+			return "ok", err
+		})
 	})
 }
 
-func handleAction(config *Config) func(http.Handler) http.Handler {
+func handleAction(router *Router, config *Config) {
 	public := config.Public
 
-	type RemovePayload struct {
-		Place string `json:"place"`
-		Name  string `json:"name"`
-		IsDir bool   `json:"isDir"`
-	}
+	router.Post("/~/rename", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		apiCall(writer, func() (string, error) {
+			decoder := json.NewDecoder(request.Body)
+			var payload RenamePayload
+			err := decoder.Decode(&payload)
+			if err != nil {
+				return "", err
+			}
 
-	type RenamePayload struct {
-		Place   string `json:"place"`
-		Name    string `json:"name"`
-		NewName string `json:"newName"`
-	}
+			rawPlace := payload.Place
+			rawName := payload.Name
+			rawNewName := payload.NewName
+			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
+			rNewPath := NormalizePath(path.Join(rawPlace, rawNewName))
 
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
-		switch true {
-		case isMatch(request, "POST", "/~/rename"):
-			apiCall(writer, func() (string, error) {
-				decoder := json.NewDecoder(request.Body)
-				var payload RenamePayload
-				err := decoder.Decode(&payload)
-				if err != nil {
-					return "", err
-				}
+			targetPath, err := GetFullPath(public, rTargetPath)
+			if err != nil {
+				return "", err
+			}
 
-				rawPlace := payload.Place
-				rawName := payload.Name
-				rawNewName := payload.NewName
-				rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-				rNewPath := NormalizePath(path.Join(rawPlace, rawNewName))
+			newPath, err := GetFullPath(public, rNewPath)
+			if err != nil {
+				return "", err
+			}
 
-				targetPath, err := GetFullPath(public, rTargetPath)
-				if err != nil {
-					return "", err
-				}
+			isWritableSource := config.IsWritable(rTargetPath, false)
+			isWritableTarget := config.IsWritable(rNewPath, false)
+			if !isWritableSource || !isWritableTarget {
+				return "", errors.New("place is not writable")
+			}
 
-				newPath, err := GetFullPath(public, rNewPath)
-				if err != nil {
-					return "", err
-				}
+			err = os.Rename(targetPath, newPath)
 
-				isWritableSource := config.IsWritable(rTargetPath, false)
-				isWritableTarget := config.IsWritable(rNewPath, false)
-				if !isWritableSource || !isWritableTarget {
-					return "", errors.New("place is not writable")
-				}
+			return "ok", err
+		})
+	})
 
-				err = os.Rename(targetPath, newPath)
+	router.Post("/~/remove", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		apiCall(writer, func() (string, error) {
+			decoder := json.NewDecoder(request.Body)
+			var payload RemovePayload
+			err := decoder.Decode(&payload)
+			if err != nil {
+				return "", err
+			}
 
-				return "ok", err
-			})
-		case isMatch(request, "POST", "/~/remove"):
-			apiCall(writer, func() (string, error) {
-				decoder := json.NewDecoder(request.Body)
-				var payload RemovePayload
-				err := decoder.Decode(&payload)
-				if err != nil {
-					return "", err
-				}
+			rawPlace := payload.Place
+			rawName := payload.Name
+			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
+			targetPath, err := GetFullPath(public, rTargetPath)
+			if err != nil {
+				return "", err
+			}
 
-				rawPlace := payload.Place
-				rawName := payload.Name
-				rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-				targetPath, err := GetFullPath(public, rTargetPath)
-				if err != nil {
-					return "", err
-				}
+			isWritable := config.IsWritable(rTargetPath, false)
+			if !isWritable {
+				return "", errors.New("place is not writable")
+			}
 
-				isWritable := config.IsWritable(rTargetPath, false)
-				if !isWritable {
-					return "", errors.New("place is not writable")
-				}
+			isDir := payload.IsDir
+			if isDir {
+				err = os.RemoveAll(targetPath)
+			} else {
+				err = os.Remove(targetPath)
+			}
 
-				isDir := payload.IsDir
-				if isDir {
-					err = os.RemoveAll(targetPath)
-				} else {
-					err = os.Remove(targetPath)
-				}
-
-				return "ok", err
-			})
-		default:
-			next()
-		}
+			return "ok", err
+		})
 	})
 }
 
-func handleWww() func(http.Handler) http.Handler {
+func handleWww(router *Router) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
@@ -428,23 +413,18 @@ func handleWww() func(http.Handler) http.Handler {
 		}
 	}
 
-	return GetHandler(func(writer http.ResponseWriter, request *http.Request, next NextFn) {
-		switch true {
-		case (request.Method == "GET" || request.Method == "HEAD") && strings.HasPrefix(request.URL.Path, "/~/www/"):
-			assetPath := request.URL.Path[3:]
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
+		assetPath := request.URL.Path[3:]
 
-			content, err := assets.Asset(assetPath)
-			if err != nil {
-				writer.WriteHeader(404)
-				return
-			}
-
-			reader := bytes.NewReader(content)
-			name := path.Base(assetPath)
-			http.ServeContent(writer, request, name, binTime, reader)
-		default:
-			next()
+		content, err := assets.Asset(assetPath)
+		if err != nil {
+			writer.WriteHeader(404)
+			return
 		}
+
+		reader := bytes.NewReader(content)
+		name := path.Base(assetPath)
+		http.ServeContent(writer, request, name, binTime, reader)
 	})
 }
 
@@ -479,22 +459,4 @@ func writeApiResult(writer http.ResponseWriter, result interface{}, err error) e
 		_, err = writer.Write(json)
 	}
 	return err
-}
-
-type NextFn func()
-
-type HandlerWithNext func(writer http.ResponseWriter, request *http.Request, next NextFn)
-
-func GetHandler(handler HandlerWithNext) func(next http.Handler) http.Handler {
-	return func(n http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handler(w, r, func() {
-				n.ServeHTTP(w, r)
-			})
-		})
-	}
-}
-
-func isMatch(request *http.Request, method string, route string) bool {
-	return request.Method == method && request.URL.Path == route
 }
