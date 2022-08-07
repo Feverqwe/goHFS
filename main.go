@@ -101,7 +101,7 @@ func handleDir(router *internal.Router, config *internal.Config) {
 		}
 
 		if stat.IsDir() {
-			gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+			gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 				content := []byte(fileIndex(urlPath, fullPath, file))
 				reader := bytes.NewReader(content)
 
