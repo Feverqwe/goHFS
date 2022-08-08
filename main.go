@@ -1,12 +1,13 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"flag"
 	"fmt"
 	"goHfs/internal"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -85,28 +86,37 @@ func handleDir(router *internal.Router, config *internal.Config) {
 	public := config.Public
 	fileIndex := internal.GetFileIndex(config)
 
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(writer http.ResponseWriter, request *http.Request, next internal.RouteNextFn) {
-		urlPath := request.URL.Path
+	type contextType string
+	const contentKey contextType = "content"
+
+	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+		content := r.Context().Value(contentKey).(string)
+		reader := strings.NewReader(content)
+
+		http.ServeContent(writer, r, "index.html", time.Now(), reader)
+	}))
+
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+		urlPath := r.URL.Path
 
 		fullPath, err := internal.GetFullPath(public, urlPath)
 		if err != nil {
-			writer.WriteHeader(403)
+			w.WriteHeader(403)
 			return
 		}
 
 		file, stat, err := internal.OpenFile(fullPath)
 		if err != nil {
-			internal.HandleOpenFileError(err, writer)
+			internal.HandleOpenFileError(err, w)
 			return
 		}
 
 		if stat.IsDir() {
-			gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-				content := []byte(fileIndex(urlPath, fullPath, file))
-				reader := bytes.NewReader(content)
+			content := fileIndex(urlPath, fullPath, file)
+			ctx := context.WithValue(r.Context(), contentKey, content)
+			r := r.WithContext(ctx)
 
-				http.ServeContent(writer, request, "index.html", time.Now(), reader)
-			})).ServeHTTP(writer, request)
+			gzipHandler.ServeHTTP(w, r)
 			return
 		}
 

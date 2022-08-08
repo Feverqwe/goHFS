@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"net/http"
 	"strings"
 )
@@ -8,6 +9,10 @@ import (
 type RouteNextFn func()
 
 type RouteHandler func(w http.ResponseWriter, r *http.Request, next RouteNextFn)
+
+type contextType string
+
+const nextFnKey contextType = "nextFn"
 
 const (
 	IsPath       = 1
@@ -56,7 +61,7 @@ func (s *Router) Use(handlers ...RouteHandler) {
 func (s *Router) Route(path string) *Router {
 	router := NewRouter()
 	s.All(path, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		router.ServeHTTPWithNext(w, r, next)
+		router.ServeHTTP(w, r)
 	})
 	return router
 }
@@ -112,32 +117,32 @@ func getPathType(path string) (string, int) {
 	return routePath, pathType
 }
 
-func (s *Router) ServeHTTPWithNext(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	next := r.Context().Value(nextFnKey)
 	index := 0
 	var n func()
+	var rc *http.Request
 	n = func() {
-		if len(s.routes) < index {
+		if index >= len(s.routes) {
 			if next != nil {
-				next()
+				next.(func())()
 			}
 			return
 		}
 
 		route := s.routes[index]
 		index++
-		isMatch := matchMethod(r, &route) && matchPath(r, &route)
+		isMatch := matchMethod(rc, &route) && matchPath(rc, &route)
 
 		if isMatch {
-			route.handler(w, r, n)
+			route.handler(w, rc, n)
 		} else {
 			n()
 		}
 	}
+	ctx := context.WithValue(r.Context(), nextFnKey, n)
+	rc = r.WithContext(ctx)
 	n()
-}
-
-func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.ServeHTTPWithNext(w, r, nil)
 }
 
 func matchMethod(r *http.Request, route *Route) bool {
