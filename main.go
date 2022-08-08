@@ -44,7 +44,7 @@ func main() {
 					httpServer.Close()
 				}
 
-				router := &internal.Router{}
+				router := internal.NewRouter()
 
 				powerLock(router, powerControl)
 				internal.HandleApi(router, &config, storage)

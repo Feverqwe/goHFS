@@ -53,6 +53,14 @@ func (s *Router) Use(handlers ...RouteHandler) {
 	s.Custom([]string{}, []string{}, handlers...)
 }
 
+func (s *Router) Route(path string) *Router {
+	router := NewRouter()
+	s.All(path, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		router.ServeHTTPWithNext(w, r, next)
+	})
+	return router
+}
+
 func (s *Router) Custom(methods []string, paths []string, handlers ...RouteHandler) {
 	if len(methods) == 0 {
 		methods = append(methods, "")
@@ -104,25 +112,32 @@ func getPathType(path string) (string, int) {
 	return routePath, pathType
 }
 
-func (s *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (s *Router) ServeHTTPWithNext(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 	index := 0
-	var doNext func()
-	doNext = func() {
+	var n func()
+	n = func() {
 		if len(s.routes) < index {
+			if next != nil {
+				next()
+			}
 			return
 		}
 
 		route := s.routes[index]
 		index++
-		isMatch := matchMethod(request, &route) && matchPath(request, &route)
+		isMatch := matchMethod(r, &route) && matchPath(r, &route)
 
 		if isMatch {
-			route.handler(writer, request, doNext)
+			route.handler(w, r, n)
 		} else {
-			doNext()
+			n()
 		}
 	}
-	doNext()
+	n()
+}
+
+func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.ServeHTTPWithNext(w, r, nil)
 }
 
 func matchMethod(r *http.Request, route *Route) bool {
@@ -149,4 +164,8 @@ func matchPath(r *http.Request, route *Route) bool {
 		isMatchPath = strings.HasSuffix(r.URL.Path, route.path)
 	}
 	return isMatchPath
+}
+
+func NewRouter() *Router {
+	return new(Router)
 }
