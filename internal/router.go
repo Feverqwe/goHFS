@@ -133,7 +133,7 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			route := s.routes[index]
 			index++
-			isMatch := matchMethod(rc, &route) && matchPath(rc, &route)
+			isMatch := matchMethod(r, &route) && matchPath(r, &route)
 
 			if isMatch {
 				route.handler(w, rc, n)
