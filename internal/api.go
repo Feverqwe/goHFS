@@ -40,6 +40,7 @@ type JsonSuccessResponse struct {
 
 func HandleApi(router *Router, config *Config, storage *Storage) {
 	apiRouter := NewRouter()
+	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
 	handleUpload(apiRouter, config)
 	handleWww(apiRouter)
@@ -49,7 +50,7 @@ func HandleApi(router *Router, config *Config, storage *Storage) {
 	handleFobidden(apiRouter)
 
 	router.All("^/~/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		gziphandler.GzipHandler(apiRouter).ServeHTTP(w, r)
+		gzipHandler.ServeHTTP(w, r)
 	})
 }
 
