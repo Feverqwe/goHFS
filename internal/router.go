@@ -123,21 +123,22 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var n func()
 	var rc *http.Request
 	n = func() {
-		if index >= len(s.routes) {
-			if next != nil {
-				next.(func())()
+		for {
+			if index >= len(s.routes) {
+				if next != nil {
+					next.(func())()
+				}
+				break
 			}
-			return
-		}
 
-		route := s.routes[index]
-		index++
-		isMatch := matchMethod(rc, &route) && matchPath(rc, &route)
+			route := s.routes[index]
+			index++
+			isMatch := matchMethod(rc, &route) && matchPath(rc, &route)
 
-		if isMatch {
-			route.handler(w, rc, n)
-		} else {
-			n()
+			if isMatch {
+				route.handler(w, rc, n)
+				break
+			}
 		}
 	}
 	ctx := context.WithValue(r.Context(), nextFnKey, n)
