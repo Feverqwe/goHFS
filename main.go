@@ -1,16 +1,11 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"goHfs/internal"
 	"log"
 	"net/http"
-	"strings"
-	"time"
-
-	"github.com/NYTimes/gziphandler"
 )
 
 func main() {
@@ -49,7 +44,7 @@ func main() {
 
 				powerLock(router, powerControl)
 				internal.HandleApi(router, &config, storage)
-				handleDir(router, &config)
+				internal.HandleDir(router, &config)
 				handleIndex(router, &config)
 				fsServer(router, &config)
 
@@ -82,48 +77,6 @@ func main() {
 	}
 }
 
-func handleDir(router *internal.Router, config *internal.Config) {
-	public := config.Public
-	fileIndex := internal.GetFileIndex(config)
-
-	type contextType string
-	const contentKey contextType = "content"
-
-	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-		content := r.Context().Value(contentKey).(string)
-		reader := strings.NewReader(content)
-
-		http.ServeContent(writer, r, "index.html", time.Now(), reader)
-	}))
-
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		urlPath := r.URL.Path
-
-		fullPath, err := internal.GetFullPath(public, urlPath)
-		if err != nil {
-			w.WriteHeader(403)
-			return
-		}
-
-		file, stat, err := internal.OpenFile(fullPath)
-		if err != nil {
-			internal.HandleOpenFileError(err, w)
-			return
-		}
-
-		if stat.IsDir() {
-			content := fileIndex(urlPath, fullPath, file)
-			ctx := context.WithValue(r.Context(), contentKey, content)
-			r := r.WithContext(ctx)
-
-			gzipHandler.ServeHTTP(w, r)
-			return
-		}
-
-		next()
-	})
-}
-
 func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
 		if powerControl != nil {
@@ -149,6 +102,7 @@ func handleIndex(router *internal.Router, config *internal.Config) {
 			internal.HandleOpenFileError(err, writer)
 			return
 		}
+		defer file.Close()
 
 		http.ServeContent(writer, request, "index.html", stat.ModTime(), file)
 	})

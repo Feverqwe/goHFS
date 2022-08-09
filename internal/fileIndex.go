@@ -1,15 +1,18 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
 	"goHfs/assets"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-)
+	"time"
 
-var template = ""
+	"github.com/NYTimes/gziphandler"
+)
 
 type RootStore struct {
 	Dir        string            `json:"dir"`
@@ -26,21 +29,20 @@ type File struct {
 	Size  int64  `json:"size"`  // bytes
 }
 
-func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os.File) string {
-	root := config.Public
+func HandleDir(router *Router, config *Config) {
+	public := config.Public
 	showHiddenFiles := config.ShowHiddenFiles
 
-	if template == "" {
-		data, err := assets.Asset("www/folder.html")
-		if err != nil {
-			panic(err)
-		}
-		template = string(data)
+	type contextType string
+	const contentKey contextType = "content"
+
+	data, err := assets.Asset("www/folder.html")
+	if err != nil {
+		panic(err)
 	}
+	template := string(data)
 
-	return func(urlPath string, fullPath string, pathFile *os.File) string {
-		place := NormalizePath(urlPath)
-
+	getIndex := func(place string, fullPath string, pathFile *os.File) string {
 		files := make([]File, 0)
 
 		if dir, err := pathFile.ReadDir(-1); err == nil {
@@ -77,7 +79,7 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 			}
 		}
 
-		isRoot := root == fullPath
+		isRoot := public == fullPath
 		isWritable := config.IsWritable(place, true)
 
 		placeName := config.Name
@@ -104,4 +106,40 @@ func GetFileIndex(config *Config) func(urlPath string, fullPath string, root *os
 
 		return body
 	}
+
+	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+		content := r.Context().Value(contentKey).(string)
+		reader := strings.NewReader(content)
+
+		http.ServeContent(writer, r, "index.html", time.Now(), reader)
+	}))
+
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		place := NormalizePath(r.URL.Path)
+
+		fullPath, err := GetFullPath(public, place)
+		if err != nil {
+			w.WriteHeader(403)
+			return
+		}
+
+		file, stat, err := OpenFile(fullPath)
+		if err != nil {
+			HandleOpenFileError(err, w)
+			return
+		}
+		defer file.Close()
+
+		if stat.IsDir() {
+			content := getIndex(place, fullPath, file)
+			ctx := context.WithValue(r.Context(), contentKey, content)
+			r := r.WithContext(ctx)
+
+			gzipHandler.ServeHTTP(w, r)
+			return
+		}
+
+		file.Close()
+		next()
+	})
 }

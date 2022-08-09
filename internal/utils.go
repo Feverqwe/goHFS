@@ -6,14 +6,14 @@ import (
 )
 
 func OpenFile(path string) (*os.File, os.FileInfo, error) {
-	var err error
-	var file *os.File
-	var stat os.FileInfo
-	if err == nil {
-		file, err = os.Open(path)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, nil, err
 	}
-	if err == nil {
-		stat, err = file.Stat()
+	stat, err := file.Stat()
+	if err != nil {
+		file.Close()
+		file = nil
 	}
 	return file, stat, err
 }
