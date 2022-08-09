@@ -118,13 +118,13 @@ func getPathType(path string) (string, int) {
 }
 
 func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	next := r.Context().Value(nextFnKey)
 	index := 0
 	var n func()
 	var rc *http.Request
 	n = func() {
 		for {
 			if index >= len(s.routes) {
+				next := r.Context().Value(nextFnKey)
 				if next != nil {
 					next.(func())()
 				}
