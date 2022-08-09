@@ -139,7 +139,6 @@ func HandleDir(router *Router, config *Config) {
 			return
 		}
 
-		file.Close()
 		next()
 	})
 }
