@@ -18,18 +18,6 @@ import (
 	"github.com/NYTimes/gziphandler"
 )
 
-type RemovePayload struct {
-	Place string `json:"place"`
-	Name  string `json:"name"`
-	IsDir bool   `json:"isDir"`
-}
-
-type RenamePayload struct {
-	Place   string `json:"place"`
-	Name    string `json:"name"`
-	NewName string `json:"newName"`
-}
-
 type JsonFailResponse struct {
 	Error string `json:"error"`
 }
@@ -333,6 +321,18 @@ func handleStorage(router *Router, storage *Storage) {
 
 func handleAction(router *Router, config *Config) {
 	public := config.Public
+
+	type RemovePayload struct {
+		Place string `json:"place"`
+		Name  string `json:"name"`
+		IsDir bool   `json:"isDir"`
+	}
+
+	type RenamePayload struct {
+		Place   string `json:"place"`
+		Name    string `json:"name"`
+		NewName string `json:"newName"`
+	}
 
 	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
