@@ -55,7 +55,7 @@ func HandleApi(router *Router, config *Config, storage *Storage) {
 }
 
 func handleFobidden(router *Router) {
-	router.Use(func(w http.ResponseWriter, r *http.Request, n RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		w.WriteHeader(403)
 	})
 }
@@ -64,7 +64,7 @@ func handleUpload(router *Router, config *Config) {
 	public := config.Public
 	salt := config.Salt
 
-	chunkSize := 16 * 1024 * 1024
+	var chunkSize int64 = 16 * 1024 * 1024
 
 	type UploadInitPayload struct {
 		FileName string `json:"fileName"`
@@ -74,7 +74,7 @@ func handleUpload(router *Router, config *Config) {
 
 	type UploadInit struct {
 		Key       string `json:"key"`
-		ChunkSize int    `json:"chunkSize"`
+		ChunkSize int64  `json:"chunkSize"`
 	}
 
 	type Key struct {
@@ -186,9 +186,9 @@ func handleUpload(router *Router, config *Config) {
 		return isFinish, nil
 	}
 
-	router.Post("/~/upload/init", func(writer http.ResponseWriter, request *http.Request, n RouteNextFn) {
-		apiCall(writer, func() (*UploadInit, error) {
-			decoder := json.NewDecoder(request.Body)
+	router.Post("/~/upload/init", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*UploadInit, error) {
+			decoder := json.NewDecoder(r.Body)
 			var payload UploadInitPayload
 			err := decoder.Decode(&payload)
 			if err != nil {
@@ -237,10 +237,9 @@ func handleUpload(router *Router, config *Config) {
 		})
 	})
 
-	router.Post("/~/upload/chunk", func(writer http.ResponseWriter, request *http.Request, n RouteNextFn) {
-		apiCall(writer, func() (bool, error) {
-			var reader *multipart.Reader
-			reader, err := request.MultipartReader()
+	router.Post("/~/upload/chunk", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (bool, error) {
+			reader, err := r.MultipartReader()
 
 			var key *Key
 			var pos int64
@@ -285,8 +284,8 @@ func handleUpload(router *Router, config *Config) {
 }
 
 func handleInterfaces(router *Router, config *Config) {
-	router.Get("/~/addresses", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		apiCall(writer, func() ([]string, error) {
+	router.Get("/~/addresses", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() ([]string, error) {
 			addresses := GetAddresses(config.Port)
 			return addresses, nil
 		})
@@ -294,9 +293,9 @@ func handleInterfaces(router *Router, config *Config) {
 }
 
 func handleStorage(router *Router, storage *Storage) {
-	router.Post("/~/storage/get", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		apiCall(writer, func() (map[string]interface{}, error) {
-			decoder := json.NewDecoder(request.Body)
+	router.Post("/~/storage/get", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (map[string]interface{}, error) {
+			decoder := json.NewDecoder(r.Body)
 			var keys []string
 			err := decoder.Decode(&keys)
 			if err != nil {
@@ -307,9 +306,9 @@ func handleStorage(router *Router, storage *Storage) {
 		})
 	})
 
-	router.Post("/~/storage/set", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		apiCall(writer, func() (string, error) {
-			decoder := json.NewDecoder(request.Body)
+	router.Post("/~/storage/set", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			decoder := json.NewDecoder(r.Body)
 			var keyValue map[string]interface{}
 			err := decoder.Decode(&keyValue)
 			if err == nil {
@@ -319,9 +318,9 @@ func handleStorage(router *Router, storage *Storage) {
 		})
 	})
 
-	router.Post("/~/storage/del", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		apiCall(writer, func() (string, error) {
-			decoder := json.NewDecoder(request.Body)
+	router.Post("/~/storage/del", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			decoder := json.NewDecoder(r.Body)
 			var keys []string
 			err := decoder.Decode(&keys)
 			if err == nil {
@@ -335,9 +334,9 @@ func handleStorage(router *Router, storage *Storage) {
 func handleAction(router *Router, config *Config) {
 	public := config.Public
 
-	router.Post("/~/rename", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		apiCall(writer, func() (string, error) {
-			decoder := json.NewDecoder(request.Body)
+	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			decoder := json.NewDecoder(r.Body)
 			var payload RenamePayload
 			err := decoder.Decode(&payload)
 			if err != nil {
@@ -372,9 +371,9 @@ func handleAction(router *Router, config *Config) {
 		})
 	})
 
-	router.Post("/~/remove", func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		apiCall(writer, func() (string, error) {
-			decoder := json.NewDecoder(request.Body)
+	router.Post("/~/remove", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			decoder := json.NewDecoder(r.Body)
 			var payload RemovePayload
 			err := decoder.Decode(&payload)
 			if err != nil {
@@ -414,32 +413,32 @@ func handleWww(router *Router) {
 		}
 	}
 
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(writer http.ResponseWriter, request *http.Request, next RouteNextFn) {
-		assetPath := request.URL.Path[3:]
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		assetPath := r.URL.Path[3:]
 
 		content, err := assets.Asset(assetPath)
 		if err != nil {
-			writer.WriteHeader(404)
+			w.WriteHeader(404)
 			return
 		}
 
 		reader := bytes.NewReader(content)
 		name := path.Base(assetPath)
-		http.ServeContent(writer, request, name, binTime, reader)
+		http.ServeContent(w, r, name, binTime, reader)
 	})
 }
 
 type ActionAny[T any] func() (T, error)
 
-func apiCall[T any](writer http.ResponseWriter, action ActionAny[T]) {
+func apiCall[T any](w http.ResponseWriter, action ActionAny[T]) {
 	result, err := action()
-	err = writeApiResult(writer, result, err)
+	err = writeApiResult(w, result, err)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func writeApiResult(writer http.ResponseWriter, result interface{}, err error) error {
+func writeApiResult(w http.ResponseWriter, result interface{}, err error) error {
 	var statusCode int
 	var body interface{}
 	if err != nil {
@@ -455,9 +454,9 @@ func writeApiResult(writer http.ResponseWriter, result interface{}, err error) e
 	}
 	json, err := json.Marshal(body)
 	if err == nil {
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(statusCode)
-		_, err = writer.Write(json)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		_, err = w.Write(json)
 	}
 	return err
 }
