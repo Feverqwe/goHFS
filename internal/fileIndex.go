@@ -118,13 +118,13 @@ func HandleDir(router *Router, config *Config) {
 	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		place := NormalizePath(r.URL.Path)
 
-		fullPath, err := GetFullPath(public, place)
+		osFullPath, err := GetFullPath(public, place)
 		if err != nil {
 			w.WriteHeader(403)
 			return
 		}
 
-		file, stat, err := OpenFile(fullPath)
+		file, stat, err := OpenFile(osFullPath)
 		if err != nil {
 			HandleOpenFileError(err, w)
 			return
@@ -132,7 +132,7 @@ func HandleDir(router *Router, config *Config) {
 		defer file.Close()
 
 		if stat.IsDir() {
-			content := getIndex(place, fullPath, file)
+			content := getIndex(place, osFullPath, file)
 			ctx := context.WithValue(r.Context(), contentKey, content)
 			r := r.WithContext(ctx)
 

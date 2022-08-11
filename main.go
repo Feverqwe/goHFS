@@ -91,13 +91,13 @@ func handleIndex(router *internal.Router, config *internal.Config) {
 	public := config.Public
 
 	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		fullPath, err := internal.GetFullPath(public, r.URL.Path)
+		osFullPath, err := internal.GetFullPath(public, r.URL.Path)
 		if err != nil {
 			w.WriteHeader(403)
 			return
 		}
 
-		file, stat, err := internal.OpenFile(fullPath)
+		file, stat, err := internal.OpenFile(osFullPath)
 		if err != nil {
 			internal.HandleOpenFileError(err, w)
 			return

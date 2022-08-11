@@ -353,12 +353,12 @@ func handleAction(router *Router, config *Config) {
 			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
 			rNewPath := NormalizePath(path.Join(rawPlace, rawNewName))
 
-			targetPath, err := GetFullPath(public, rTargetPath)
+			osTargetPath, err := GetFullPath(public, rTargetPath)
 			if err != nil {
 				return "", err
 			}
 
-			newPath, err := GetFullPath(public, rNewPath)
+			osNewPath, err := GetFullPath(public, rNewPath)
 			if err != nil {
 				return "", err
 			}
@@ -369,7 +369,7 @@ func handleAction(router *Router, config *Config) {
 				return "", errors.New("place is not writable")
 			}
 
-			err = os.Rename(targetPath, newPath)
+			err = os.Rename(osTargetPath, osNewPath)
 
 			return "ok", err
 		})
@@ -387,7 +387,7 @@ func handleAction(router *Router, config *Config) {
 			rawPlace := payload.Place
 			rawName := payload.Name
 			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-			targetPath, err := GetFullPath(public, rTargetPath)
+			osTargetPath, err := GetFullPath(public, rTargetPath)
 			if err != nil {
 				return "", err
 			}
@@ -399,9 +399,9 @@ func handleAction(router *Router, config *Config) {
 
 			isDir := payload.IsDir
 			if isDir {
-				err = os.RemoveAll(targetPath)
+				err = os.RemoveAll(osTargetPath)
 			} else {
-				err = os.Remove(targetPath)
+				err = os.Remove(osTargetPath)
 			}
 
 			return "ok", err
