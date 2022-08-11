@@ -20,7 +20,7 @@ const (
 	IsExtraPtrn  = 1
 )
 
-type NormPattern struct {
+type PrepPattern struct {
 	patternType int
 	pattern     string
 	partCount   int
@@ -35,7 +35,7 @@ type Config struct {
 	ExtHandle            map[string]string
 	WritablePatterns     []string
 	Salt                 string
-	normWritablePatterns []NormPattern
+	prepWritablePatterns []PrepPattern
 }
 
 var APP_ID = "com.rndnm.gohfs"
@@ -58,7 +58,7 @@ func (s *Config) IsWritable(targetPath string, isDir bool) bool {
 		lowPath += "/"
 	}
 
-	for _, p := range s.normWritablePatterns {
+	for _, p := range s.prepWritablePatterns {
 		if p.patternType == IsExtraPtrn {
 			lastIndex := p.partCount
 			pathParts := strings.SplitN(lowPath, "/", lastIndex+1)
@@ -75,8 +75,8 @@ func (s *Config) IsWritable(targetPath string, isDir bool) bool {
 	return false
 }
 
-func NormalizeWritablePatterns(patterns []string) []NormPattern {
-	result := []NormPattern{}
+func PrepPatterns(patterns []string) []PrepPattern {
+	result := []PrepPattern{}
 
 	for _, rawPattern := range patterns {
 		pattern := strings.ToLower(rawPattern)
@@ -86,7 +86,7 @@ func NormalizeWritablePatterns(patterns []string) []NormPattern {
 			pattern = pattern[0 : len(pattern)-1]
 			patternType = IsExtraPtrn
 		}
-		np := NormPattern{
+		np := PrepPattern{
 			patternType: patternType,
 			pattern:     pattern,
 			partCount:   partCount,
@@ -142,7 +142,7 @@ func LoadConfig() Config {
 		}
 	}
 
-	config.normWritablePatterns = NormalizeWritablePatterns(config.WritablePatterns)
+	config.prepWritablePatterns = PrepPatterns(config.WritablePatterns)
 
 	return config
 }
