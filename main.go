@@ -45,7 +45,6 @@ func main() {
 				powerLock(router, powerControl)
 				internal.HandleApi(router, &config, storage)
 				internal.HandleDir(router, &config)
-				handleIndex(router, &config)
 				fsServer(router, &config)
 
 				address := config.GetAddress()
@@ -87,8 +86,10 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 	})
 }
 
-func handleIndex(router *internal.Router, config *internal.Config) {
+func fsServer(router *internal.Router, config *internal.Config) {
 	public := config.Public
+
+	fileServer := http.FileServer(http.Dir(public))
 
 	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
 		osFullPath, err := internal.GetFullPath(public, r.URL.Path)
@@ -106,10 +107,8 @@ func handleIndex(router *internal.Router, config *internal.Config) {
 
 		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
 	})
-}
 
-func fsServer(router *internal.Router, config *internal.Config) {
 	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		http.FileServer(http.Dir(config.Public)).ServeHTTP(w, r)
+		fileServer.ServeHTTP(w, r)
 	})
 }
