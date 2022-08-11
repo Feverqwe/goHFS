@@ -54,8 +54,8 @@ func (s *Config) IsWritable(targetPath string, isDir bool) bool {
 			lowPattern = lowPattern[0 : len(lowPattern)-1]
 
 			slashCount := strings.Count(lowPattern, "/")
-			pathParts := strings.Split(lowPath, "/")
 			lastIndex := slashCount + 1
+			pathParts := strings.SplitN(lowPath, "/", lastIndex+1)
 			if len(pathParts) < lastIndex {
 				continue
 			}
