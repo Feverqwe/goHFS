@@ -52,11 +52,8 @@ func (s *Config) GetBrowserAddress() string {
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
 }
 
-func (s *Config) IsWritable(targetPath string, isDir bool) bool {
+func (s *Config) IsWritable(targetPath string) bool {
 	lowPath := strings.ToLower(targetPath)
-	if isDir && !strings.HasSuffix(lowPath, "/") {
-		lowPath += "/"
-	}
 
 	for _, p := range s.prepWritablePatterns {
 		if p.patternType == IsExtraPtrn {

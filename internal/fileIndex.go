@@ -6,6 +6,7 @@ import (
 	"goHfs/assets"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -80,7 +81,7 @@ func HandleDir(router *Router, config *Config) {
 		}
 
 		isRoot := public == fullPath
-		isWritable := config.IsWritable(place, true)
+		isWritable := config.IsWritable(path.Join(place, "tmp"))
 
 		placeName := config.Name
 		if !isRoot {

@@ -194,7 +194,7 @@ func handleUpload(router *Router, config *Config) {
 
 			filePath := NormalizePath(path.Join(rawPlace, rawFileName))
 
-			isWritable := config.IsWritable(filePath, false)
+			isWritable := config.IsWritable(filePath)
 			if !isWritable {
 				return nil, errors.New("unable wite in this place")
 			}
@@ -359,8 +359,8 @@ func handleAction(router *Router, config *Config) {
 				return "", err
 			}
 
-			isWritableSource := config.IsWritable(rTargetPath, false)
-			isWritableTarget := config.IsWritable(rNewPath, false)
+			isWritableSource := config.IsWritable(rTargetPath)
+			isWritableTarget := config.IsWritable(rNewPath)
 			if !isWritableSource || !isWritableTarget {
 				return "", errors.New("place is not writable")
 			}
@@ -388,7 +388,7 @@ func handleAction(router *Router, config *Config) {
 				return "", err
 			}
 
-			isWritable := config.IsWritable(rTargetPath, false)
+			isWritable := config.IsWritable(rTargetPath)
 			if !isWritable {
 				return "", errors.New("place is not writable")
 			}
