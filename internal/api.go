@@ -50,7 +50,11 @@ func handleFobidden(router *Router) {
 
 func handleUpload(router *Router, config *Config) {
 	public := config.Public
+
 	salt := config.Salt
+	if len(salt) == 0 {
+		salt = strconv.FormatInt(time.Now().Unix(), 10)
+	}
 
 	var chunkSize int64 = 16 * 1024 * 1024
 

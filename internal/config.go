@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/natefinch/atomic"
 )
@@ -133,9 +132,6 @@ func LoadConfig() Config {
 		}
 		if config.ExtHandle == nil {
 			config.ExtHandle = make(map[string]string)
-		}
-		if len(config.Salt) == 0 {
-			config.Salt = strconv.FormatInt(time.Now().Unix(), 10)
 		}
 	}
 
