@@ -15,15 +15,27 @@ import (
 	"github.com/natefinch/atomic"
 )
 
+const (
+	IsSimplePtrn = 0
+	IsExtraPtrn  = 1
+)
+
+type NormPattern struct {
+	patternType int
+	pattern     string
+	partCount   int
+}
+
 type Config struct {
-	Port             int
-	Address          string
-	Public           string
-	Name             string
-	ShowHiddenFiles  bool
-	ExtHandle        map[string]string
-	WritablePatterns []string
-	Salt             string
+	Port                 int
+	Address              string
+	Public               string
+	Name                 string
+	ShowHiddenFiles      bool
+	ExtHandle            map[string]string
+	WritablePatterns     []string
+	Salt                 string
+	normWritablePatterns []NormPattern
 }
 
 var APP_ID = "com.rndnm.gohfs"
@@ -42,32 +54,47 @@ func (s *Config) GetBrowserAddress() string {
 
 func (s *Config) IsWritable(targetPath string, isDir bool) bool {
 	lowPath := strings.ToLower(targetPath)
-	if isDir && lowPath[len(lowPath)-1:] != "/" {
+	if isDir && !strings.HasSuffix(lowPath, "/") {
 		lowPath += "/"
 	}
 
-	for _, pattern := range s.WritablePatterns {
-		lowPattern := strings.ToLower(pattern)
-
-		// like /a/b/c/**
-		if len(lowPattern) > 1 && lowPattern[len(lowPattern)-2:] == "**" {
-			lowPattern = lowPattern[0 : len(lowPattern)-1]
-
-			slashCount := strings.Count(lowPattern, "/")
-			lastIndex := slashCount + 1
+	for _, p := range s.normWritablePatterns {
+		if p.patternType == IsExtraPtrn {
+			lastIndex := p.partCount
 			pathParts := strings.SplitN(lowPath, "/", lastIndex+1)
 			if len(pathParts) < lastIndex {
 				continue
 			}
 			lowPath = strings.Join(pathParts[0:lastIndex], "/")
 		}
-
-		m, _ := path.Match(lowPattern, lowPath)
+		m, _ := path.Match(p.pattern, lowPath)
 		if m {
 			return true
 		}
 	}
 	return false
+}
+
+func NormalizeWritablePatterns(patterns []string) []NormPattern {
+	result := []NormPattern{}
+
+	for _, rawPattern := range patterns {
+		pattern := strings.ToLower(rawPattern)
+		partCount := strings.Count(pattern, "/") + 1
+		patternType := IsSimplePtrn
+		if strings.HasSuffix(pattern, "**") {
+			pattern = pattern[0 : len(pattern)-1]
+			patternType = IsExtraPtrn
+		}
+		np := NormPattern{
+			patternType: patternType,
+			pattern:     pattern,
+			partCount:   partCount,
+		}
+		result = append(result, np)
+	}
+
+	return result
 }
 
 func getNewConfig() Config {
@@ -114,6 +141,8 @@ func LoadConfig() Config {
 			config.Salt = strconv.FormatInt(time.Now().Unix(), 10)
 		}
 	}
+
+	config.normWritablePatterns = NormalizeWritablePatterns(config.WritablePatterns)
 
 	return config
 }
