@@ -57,12 +57,12 @@ func (s *Config) IsWritable(targetPath string) bool {
 
 	for _, p := range s.prepWritablePatterns {
 		if p.patternType == IsExtraPtrn {
-			lastIndex := p.partCount
-			pathParts := strings.SplitN(lowPath, "/", lastIndex+1)
-			if len(pathParts) < lastIndex {
+			partCount := p.partCount
+			pathParts := strings.SplitN(lowPath, "/", partCount+1)
+			if len(pathParts) < partCount {
 				continue
 			}
-			lowPath = strings.Join(pathParts[0:lastIndex], "/")
+			lowPath = strings.Join(pathParts[0:partCount], "/")
 		}
 		m, _ := path.Match(p.pattern, lowPath)
 		if m {
