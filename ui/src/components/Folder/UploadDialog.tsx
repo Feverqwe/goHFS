@@ -204,9 +204,9 @@ const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
   React.useEffect(() => {
     let dragTimeout: NodeJS.Timeout | null = null;
 
-    const div = refDropZone.current!;
-    div.addEventListener('dragover', handleDragOver);
-    div.addEventListener('drop', handleDrop);
+    const {body} = document;
+    body.addEventListener('dragover', handleDragOver);
+    body.addEventListener('drop', handleDrop);
 
     function handleDragOver(e: DragEvent) {
       e.preventDefault();
@@ -232,8 +232,8 @@ const DropZone: React.FC<DropZoneProps> = ({onUpload}) => {
 
     return () => {
       dragTimeout && clearTimeout(dragTimeout);
-      div.removeEventListener('dragover', handleDragOver);
-      div.removeEventListener('drop', handleDrop);
+      body.removeEventListener('dragover', handleDragOver);
+      body.removeEventListener('drop', handleDrop);
     };
   }, []);
 
