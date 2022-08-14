@@ -5,7 +5,7 @@ class Storage {
     return doReq<T>('/~/storage/get', keys);
   }
 
-  static async set(data: Record<string, any>) {
+  static async set<T extends any>(data: Record<string, T>) {
     await doReq('/~/storage/set', data);
   }
 }

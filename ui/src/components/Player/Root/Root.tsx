@@ -1,8 +1,11 @@
 import * as React from "react";
+import {useState} from "react";
 import Video from "../Video/Video";
 import UrlForm from "../UrlForm/UrlForm";
 import UrlFormContext from "../UrlForm/UrlFormContext";
 import {GlobalStyles} from "@mui/material";
+import {changeUrlParams} from "../../../tools/urlParams";
+import {getParamsFromUrl} from "./utils";
 
 const RootStyles = {
   html: {
@@ -23,20 +26,11 @@ const RootStyles = {
 };
 
 const Root = React.memo(() => {
-  const [url, setUrl] = React.useState('');
-  const [time, setTime] = React.useState(0);
+  const [{url, time}, setUrlTime] = useState(getParamsFromUrl);
   const [isShowForm, setShowForm] = React.useState(false);
 
   React.useEffect(() => {
-    const uri = new URL(location.href);
-    const url = uri.searchParams.get('url');
-    const time = uri.searchParams.get('t');
-    if (time && /^\d+$/.test(time)) {
-      setTime(parseInt(time, 10));
-    }
-    if (url) {
-      setUrl(url);
-    } else {
+    if (!url) {
       setShowForm(true);
     }
   },[]);
@@ -46,8 +40,8 @@ const Root = React.memo(() => {
   }, []);
 
   const handleUrlFormSubmit = React.useCallback((url: string) => {
-    setUrl(url);
-    setTime(0);
+    changeUrlParams({url, time: String(0)});
+    setUrlTime(getParamsFromUrl());
     handleClose();
   }, []);
 

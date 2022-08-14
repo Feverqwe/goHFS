@@ -1,9 +1,11 @@
 import * as React from "react";
-import {useRef} from "react";
+import {memo, useContext, useEffect, useMemo, useRef, useState} from "react";
 import addEvent from "../../../tools/addEvent";
 import UrlFormContext from "../UrlForm/UrlFormContext";
 import Storage from "../../../tools/storage";
 import {styled} from "@mui/material";
+import Path from "path-browserify";
+import {TITLE} from "../constants";
 
 interface PlayerProps {
   url: string,
@@ -19,18 +21,22 @@ const VideoTag = styled('video')(() => {
   };
 });
 
-const Video = React.memo(({url, starTime}: PlayerProps) => {
-  const showUrlForm = React.useContext(UrlFormContext);
+type StorageValue = number;
+
+const Video = memo(({url, starTime}: PlayerProps) => {
+  const showUrlForm = useContext(UrlFormContext);
   const refVideo = useRef<HTMLVideoElement | null>(null);
-  const [isLock, setLock] = React.useState(false);
-  const scope = React.useMemo(() => {
-    return {isLock, starTime, metadataLoaded: false};
+  const [isPlaying, setPlaying] = useState(false);
+
+  const scope = useMemo(() => {
+    return {starTime, metadataLoaded: false};
   }, []);
 
-  scope.isLock = isLock;
-  scope.starTime = starTime;
+  useMemo(() => {
+    scope.starTime = starTime;
+  }, [scope, starTime]);
 
-  const sid = React.useMemo(() => {
+  const oldSid = useMemo(() => {
     const m = /\/\/[^\/]+(.+)$/.exec(url);
     if (m) {
       return m[1];
@@ -38,26 +44,37 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
     return url;
   }, [url]);
 
-  React.useEffect(() => {
-    const prevTitle = document.title;
-    const m = /.*\/([^\/?#]+)/.exec(url);
+  const sid = useMemo(() => {
+    const m = /\/\/[^\/]+(.+?)(?:\.[a-z0-9]+)?$/i.exec(url);
     if (m) {
-      document.title = '[>] ' + decodeURIComponent(m[1]);
+      return m[1];
     }
-    return () => {
-      document.title = prevTitle;
-    };
+    return url;
   }, [url]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    let uri;
+    try {
+      uri = url && new URL(url);
+    } catch (err) {}
+    if (uri) {
+      const name = Path.basename(uri.pathname);
+      document.title = `[${isPlaying ? '>' : '||'}] ${decodeURIComponent(name)}`
+    }
+    return () => {
+      document.title = TITLE;
+    };
+  }, [url, isPlaying]);
+
+  useEffect(() => {
     let unmount = false;
-    Storage.get<Partial<Record<string, number>>>([sid]).then((result) => {
+    Storage.get<Partial<Record<string, StorageValue>>>([sid, oldSid]).then((result) => {
       if (unmount) return;
-      const value = result[sid];
+      const value = result[sid] || result[oldSid];
       if (typeof value === "number") {
         scope.starTime = value;
-        if (scope.metadataLoaded) {
-          refVideo.current!.currentTime = value;
+        if (refVideo.current && scope.metadataLoaded) {
+          refVideo.current.currentTime = value;
         }
       }
     }).catch((err) => {
@@ -69,10 +86,10 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
     };
   }, [url]);
 
-  React.useEffect(() => {
-    if (!url) return;
+  useEffect(() => {
+    if (!url || !refVideo.current) return;
 
-    const video = refVideo.current!;
+    const video = refVideo.current;
 
     const disposers: Array<() => void> = [];
 
@@ -89,6 +106,8 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
 
     addEvent(window, on => on('keydown', (e: KeyboardEvent) => {
       // console.log('keydown: %s', e.code);
+      const target = e.target as HTMLElement;
+      if (target && target.tagName === 'INPUT') return;
 
       const code = e.code;
       const isRepeat = e.code === lastKey;
@@ -120,14 +139,12 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
           break;
         }*/
         case 'ArrowLeft': {
-          if (scope.isLock) return;
           e.preventDefault();
           const offset = e.altKey ? 3 : 10;
           video.currentTime -= offset;
           break;
         }
         case 'ArrowRight': {
-          if (scope.isLock) return;
           e.preventDefault();
           const offset = e.altKey ? 3 : 10;
           video.currentTime += offset;
@@ -160,7 +177,6 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
     }, true), disposers);
 
     addEvent(video, on => on('click', (e: MouseEvent) => {
-      if (!scope.isLock) return;
       e.preventDefault();
       if (video.paused) {
         video.play().catch((err) => {
@@ -179,7 +195,7 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
       } else
       if (lastSyncAt < now - 5 * 1000) {
         lastSyncAt = now;
-        Storage.set({
+        Storage.set<StorageValue>({
           [sid]: video.currentTime,
         }).catch((err) => {
           console.error('Storage.set error: %O', err);
@@ -187,15 +203,24 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
       }
     }), disposers);
 
+    addEvent(video, (on) => {
+      on('play', (e: Event) => {
+        setPlaying(!video.paused);
+      });
+      on('pause', (e: Event) => {
+        setPlaying(!video.paused);
+      });
+    });
+
     /*[
       'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'ended',
       'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play',
       'playing', 'progress', 'ratechange', 'seeked', 'seeking', 'stalled',
       'suspend', 'timeupdate', 'volumechange', 'waiting',
     ].forEach((type) => {
-      video.addEvent(type, (e) => {
+      addEvent(video, on => on(type, (e: Event) => {
         console.log('Event %s: %O', type, e);
-      });
+      }));
     });*/
 
     const disposeLoadedMetadata = addEvent(video, on => on('loadedmetadata', () => {
@@ -220,15 +245,8 @@ const Video = React.memo(({url, starTime}: PlayerProps) => {
     };
   }, [url]);
 
-  const handleLockClick = React.useCallback(() => {
-    setLock(v => !v);
-  }, []);
-
   return (
-    <>
-      {/*<TouchLock onClick={handleLockClick} isLock={isLock}/>*/}
-      <VideoTag ref={refVideo} controls={!isLock} />
-    </>
+    <VideoTag ref={refVideo} />
   );
 });
 
