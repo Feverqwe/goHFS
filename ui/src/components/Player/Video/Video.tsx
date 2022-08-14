@@ -246,7 +246,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
   }, [url]);
 
   return (
-    <VideoTag ref={refVideo} />
+    <VideoTag ref={refVideo} controls={true} />
   );
 });
 
