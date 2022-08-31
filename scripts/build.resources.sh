@@ -1,5 +1,8 @@
 #!/bin/sh
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR/..
+
 cd assets
 go get github.com/jteeuwen/go-bindata/...
 go install github.com/jteeuwen/go-bindata/...
