@@ -28,9 +28,8 @@ const DropZone: FC<DropZoneProps> = ({onUpload}) => {
   React.useEffect(() => {
     let dragTimeout: number | null = null;
 
-    const {body} = document;
-    body.addEventListener('dragover', handleDragOver);
-    body.addEventListener('drop', handleDrop);
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('drop', handleDrop);
 
     function handleDragOver(e: DragEvent) {
       if (!e.dataTransfer?.types.includes('Files')) return;
@@ -56,8 +55,8 @@ const DropZone: FC<DropZoneProps> = ({onUpload}) => {
 
     return () => {
       dragTimeout && clearTimeout(dragTimeout);
-      body.removeEventListener('dragover', handleDragOver);
-      body.removeEventListener('drop', handleDrop);
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('drop', handleDrop);
     };
   }, []);
 
