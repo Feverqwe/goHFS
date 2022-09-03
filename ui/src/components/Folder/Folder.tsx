@@ -1,6 +1,6 @@
 import * as React from "react";
 import {SyntheticEvent} from "react";
-import SortChooseDialog from "./SortChooseDialog";
+import SortChooseDialog from "./components/SortChooseDialog";
 import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, styled} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -9,11 +9,12 @@ import {
   Upload as UploadIcon
 } from "@mui/icons-material";
 import {FileInfo, RootStore} from "../../folder";
-import UploadDialog from "./UploadDialog";
-import AddressesDialog from "./AddressesDialog";
-import File from "./File/File";
+import AddressesDialog from "./components/AddressesDialog";
+import File from "./components/File/File";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import Path from "path-browserify";
+import DropZone from "./components/DropZone";
+import useUpload from "./components/hooks/useUpload";
 
 const RootSx = {
   width: '100%',
@@ -48,8 +49,8 @@ const Folder = React.memo(({store}: FolderProps) => {
     return getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]);
   });
   const [showSortDialog, setShowSortDialog] = React.useState(false);
-  const [showUploadDialog, setShowUploadDialog] = React.useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
+  const {dialog, handleUpload} = useUpload(store.dir);
 
   const changeSort = React.useCallback((keyDir: [string, boolean]) => {
     setSortKey(keyDir as [keyof FileInfo, boolean]);
@@ -80,11 +81,15 @@ const Folder = React.memo(({store}: FolderProps) => {
   }, []);
 
   const handleUploadBtn = React.useCallback((e: SyntheticEvent) => {
-    setShowUploadDialog(true);
-  }, []);
-
-  const handleCloseUploadDialog = React.useCallback(() => {
-    setShowUploadDialog(false);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.addEventListener('change', (e: Event) => {
+      if (!input.files?.length) return;
+      const files = Array.from(input.files);
+      handleUpload(files);
+    });
+    input.dispatchEvent(new MouseEvent('click'));
   }, []);
 
   const handleCloseSortDialog = React.useCallback(() => {
@@ -107,7 +112,7 @@ const Folder = React.memo(({store}: FolderProps) => {
       }
     });
 
-    const dirname = store.isRoot ? 'root' : Path.dirname(store.dir);
+    const dirname = store.isRoot ? 'root' : Path.basename(store.dir);
 
     const blob = new Blob([lines.join('\n')], {type: "application/mpegurl"});
     const url  = URL.createObjectURL(blob);
@@ -157,15 +162,16 @@ const Folder = React.memo(({store}: FolderProps) => {
           return <File key={file.isDir + '_' + file.name} store={store} dir={store.dir} file={file} writable={store.isWritable}/>
         })}
       </List>
+      {store.isWritable && (
+        <DropZone onUpload={handleUpload}/>
+      )}
       {showSortDialog && (
         <SortChooseDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />
-      )}
-      {showUploadDialog && (
-        <UploadDialog dir={store.dir} onClose={handleCloseUploadDialog} />
       )}
       {showAddressesDialog && (
         <AddressesDialog onClose={handleCloseAddressesDialog} />
       )}
+      {dialog}
     </>
   );
 });

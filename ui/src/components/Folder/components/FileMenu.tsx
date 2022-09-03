@@ -5,8 +5,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
-import {FileInfo} from "../../folder";
-import {doReq} from "../../tools/apiRequest";
+import {FileInfo} from "../../../folder";
+import {doReq} from "../../../tools/apiRequest";
 
 const MyListItemIcon = styled(ListItemIcon)(({theme}) => {
   return {
