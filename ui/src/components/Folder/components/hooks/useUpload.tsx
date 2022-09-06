@@ -101,7 +101,17 @@ const useUpload = (dir: string) => {
     return results;
   }, []);
 
+  const resetState = useCallback(() => {
+    setReport(null);
+    setError(null);
+    setProgress(0);
+    setRetry(false);
+    setOk(false);
+  }, []);
+
   const handleUpload = React.useCallback(async (files: File[]) => {
+    if (visible && !ok) return;
+    resetState();
     setVisible(true);
     try {
       const results = await upload(dir, files);
@@ -111,17 +121,13 @@ const useUpload = (dir: string) => {
       console.error('Upload error: %O', err);
       setError(err as Error);
     }
-  }, [dir, upload]);
+  }, [dir, upload, ok, visible]);
 
   const handleClose = React.useCallback((e: SyntheticEvent, reason?: string) => {
     e.preventDefault();
     if (!ok && reason === 'backdropClick') return;
     setVisible(false);
-    setReport(null);
-    setError(null);
-    setProgress(0);
-    setRetry(false);
-    setOk(false);
+    resetState();
   }, [ok]);
 
   let dialog = null;
