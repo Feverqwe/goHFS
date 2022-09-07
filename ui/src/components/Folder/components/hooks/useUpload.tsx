@@ -19,11 +19,13 @@ export interface UploadResponse {
 }
 
 const useUpload = (dir: string) => {
-  const [visible, setVisible] = useState(false);
-  const [report, setReport] = useState<Required<UploadResponse>["result"] | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [isRetry, setRetry] = useState(false);
+  const [queueFiles] = useState<File[]>([]);
   const [ok, setOk] = useState(false);
+  const [isDone, setDone] = useState(false);
+  const [report, setReport] = useState<UploadFileResult[] | null>(null);
+  const [isRetry, setRetry] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const resetState = useCallback(() => {
     setReport(null);
@@ -33,13 +35,23 @@ const useUpload = (dir: string) => {
   }, []);
 
   const handleUpload = useCallback(async (files: File[]) => {
-    if (visible && !ok) return;
-    resetState();
+    queueFiles.push(...files);
+
+    if (queueFiles.length > files.length) return;
+
     setVisible(true);
-    const results = await upload(dir, files, setProgress, setRetry);
-    setOk(results.every(file => file.ok));
-    setReport(results);
-  }, [dir, upload, ok, visible]);
+    setDone(false);
+
+    const newReport = await upload(dir, queueFiles, setProgress, setRetry);
+    queueFiles.splice(0);
+
+    setReport((prevReport) => {
+      const sumReport = (prevReport || []).concat(newReport);
+      setOk(sumReport.every(file => file.ok));
+      setDone(true);
+      return sumReport;
+    });
+  }, [dir, upload, queueFiles]);
 
   const handleClose = useCallback((e: SyntheticEvent, reason?: string) => {
     e.preventDefault();
@@ -52,7 +64,7 @@ const useUpload = (dir: string) => {
   if (visible) {
     dialog = (
       <MyDialog fullWidth={true} onClose={handleClose} open={true}>
-        {report ? (
+        {isDone ? (
           <DialogTitle>
             <Box alignItems="center" display="flex">
               Upload {ok ? 'complete' : 'error'}
@@ -63,13 +75,13 @@ const useUpload = (dir: string) => {
           </DialogTitle>
         ) : null}
         <DialogContent>
-          {report ? (
-            <Report report={report}/>
-          ) : (
+          {!isDone ? (
             <LinearProgress color={isRetry ? "warning" : "primary"} variant={"determinate"} value={progress}/>
-          )}
+          ) : report ? (
+            <Report report={report}/>
+          ) : null}
         </DialogContent>
-        {report ? (
+        {isDone ? (
           <DialogActions>
             <Button onClick={handleClose}>Close</Button>
           </DialogActions>
