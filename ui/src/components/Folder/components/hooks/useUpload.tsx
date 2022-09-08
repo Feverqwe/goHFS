@@ -94,9 +94,16 @@ const useUpload = (dir: string) => {
 };
 
 const upload = async (dir: string, files: File[], setProgress: (val: number) => void, setRetry: (bool: boolean) => void) => {
-  const sumBytes = files.reduce((r, file) => r += file.size, 0);
+  let sumBytesLen = 0;
+  let sumBytes = 0;
+
   let uploadedBytes = 0;
   const updateProgress = (bytes: number) => {
+    if (sumBytesLen !== files.length) {
+      sumBytes = files.slice(sumBytesLen).reduce((r, file) => r += file.size, sumBytes);
+      sumBytesLen = files.length;
+    }
+
     uploadedBytes += bytes;
     setProgress(100 / sumBytes * uploadedBytes);
   };
