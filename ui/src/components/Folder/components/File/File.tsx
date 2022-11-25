@@ -8,7 +8,7 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
   Movie as MovieIcon
 } from "@mui/icons-material";
-import {IconButton, ListItem, ListItemIcon, ListItemText, styled} from "@mui/material";
+import {Box, CardActionArea, IconButton, ListItemText, styled} from "@mui/material";
 import {FileInfo, RootStore} from "../../../../folder";
 import FileMenu from "../FileMenu";
 import RenameDialog from "../RenameDialog";
@@ -16,10 +16,6 @@ import Path from "path-browserify";
 
 const mime = require('mime');
 const filesize = require('filesize');
-
-const iconStyle = {
-  minWidth: '42px',
-};
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -138,21 +134,27 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
 
   return (
     <>
-      <ListItem button component={'a'} href={Path.join(dir, encodeURIComponent(name))}>
-        <ListItemIcon className={'no-click'} style={iconStyle} onContextMenu={writable && handleMenuClick || undefined}>
+      <Box display={"flex"} alignItems={"stretch"}>
+        <Box pl={1} display={"flex"} alignItems={"center"}>
           {handleUrl ? (
-            <MyIconButton color="primary" onClick={handleHandleClick}>
+            <IconButton color={'primary'} onClick={handleHandleClick} onContextMenu={writable && handleMenuClick || undefined}>
               <Icon/>
-            </MyIconButton>
+            </IconButton>
           ) : (
-            <Icon/>
+            <Box p={1} onContextMenu={writable && handleMenuClick || undefined}>
+              <Icon/>
+            </Box>
           )}
-        </ListItemIcon>
-        <ListItemText primary={name} secondary={<SubLine>
-          <div>{dateStr}</div>
-          <div>{sizeStr}</div>
-        </SubLine>} secondaryTypographyProps={{component: 'div'}} sx={NameSx}/>
-      </ListItem>
+        </Box>
+        <Box flexGrow={1}>
+          <CardActionArea sx={{p: 1}} href={Path.join(dir, encodeURIComponent(name))}>
+            <ListItemText primary={name} secondary={<SubLine>
+              <div>{dateStr}</div>
+              <div>{sizeStr}</div>
+            </SubLine>} secondaryTypographyProps={{component: 'div'}} sx={NameSx}/>
+          </CardActionArea>
+        </Box>
+      </Box>
       {menuAnchorEl ? (
         <FileMenu
           anchorEl={menuAnchorEl}
@@ -168,12 +170,6 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
       ) : null}
     </>
   );
-});
-
-const MyIconButton = styled(IconButton)(() => {
-  return {
-    padding: 0,
-  };
 });
 
 function dateToStr(date: Date) {
