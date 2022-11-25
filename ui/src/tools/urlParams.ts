@@ -21,10 +21,10 @@ export function changeUrlParams(changes: Record<string, string | string[]>) {
   const params = uri.searchParams;
   Object.entries(changes).forEach(([key, value]) => {
     if (Array.isArray(value)) {
-      value.forEach(value => params.set(key, value));
+      value.forEach((value) => params.set(key, value));
     } else {
       params.set(key, value);
     }
   });
-  history.replaceState(null, '', uri.toString())
+  history.replaceState(null, '', uri.toString());
 }

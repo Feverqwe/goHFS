@@ -1,21 +1,21 @@
-import * as React from "react";
-import {SyntheticEvent, useMemo} from "react";
+import * as React from 'react';
+import {SyntheticEvent, useMemo} from 'react';
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
   Folder as FolderIcon,
   Image as ImageIcon,
   InsertDriveFile as InsertDriveFileIcon,
-  Movie as MovieIcon
-} from "@mui/icons-material";
-import {Box, CardActionArea, IconButton, ListItemText, styled} from "@mui/material";
-import {FileInfo, RootStore} from "../../../../folder";
-import FileMenu from "../FileMenu";
-import RenameDialog from "../RenameDialog";
-import Path from "path-browserify";
+  Movie as MovieIcon,
+} from '@mui/icons-material';
+import {Box, CardActionArea, IconButton, ListItemText, styled} from '@mui/material';
+import Path from 'path-browserify';
+import {FileInfo, RootStore} from '../../../../folder';
+import FileMenu from '../FileMenu';
+import RenameDialog from '../RenameDialog';
+import {filesize} from 'filesize';
 
 const mime = require('mime');
-const filesize = require('filesize');
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -51,8 +51,8 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
     try {
       if (!isDir) {
         const [value, symbol] = filesize(size, {
-          output: 'array'
-        });
+          output: 'array',
+        }) as any[];
         hSize = `${Math.trunc(value * 10) / 10} ${symbol}`;
       }
     } catch (err) {
@@ -103,7 +103,7 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
     if (win) {
       win.focus();
     }
-  }, [handleUrl]);
+  }, [dir, handleUrl, name]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -134,24 +134,31 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
 
   return (
     <>
-      <Box display={"flex"} alignItems={"stretch"}>
-        <Box pl={1} display={"flex"} alignItems={"center"}>
+      <Box display="flex" alignItems="stretch">
+        <Box pl={1} display="flex" alignItems="center">
           {handleUrl ? (
-            <IconButton color={'primary'} onClick={handleHandleClick} onContextMenu={writable && handleMenuClick || undefined}>
-              <Icon/>
+            <IconButton color="primary" onClick={handleHandleClick} onContextMenu={writable && handleMenuClick || undefined}>
+              <Icon />
             </IconButton>
           ) : (
             <Box p={1} onContextMenu={writable && handleMenuClick || undefined}>
-              <Icon/>
+              <Icon />
             </Box>
           )}
         </Box>
         <Box flexGrow={1}>
           <CardActionArea sx={{p: 1}} href={Path.join(dir, encodeURIComponent(name))}>
-            <ListItemText primary={name} secondary={<SubLine>
-              <div>{dateStr}</div>
-              <div>{sizeStr}</div>
-            </SubLine>} secondaryTypographyProps={{component: 'div'}} sx={NameSx}/>
+            <ListItemText
+              primary={name}
+              secondary={(
+                <SubLine>
+                  <div>{dateStr}</div>
+                  <div>{sizeStr}</div>
+                </SubLine>
+)}
+              secondaryTypographyProps={{component: 'div'}}
+              sx={NameSx}
+            />
           </CardActionArea>
         </Box>
       </Box>
@@ -166,15 +173,15 @@ const File = React.memo(({store, file, dir, writable}: FileProps) => {
         />
       ) : null}
       {renameDialog ? (
-        <RenameDialog onClose={handleCloseDialog} dir={dir} file={file}/>
+        <RenameDialog onClose={handleCloseDialog} dir={dir} file={file} />
       ) : null}
     </>
   );
 });
 
 function dateToStr(date: Date) {
-  const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(v => (v < 10 ? '0' : '') + v).join('-');
-  const timeStr = [date.getHours(), date.getMinutes(), date.getSeconds()].map(v => (v < 10 ? '0' : '') + v).join(':');
+  const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((v) => (v < 10 ? '0' : '') + v).join('-');
+  const timeStr = [date.getHours(), date.getMinutes(), date.getSeconds()].map((v) => (v < 10 ? '0' : '') + v).join(':');
   return `${dateStr} ${timeStr}`;
 }
 

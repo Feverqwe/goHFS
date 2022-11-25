@@ -1,9 +1,9 @@
-function addEvent<T extends HTMLElement | Window>(target: T, on: (target: T["addEventListener"]) => void, disposers?: Array<() => void>) {
-  let events: Parameters<T["addEventListener"]>[] = [];
-  const vOn = (...args: Parameters<T["addEventListener"]>) => {
+function addEvent<T extends HTMLElement | Window>(target: T, on: (target: T['addEventListener']) => void, disposers?: Array<() => void>) {
+  const events: Parameters<T['addEventListener']>[] = [];
+  const vOn = (...args: Parameters<T['addEventListener']>) => {
     events.push(args);
-  }
-  on(vOn as T["addEventListener"]);
+  };
+  on(vOn as T['addEventListener']);
   if (!events.length) {
     throw new Error('Listener is not set!');
   }

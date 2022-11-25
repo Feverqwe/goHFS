@@ -1,11 +1,11 @@
-import * as React from "react";
-import {useState} from "react";
-import Video from "../Video/Video";
-import UrlForm from "../UrlForm/UrlForm";
-import UrlFormContext from "../UrlForm/UrlFormContext";
-import {GlobalStyles} from "@mui/material";
-import {changeUrlParams} from "../../../tools/urlParams";
-import {getParamsFromUrl} from "./utils";
+import * as React from 'react';
+import {useState} from 'react';
+import {GlobalStyles} from '@mui/material';
+import Video from '../Video/Video';
+import UrlForm from '../UrlForm/UrlForm';
+import UrlFormContext from '../UrlForm/UrlFormContext';
+import {changeUrlParams} from '../../../tools/urlParams';
+import {getParamsFromUrl} from './utils';
 
 const RootStyles = {
   html: {
@@ -22,7 +22,7 @@ const RootStyles = {
   '#root': {
     width: '100%',
     height: '100%',
-  }
+  },
 };
 
 const Root = React.memo(() => {
@@ -33,28 +33,28 @@ const Root = React.memo(() => {
     if (!url) {
       setShowForm(true);
     }
-  },[]);
+  }, [url]);
 
   const handleShowForm = React.useCallback(() => {
-    setShowForm(v => !v);
-  }, []);
-
-  const handleUrlFormSubmit = React.useCallback((url: string) => {
-    changeUrlParams({url, time: String(0)});
-    setUrlTime(getParamsFromUrl());
-    handleClose();
+    setShowForm((v) => !v);
   }, []);
 
   const handleClose = React.useCallback(() => {
     setShowForm(false);
   }, []);
 
+  const handleUrlFormSubmit = React.useCallback((url: string) => {
+    changeUrlParams({url, time: String(0)});
+    setUrlTime(getParamsFromUrl());
+    handleClose();
+  }, [handleClose]);
+
   return (
     <UrlFormContext.Provider value={handleShowForm}>
       <GlobalStyles styles={RootStyles} />
-      <Video url={url} starTime={time}/>
+      <Video url={url} starTime={time} />
       {isShowForm ? (
-        <UrlForm onCancel={url && handleClose || undefined} onSubmit={handleUrlFormSubmit}/>
+        <UrlForm onCancel={url && handleClose || undefined} onSubmit={handleUrlFormSubmit} />
       ) : null}
     </UrlFormContext.Provider>
   );

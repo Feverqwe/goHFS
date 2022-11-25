@@ -1,11 +1,11 @@
-import * as React from "react";
-import {Box, Input, Table, TableBody, TableCell, TableRow} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import {UploadResponse} from "./hooks/useUpload";
+import * as React from 'react';
+import {Box, Input, Table, TableBody, TableCell, TableRow} from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import {UploadResponse} from './hooks/useUpload';
 
 interface ReportProps {
-  report: Required<UploadResponse>["result"];
+  report: Required<UploadResponse>['result'];
 }
 
 const Report: React.FC<ReportProps> = ({report}) => {
@@ -17,7 +17,7 @@ const Report: React.FC<ReportProps> = ({report}) => {
             <TableCell>
               {file.filename}
               {!file.ok ? (
-                <Input fullWidth={true} value={file.error} readOnly/>
+                <Input fullWidth={true} value={file.error} readOnly />
               ) : null}
             </TableCell>
             <TableCell padding="none" align="right">

@@ -1,9 +1,9 @@
-import * as React from "react";
-import {SyntheticEvent} from "react";
-import {Box, Button, DialogActions, DialogContent, Input, LinearProgress, Typography} from "@mui/material";
-import MyDialog from "./MyDialog";
+import * as React from 'react';
+import {SyntheticEvent} from 'react';
+import {Box, Button, DialogActions, DialogContent, Input, LinearProgress, Typography} from '@mui/material';
+import MyDialog from './MyDialog';
 
-const QRCode = require("qrcode");
+const QRCode = require('qrcode');
 
 interface AddressesDialogProps {
   onClose: () => void,
@@ -42,13 +42,13 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
 
     return () => {
       mounted = false;
-    }
+    };
   }, []);
 
   const handleClose = React.useCallback((e: SyntheticEvent, reason?: string) => {
     e.preventDefault();
     onClose();
-  }, []);
+  }, [onClose]);
 
   return (
     <MyDialog fullWidth={true} onClose={handleClose} open={true}>
@@ -58,15 +58,15 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
         ) : error ? (
           <>
             <p>Error:</p>
-            <Input fullWidth={true} value={error.message} readOnly/>
+            <Input fullWidth={true} value={error.message} readOnly />
           </>
         ) : (
           <Box justifyContent="space-around" display="flex" flexWrap="wrap">
-          {addresses!.map((address) => {
-            return (
-              <AddressItem key={address} address={address} />
-            );
-          })}
+            {addresses!.map((address) => {
+              return (
+                <AddressItem key={address} address={address} />
+              );
+            })}
           </Box>
         )}
         <DialogActions>
@@ -96,17 +96,17 @@ const AddressItem = React.memo(({address}: AddressItemProps) => {
       if (err) {
         console.error('Create QRCode error: %O', err);
       }
-    })
-  }, []);
+    });
+  }, [address]);
 
   return (
     <Box>
-        <Typography align="center" fontSize={14} color="text.secondary" gutterBottom>
-          {address}
-        </Typography>
-        <Box>
-          <canvas ref={refCanvas} width={QR_CODE_SIZE} height={QR_CODE_SIZE} />
-        </Box>
+      <Typography align="center" fontSize={14} color="text.secondary" gutterBottom>
+        {address}
+      </Typography>
+      <Box>
+        <canvas ref={refCanvas} width={QR_CODE_SIZE} height={QR_CODE_SIZE} />
+      </Box>
     </Box>
   );
 });

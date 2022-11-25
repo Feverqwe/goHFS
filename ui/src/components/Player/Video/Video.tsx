@@ -1,11 +1,11 @@
-import * as React from "react";
-import {memo, useContext, useEffect, useMemo, useRef, useState} from "react";
-import addEvent from "../../../tools/addEvent";
-import UrlFormContext from "../UrlForm/UrlFormContext";
-import Storage from "../../../tools/storage";
-import {styled} from "@mui/material";
-import Path from "path-browserify";
-import {TITLE} from "../constants";
+import * as React from 'react';
+import {memo, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {styled} from '@mui/material';
+import Path from 'path-browserify';
+import addEvent from '../../../tools/addEvent';
+import UrlFormContext from '../UrlForm/UrlFormContext';
+import Storage from '../../../tools/storage';
+import {TITLE} from '../constants';
 
 interface PlayerProps {
   url: string,
@@ -28,9 +28,9 @@ const Video = memo(({url, starTime}: PlayerProps) => {
   const refVideo = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setPlaying] = useState(false);
 
-  const scope = useMemo(() => {
+  const [scope] = useState(() => {
     return {starTime, metadataLoaded: false};
-  }, []);
+  });
 
   useMemo(() => {
     scope.starTime = starTime;
@@ -59,7 +59,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
     } catch (err) {}
     if (uri) {
       const name = Path.basename(uri.pathname);
-      document.title = `[${isPlaying ? '>' : '||'}] ${decodeURIComponent(name)}`
+      document.title = `[${isPlaying ? '>' : '||'}] ${decodeURIComponent(name)}`;
     }
     return () => {
       document.title = TITLE;
@@ -71,7 +71,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
     Storage.get<Partial<Record<string, StorageValue>>>([sid, oldSid]).then((result) => {
       if (unmount) return;
       const value = result[sid] || result[oldSid];
-      if (typeof value === "number") {
+      if (typeof value === 'number') {
         scope.starTime = value;
         if (refVideo.current && scope.metadataLoaded) {
           refVideo.current.currentTime = value;
@@ -84,7 +84,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
     return () => {
       unmount = true;
     };
-  }, [url]);
+  }, [oldSid, scope, sid, url]);
 
   useEffect(() => {
     if (!url || !refVideo.current) return;
@@ -94,22 +94,22 @@ const Video = memo(({url, starTime}: PlayerProps) => {
     const disposers: Array<() => void> = [];
 
     let isFullscreen = false;
-    addEvent(video, on => on('fullscreenchange', () => {
+    addEvent(video, (on) => on('fullscreenchange', () => {
       isFullscreen = document.fullscreenElement === video;
     }), disposers);
 
     let lastKey = '';
-    addEvent(window, on => on('keyup', (e: KeyboardEvent) => {
+    addEvent(window, (on) => on('keyup', (e: KeyboardEvent) => {
       // console.log('keyup: %s', e.code);
       lastKey = '';
     }, true), disposers);
 
-    addEvent(window, on => on('keydown', (e: KeyboardEvent) => {
+    addEvent(window, (on) => on('keydown', (e: KeyboardEvent) => {
       // console.log('keydown: %s', e.code);
       const target = e.target as HTMLElement;
       if (target && target.tagName === 'INPUT') return;
 
-      const code = e.code;
+      const {code} = e;
       const isRepeat = e.code === lastKey;
 
       // Bail if a modifier key is set
@@ -132,12 +132,12 @@ const Video = memo(({url, starTime}: PlayerProps) => {
           }
           break;
         }
-        /*case 'ArrowUp': {
+        /* case 'ArrowUp': {
           break;
         }
         case 'ArrowDown': {
           break;
-        }*/
+        } */
         case 'ArrowLeft': {
           e.preventDefault();
           const offset = e.altKey ? 3 : 10;
@@ -158,7 +158,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
             });
           } else {
             video.requestFullscreen({
-              navigationUI: "auto",
+              navigationUI: 'auto',
             }).catch((err) => {
               console.error('requestFullscreen error: %O', err);
             });
@@ -176,7 +176,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
       lastKey = code;
     }, true), disposers);
 
-    addEvent(video, on => on('click', (e: MouseEvent) => {
+    addEvent(video, (on) => on('click', (e: MouseEvent) => {
       e.preventDefault();
       if (video.paused) {
         video.play().catch((err) => {
@@ -188,7 +188,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
     }), disposers);
 
     let lastSyncAt = 0;
-    addEvent(video, on => on('timeupdate', (e: Event) => {
+    addEvent(video, (on) => on('timeupdate', (e: Event) => {
       const now = Date.now();
       if (!lastSyncAt) {
         lastSyncAt = now;
@@ -212,7 +212,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
       });
     });
 
-    /*[
+    /* [
       'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'ended',
       'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play',
       'playing', 'progress', 'ratechange', 'seeked', 'seeking', 'stalled',
@@ -221,9 +221,9 @@ const Video = memo(({url, starTime}: PlayerProps) => {
       addEvent(video, on => on(type, (e: Event) => {
         console.log('Event %s: %O', type, e);
       }));
-    });*/
+    }); */
 
-    const disposeLoadedMetadata = addEvent(video, on => on('loadedmetadata', () => {
+    const disposeLoadedMetadata = addEvent(video, (on) => on('loadedmetadata', () => {
       disposeLoadedMetadata();
       scope.metadataLoaded = true;
       if (scope.starTime > 0) {
@@ -238,12 +238,12 @@ const Video = memo(({url, starTime}: PlayerProps) => {
     video.focus();
 
     return () => {
-      disposers.splice(0).forEach(disposer => disposer());
+      disposers.splice(0).forEach((disposer) => disposer());
 
       video.src = '';
       scope.metadataLoaded = false;
     };
-  }, [url]);
+  }, [scope, showUrlForm, sid, url]);
 
   return (
     <VideoTag ref={refVideo} controls={true} />

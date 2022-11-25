@@ -1,9 +1,8 @@
-import * as React from "react";
-import {SyntheticEvent} from "react";
-import {Button, ButtonGroup, DialogContent} from "@mui/material";
-import {ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon} from "@mui/icons-material";
-import MyDialog from "./MyDialog";
-
+import * as React from 'react';
+import {SyntheticEvent} from 'react';
+import {Button, ButtonGroup, DialogContent} from '@mui/material';
+import {ArrowDropDown as ArrowDropDownIcon, ArrowDropUp as ArrowDropUpIcon} from '@mui/icons-material';
+import MyDialog from './MyDialog';
 
 const keyName = {
   ctime: 'Create time',
@@ -22,11 +21,11 @@ interface SortChooseDialogProps {
 const SortChooseDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseDialogProps) => {
   const handleClose = React.useCallback((e: SyntheticEvent) => {
     onClose();
-  }, []);
+  }, [onClose]);
 
   const handleChangeSort = React.useCallback((key: Key) => {
     changeSort(key);
-  }, []);
+  }, [changeSort]);
 
   return (
     <MyDialog onClose={handleClose} open={true}>
@@ -63,11 +62,11 @@ const SortBtn = React.memo(({type, name, active, direction, onClick}: SortBtnPro
   let icon;
   if (active && direction) {
     icon = (
-      <ArrowDropUpIcon/>
+      <ArrowDropUpIcon />
     );
   } else {
     icon = (
-      <ArrowDropDownIcon/>
+      <ArrowDropDownIcon />
     );
   }
 
@@ -78,14 +77,15 @@ const SortBtn = React.memo(({type, name, active, direction, onClick}: SortBtnPro
     } else {
       onClick([type, direction]);
     }
-  }, [active, direction]);
+  }, [active, direction, onClick, type]);
 
   return (
     <Button
       onClick={handleClick}
       variant={active ? 'contained' : 'outlined'}
       endIcon={icon}
-    >{name}</Button>
+    >{name}
+    </Button>
   );
 });
 

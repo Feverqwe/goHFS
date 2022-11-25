@@ -1,4 +1,4 @@
-import {getUrlParams} from "../../../tools/urlParams";
+import {getUrlParams} from '../../../tools/urlParams';
 
 export function getParamsFromUrl() {
   const {url: rawUrl, time: rawTime} = getUrlParams();

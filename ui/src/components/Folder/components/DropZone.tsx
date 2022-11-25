@@ -1,6 +1,6 @@
-import React, {FC, useState} from "react";
-import {Fade, styled} from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import React, {FC, useState} from 'react';
+import {Fade, styled} from '@mui/material';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 const MyDiv = styled('div')(() => {
   return {
@@ -47,7 +47,7 @@ const DropZone: FC<DropZoneProps> = ({onUpload}) => {
       if (!e.dataTransfer?.types.includes('Files')) return;
       e.stopPropagation();
       e.preventDefault();
-      const files = e.dataTransfer.files;
+      const {files} = e.dataTransfer;
       if (files.length) {
         onUpload(Array.from(files));
       }
@@ -58,12 +58,12 @@ const DropZone: FC<DropZoneProps> = ({onUpload}) => {
       window.removeEventListener('dragover', handleDragOver);
       window.removeEventListener('drop', handleDrop);
     };
-  }, []);
+  }, [onUpload]);
 
   return (
     <Fade in={visible} unmountOnExit>
       <MyDiv>
-        <UploadFileIcon color="primary" fontSize="large"/>
+        <UploadFileIcon color="primary" fontSize="large" />
       </MyDiv>
     </Fade>
   );

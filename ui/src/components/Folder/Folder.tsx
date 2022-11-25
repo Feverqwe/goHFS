@@ -1,20 +1,20 @@
-import * as React from "react";
-import {SyntheticEvent} from "react";
-import SortChooseDialog from "./components/SortChooseDialog";
-import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, styled} from "@mui/material";
+import * as React from 'react';
+import {SyntheticEvent} from 'react';
+import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   QrCode2 as QrCode2Icon,
   Sort as SortIcon,
-  Upload as UploadIcon
-} from "@mui/icons-material";
-import {FileInfo, RootStore} from "../../folder";
-import AddressesDialog from "./components/AddressesDialog";
-import File from "./components/File/File";
+  Upload as UploadIcon,
+} from '@mui/icons-material';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
-import Path from "path-browserify";
-import DropZone from "./components/DropZone";
-import useUpload from "./components/hooks/useUpload";
+import Path from 'path-browserify';
+import SortChooseDialog from './components/SortChooseDialog';
+import {FileInfo, RootStore} from '../../folder';
+import AddressesDialog from './components/AddressesDialog';
+import File from './components/File/File';
+import DropZone from './components/DropZone';
+import useUpload from './components/hooks/useUpload';
 
 const RootSx = {
   width: '100%',
@@ -90,7 +90,7 @@ const Folder = React.memo(({store}: FolderProps) => {
       handleUpload(files);
     });
     input.dispatchEvent(new MouseEvent('click'));
-  }, []);
+  }, [handleUpload]);
 
   const handleCloseSortDialog = React.useCallback(() => {
     setShowSortDialog(false);
@@ -106,7 +106,7 @@ const Folder = React.memo(({store}: FolderProps) => {
     sortedFiles.forEach((file) => {
       if (!file.isDir) {
         const url = new URL(Path.join(store.dir, file.name), location.href).toString();
-        const name = file.name;
+        const {name} = file;
         lines.push(`#EXTINF:-1,${name}`);
         lines.push(url);
       }
@@ -114,8 +114,8 @@ const Folder = React.memo(({store}: FolderProps) => {
 
     const dirname = store.isRoot ? 'root' : Path.basename(store.dir);
 
-    const blob = new Blob([lines.join('\n')], {type: "application/mpegurl"});
-    const url  = URL.createObjectURL(blob);
+    const blob = new Blob([lines.join('\n')], {type: 'application/mpegurl'});
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${dirname}.m3u8`;
@@ -127,7 +127,7 @@ const Folder = React.memo(({store}: FolderProps) => {
     <>
       <List
         component="nav"
-        subheader={
+        subheader={(
           <ListSubheaderMy component="div">
             <Box sx={PathLinePathSx}>
               {store.dir}
@@ -147,23 +147,23 @@ const Folder = React.memo(({store}: FolderProps) => {
               <QrCode2Icon fontSize="inherit" />
             </IconButton>
           </ListSubheaderMy>
-        }
+        )}
         sx={RootSx}
       >
         {!store.isRoot && (
-          <ListItem button component={'a'} href={Path.join(store.dir, '/', '..')}>
+          <ListItem button component="a" href={Path.join(store.dir, '/', '..')}>
             <ListItemIcon style={iconStyle}>
-              <ArrowBackIcon/>
+              <ArrowBackIcon />
             </ListItemIcon>
-            <ListItemText primary="Back"/>
+            <ListItemText primary="Back" />
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={file.isDir + '_' + file.name} store={store} dir={store.dir} file={file} writable={store.isWritable}/>
+          return <File key={`${file.isDir}_${file.name}`} store={store} dir={store.dir} file={file} writable={store.isWritable} />;
         })}
       </List>
       {store.isWritable && (
-        <DropZone onUpload={handleUpload}/>
+        <DropZone onUpload={handleUpload} />
       )}
       {showSortDialog && (
         <SortChooseDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />
@@ -184,7 +184,9 @@ function getOption<T>(key: string, defaultValue: T) {
       throw new Error('Value is empty');
     }
     value = JSON.parse(raw);
-  } catch (err) {}
+  } catch (err) {
+    // pass
+  }
   if (value === null) {
     value = defaultValue;
   }

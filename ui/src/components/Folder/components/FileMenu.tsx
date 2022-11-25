@@ -1,12 +1,12 @@
-import * as React from "react";
-import {SyntheticEvent} from "react";
-import {CircularProgress, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from "@mui/material";
+import * as React from 'react';
+import {SyntheticEvent} from 'react';
+import {CircularProgress, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
-import {FileInfo} from "../../../folder";
-import {doReq} from "../../../tools/apiRequest";
+import {FileInfo} from '../../../folder';
+import {doReq} from '../../../tools/apiRequest';
 
 const MyListItemIcon = styled(ListItemIcon)(({theme}) => {
   return {
@@ -93,7 +93,7 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
     }
 
     return [icon, label, url, payload];
-  }, [file]);
+  }, [action, dir, file.isDir, file.name]);
 
   const handleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
@@ -111,23 +111,23 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
     } else {
       onSuccess && onSuccess();
     }
-  }, [onSuccess, url, payload]);
+  }, [scope.isLoading, payload, url, onSuccess]);
 
   return (
     <MenuItem onClick={handleClick}>
       <ListItemIcon>
-        <Icon/>
+        <Icon />
       </ListItemIcon>
       <ListItemText>{label}</ListItemText>
       <MyListItemIcon>
         {isLoading ? (
-          <CircularProgress size={20}/>
+          <CircularProgress size={20} />
         ) : error ? (
           <Tooltip title={error.message}>
-            <ErrorIcon color="error"/>
+            <ErrorIcon color="error" />
           </Tooltip>
         ) : isDone ? (
-          <DoneIcon/>
+          <DoneIcon />
         ) : null}
       </MyListItemIcon>
     </MenuItem>

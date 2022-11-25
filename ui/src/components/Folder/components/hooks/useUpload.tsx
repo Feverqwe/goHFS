@@ -1,11 +1,11 @@
-import * as React from "react";
-import {SyntheticEvent, useCallback, useState} from "react";
-import {ApiError, doReq, handleApiResponse} from "../../../../tools/apiRequest";
-import {Box, Button, DialogActions, DialogContent, DialogTitle, Input, LinearProgress} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import MyDialog from "../MyDialog";
-import Report from "../Report";
+import * as React from 'react';
+import {SyntheticEvent, useCallback, useState} from 'react';
+import {Box, Button, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import {ApiError, doReq, handleApiResponse} from '../../../../tools/apiRequest';
+import MyDialog from '../MyDialog';
+import Report from '../Report';
 
 export interface UploadFileResult {
   ok: boolean,
@@ -47,18 +47,18 @@ const useUpload = (dir: string) => {
 
     setReport((prevReport) => {
       const sumReport = (prevReport || []).concat(newReport);
-      setOk(sumReport.every(file => file.ok));
+      setOk(sumReport.every((file) => file.ok));
       setDone(true);
       return sumReport;
     });
-  }, [dir, upload, queueFiles]);
+  }, [dir, queueFiles]);
 
   const handleClose = useCallback((e: SyntheticEvent, reason?: string) => {
     e.preventDefault();
     if (!ok && reason === 'backdropClick') return;
     setVisible(false);
     resetState();
-  }, [ok]);
+  }, [ok, resetState]);
 
   let dialog = null;
   if (visible) {
@@ -69,16 +69,16 @@ const useUpload = (dir: string) => {
             <Box alignItems="center" display="flex">
               Upload {ok ? 'complete' : 'error'}
               <Box alignItems="center" display="flex" p={1}>
-                {ok ? <CheckIcon color="primary"/> : <ErrorOutlineIcon color="error"/>}
+                {ok ? <CheckIcon color="primary" /> : <ErrorOutlineIcon color="error" />}
               </Box>
             </Box>
           </DialogTitle>
         ) : null}
         <DialogContent>
           {!isDone ? (
-            <LinearProgress color={isRetry ? "warning" : "primary"} variant={"determinate"} value={progress}/>
+            <LinearProgress color={isRetry ? 'warning' : 'primary'} variant="determinate" value={progress} />
           ) : report ? (
-            <Report report={report}/>
+            <Report report={report} />
           ) : null}
         </DialogContent>
         {isDone ? (
@@ -110,10 +110,10 @@ const upload = async (dir: string, files: File[], setProgress: (val: number) => 
 
   const sendChunk = async (key: string, chunk: Blob, pos: number) => {
     const data = new FormData();
-    data.append("key", key);
-    data.append("pos", String(pos));
-    data.append("size", String(chunk.size));
-    data.append("chunk", chunk);
+    data.append('key', key);
+    data.append('pos', String(pos));
+    data.append('size', String(chunk.size));
+    data.append('chunk', chunk);
 
     await fetch('/~/upload/chunk', {
       method: 'POST',
@@ -146,7 +146,7 @@ const upload = async (dir: string, files: File[], setProgress: (val: number) => 
             throw err;
           }
           setRetry(true);
-          await new Promise(r => setTimeout(r, 5 * 1000));
+          await new Promise((r) => setTimeout(r, 5 * 1000));
         }
       }
       setRetry(false);
@@ -168,7 +168,7 @@ const upload = async (dir: string, files: File[], setProgress: (val: number) => 
     results.push({
       ok: !error,
       filename: file.name,
-      error: error,
+      error,
     });
   }
 

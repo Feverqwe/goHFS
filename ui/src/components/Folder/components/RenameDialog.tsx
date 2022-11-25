@@ -1,7 +1,5 @@
-import {FileInfo} from "../../../folder";
-import MyDialog from "./MyDialog";
-import * as React from "react";
-import {FormEvent, SyntheticEvent} from "react";
+import * as React from 'react';
+import {FormEvent, SyntheticEvent} from 'react';
 import {
   Box,
   Button,
@@ -10,10 +8,12 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-  Tooltip
-} from "@mui/material";
-import {doReq} from "../../../tools/apiRequest";
-import ErrorIcon from "@mui/icons-material/Error";
+  Tooltip,
+} from '@mui/material';
+import ErrorIcon from '@mui/icons-material/Error';
+import {doReq} from '../../../tools/apiRequest';
+import MyDialog from './MyDialog';
+import {FileInfo} from '../../../folder';
 
 interface RenameDialogProps {
   dir: string;
@@ -28,7 +28,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
   const handleClose = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     onClose();
-  }, []);
+  }, [onClose]);
 
   const handleRename = React.useCallback((e: FormEvent) => {
     e.preventDefault();
@@ -37,7 +37,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
     doReq('/~/rename', {
       place: dir,
       name: file.name,
-      newName: newName,
+      newName,
     }).finally(() => {
       setLoading(false);
     }).then(() => {
@@ -45,7 +45,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
     }, (err) => {
       setError(err);
     });
-  }, []);
+  }, [dir, file.name, onClose]);
 
   return (
     <MyDialog fullWidth={true} onClose={handleClose} open={true}>
@@ -55,21 +55,21 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
         </DialogTitle>
         <DialogContent>
           <TextField
-            margin={"dense"}
-            name={'name'}
+            margin="dense"
+            name="name"
             fullWidth={true}
             defaultValue={file.name}
             InputProps={{readOnly: true}}
-            label={'Original name'}
+            label="Original name"
             variant="standard"
           />
           <TextField
-            margin={"dense"}
-            name={'new_name'}
+            margin="dense"
+            name="new_name"
             fullWidth={true}
             defaultValue={file.name}
             InputProps={{readOnly: isLoading}}
-            label={'New name'}
+            label="New name"
             variant="standard"
           />
         </DialogContent>
@@ -79,12 +79,12 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
             Rename
             {isLoading ? (
               <Box display="flex" alignItems="center" ml={1}>
-                <CircularProgress size={20}/>
+                <CircularProgress size={20} />
               </Box>
             ) : error ? (
               <Box display="flex" alignItems="center" ml={1}>
                 <Tooltip title={error.message}>
-                  <ErrorIcon color="error"/>
+                  <ErrorIcon color="error" />
                 </Tooltip>
               </Box>
             ) : null}
