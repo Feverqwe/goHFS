@@ -6,3 +6,4 @@ storage.json
 open.lock
 goHfs
 /ui/dist
+/assets/www
