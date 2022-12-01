@@ -424,7 +424,7 @@ func handleWww(router *Router, debugUi bool) {
 		var content []byte
 		var err error
 		if debugUi {
-			path := "./ui/dist" + assetPath
+			path := "./ui/dist" + assetPath[3:]
 			content, err = os.ReadFile(path)
 			if info, err := os.Stat(path); err == nil {
 				mTime = info.ModTime()

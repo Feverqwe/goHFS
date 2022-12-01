@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"goHfs/assets"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -97,10 +98,12 @@ func HandleDir(router *Router, config *Config, debugUi bool) {
 		}
 
 		if debugUi {
-			assetPath := "www/folder.html"
+			assetPath := "/folder.html"
 			path := "./ui/dist" + assetPath
 			content, err := os.ReadFile(path)
-			if err == nil {
+			if err != nil {
+				log.Println("Path not found", assetPath)
+			} else {
 				template = string(content)
 			}
 		}
