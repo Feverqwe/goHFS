@@ -99,11 +99,7 @@ func handleUpload(router *Router, config *Config) {
 			return nil, err
 		}
 
-		decoder := json.NewDecoder(strings.NewReader(keyJson))
-
-		var payload Key
-		err = decoder.Decode(&payload)
-		return &payload, err
+		return ParseJson[Key](strings.NewReader(keyJson))
 	}
 
 	readAsString := func(part *multipart.Part) (string, error) {
@@ -180,9 +176,7 @@ func handleUpload(router *Router, config *Config) {
 
 	router.Post("/~/upload/init", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*UploadInit, error) {
-			decoder := json.NewDecoder(r.Body)
-			var payload UploadInitPayload
-			err := decoder.Decode(&payload)
+			payload, err := ParseJson[UploadInitPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
@@ -287,24 +281,20 @@ func handleInterfaces(router *Router, config *Config) {
 func handleStorage(router *Router, storage *Storage) {
 	router.Post("/~/storage/get", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (map[string]interface{}, error) {
-			decoder := json.NewDecoder(r.Body)
-			var keys []string
-			err := decoder.Decode(&keys)
+			keys, err := ParseJson[[]string](r.Body)
 			if err != nil {
 				return nil, err
 			}
-			result := storage.GetKeys(keys)
+			result := storage.GetKeys(*keys)
 			return result, nil
 		})
 	})
 
 	router.Post("/~/storage/set", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			decoder := json.NewDecoder(r.Body)
-			var keyValue map[string]interface{}
-			err := decoder.Decode(&keyValue)
+			keyValue, err := ParseJson[map[string]interface{}](r.Body)
 			if err == nil {
-				err = storage.SetObject(keyValue)
+				err = storage.SetObject(*keyValue)
 			}
 			return "ok", err
 		})
@@ -312,11 +302,9 @@ func handleStorage(router *Router, storage *Storage) {
 
 	router.Post("/~/storage/del", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			decoder := json.NewDecoder(r.Body)
-			var keys []string
-			err := decoder.Decode(&keys)
+			keys, err := ParseJson[[]string](r.Body)
 			if err == nil {
-				err = storage.DelKeys(keys)
+				err = storage.DelKeys(*keys)
 			}
 			return "ok", err
 		})
@@ -340,9 +328,7 @@ func handleAction(router *Router, config *Config) {
 
 	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			decoder := json.NewDecoder(r.Body)
-			var payload RenamePayload
-			err := decoder.Decode(&payload)
+			payload, err := ParseJson[RenamePayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -377,9 +363,7 @@ func handleAction(router *Router, config *Config) {
 
 	router.Post("/~/remove", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			decoder := json.NewDecoder(r.Body)
-			var payload RemovePayload
-			err := decoder.Decode(&payload)
+			payload, err := ParseJson[RemovePayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -451,6 +435,16 @@ func apiCall[T any](w http.ResponseWriter, action ActionAny[T]) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func ParseJson[T any](data io.Reader) (*T, error) {
+	decoder := json.NewDecoder(data)
+	var payload T
+	err := decoder.Decode(&payload)
+	if err != nil {
+		return nil, err
+	}
+	return &payload, nil
 }
 
 func writeApiResult(w http.ResponseWriter, result interface{}, err error) error {
