@@ -30,7 +30,7 @@ type File struct {
 	Size  int64  `json:"size"`  // bytes
 }
 
-func HandleDir(router *Router, config *Config) {
+func HandleDir(router *Router, config *Config, debugUi bool) {
 	public := config.Public
 	showHiddenFiles := config.ShowHiddenFiles
 
@@ -94,6 +94,15 @@ func HandleDir(router *Router, config *Config) {
 			IsWritable: isWritable,
 			Files:      files,
 			ExtHandle:  config.ExtHandle,
+		}
+
+		if debugUi {
+			assetPath := "www/folder.html"
+			path := "./ui/dist" + assetPath
+			content, err := os.ReadFile(path)
+			if err == nil {
+				template = string(content)
+			}
 		}
 
 		var body string

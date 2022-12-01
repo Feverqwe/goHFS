@@ -26,12 +26,12 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, config *Config, storage *Storage) {
+func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
 	handleUpload(apiRouter, config)
-	handleWww(apiRouter)
+	handleWww(apiRouter, debugUi)
 	handleStorage(apiRouter, storage)
 	handleAction(apiRouter, config)
 	handleInterfaces(apiRouter, config)
@@ -409,7 +409,7 @@ func handleAction(router *Router, config *Config) {
 	})
 }
 
-func handleWww(router *Router) {
+func handleWww(router *Router, debugUi bool) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
@@ -418,9 +418,20 @@ func handleWww(router *Router) {
 	}
 
 	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		mTime := binTime
 		assetPath := r.URL.Path[3:]
 
-		content, err := assets.Asset(assetPath)
+		var content []byte
+		var err error
+		if debugUi {
+			path := "./ui/dist" + assetPath
+			content, err = os.ReadFile(path)
+			if info, err := os.Stat(path); err == nil {
+				mTime = info.ModTime()
+			}
+		} else {
+			content, err = assets.Asset(assetPath)
+		}
 		if err != nil {
 			w.WriteHeader(404)
 			return
@@ -428,7 +439,7 @@ func handleWww(router *Router) {
 
 		reader := bytes.NewReader(content)
 		name := path.Base(assetPath)
-		http.ServeContent(w, r, name, binTime, reader)
+		http.ServeContent(w, r, name, mTime, reader)
 	})
 }
 

@@ -6,7 +6,10 @@ import (
 	"goHfs/internal"
 	"log"
 	"net/http"
+	"os"
 )
+
+var DEBUG_UI = os.Getenv("DEBUG_UI") != ""
 
 func main() {
 	if _, err := internal.CreateMutex("GoHFS"); err != nil {
@@ -43,8 +46,8 @@ func main() {
 				router := internal.NewRouter()
 
 				powerLock(router, powerControl)
-				internal.HandleApi(router, &config, storage)
-				internal.HandleDir(router, &config)
+				internal.HandleApi(router, &config, storage, DEBUG_UI)
+				internal.HandleDir(router, &config, DEBUG_UI)
 				fsServer(router, &config)
 
 				address := config.GetAddress()
