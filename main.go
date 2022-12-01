@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var DEBUG_UI = os.Getenv("DEBUG_UI") != ""
+var DEBUG_UI = os.Getenv("DEBUG_UI") == "1"
 
 func main() {
 	if _, err := internal.CreateMutex("GoHFS"); err != nil {
