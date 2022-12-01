@@ -129,6 +129,9 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
     setRenameDialog(false);
   }, []);
 
+  const handleCtxMenu = writable && handleMenuClick || undefined;
+  const href = Path.join(dir, encodeURIComponent(name));
+
   if (removed) {
     return null;
   }
@@ -138,17 +141,17 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
       <Box display="flex" alignItems="stretch">
         <Box pl={1} display="flex" alignItems="center">
           {handleUrl ? (
-            <IconButton color="primary" onClick={handleHandleClick} onContextMenu={writable && handleMenuClick || undefined}>
+            <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu}>
               <Icon />
             </IconButton>
           ) : (
-            <Box p={1} onContextMenu={writable && handleMenuClick || undefined}>
+            <IconButton href={href} onContextMenu={handleCtxMenu}>
               <Icon />
-            </Box>
+            </IconButton>
           )}
         </Box>
         <Box flexGrow={1}>
-          <CardActionArea sx={{p: 1}} href={Path.join(dir, encodeURIComponent(name))}>
+          <CardActionArea sx={{p: 1}} href={href}>
             <ListItemText
               primary={name}
               secondary={(
@@ -156,7 +159,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
                   <div>{dateStr}</div>
                   <div>{sizeStr}</div>
                 </SubLine>
-)}
+              )}
               secondaryTypographyProps={{component: 'div'}}
               sx={NameSx}
             />
