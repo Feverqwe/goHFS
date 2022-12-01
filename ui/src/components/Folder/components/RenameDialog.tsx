@@ -13,7 +13,7 @@ import {
 import ErrorIcon from '@mui/icons-material/Error';
 import {doReq} from '../../../tools/apiRequest';
 import MyDialog from './MyDialog';
-import {FileInfo} from '../../../folder';
+import {FileInfo} from '../../../types';
 
 interface RenameDialogProps {
   dir: string;

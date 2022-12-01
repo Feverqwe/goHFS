@@ -5,21 +5,8 @@ import {CacheProvider} from '@emotion/react';
 import Folder from './components/Folder/Folder';
 import theme from './tools/muiTheme';
 import cache from './tools/muiCache';
-
-export interface FileInfo {
-  size: number,
-  ctime: number,
-  name: string,
-  isDir: boolean,
-}
-
-export interface RootStore {
-  dir: string,
-  isRoot: boolean,
-  isWritable: boolean,
-  files: FileInfo[],
-  extHandle: Partial<Record<string, string>>,
-}
+import {RootStore} from './types';
+import RootStoreProvider from './components/RootStore/RootStoreProvider';
 
 declare const ROOT_STORE: RootStore | undefined;
 
@@ -82,7 +69,9 @@ root.render(
   <CacheProvider value={cache}>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Folder store={rootStore} />
+      <RootStoreProvider>
+        <Folder />
+      </RootStoreProvider>
     </ThemeProvider>
   </CacheProvider>,
 );

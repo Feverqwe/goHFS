@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {SyntheticEvent} from 'react';
+import {SyntheticEvent, useContext} from 'react';
 import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -10,11 +10,12 @@ import {
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import Path from 'path-browserify';
 import SortChooseDialog from './components/SortChooseDialog';
-import {FileInfo, RootStore} from '../../folder';
 import AddressesDialog from './components/AddressesDialog';
 import File from './components/File/File';
 import DropZone from './components/DropZone';
 import useUpload from './components/hooks/useUpload';
+import {FileInfo, RootStore} from '../../types';
+import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 
 const RootSx = {
   width: '100%',
@@ -43,7 +44,8 @@ interface FolderProps {
   store: RootStore,
 }
 
-const Folder = React.memo(({store}: FolderProps) => {
+const Folder = React.memo(() => {
+  const store = useContext(RootStoreCtx);
   const [files] = React.useState(store.files);
   const [sortKey, setSortKey] = React.useState(() => {
     return getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]);
@@ -159,7 +161,7 @@ const Folder = React.memo(({store}: FolderProps) => {
           </ListItem>
         )}
         {sortedFiles.map((file) => {
-          return <File key={`${file.isDir}_${file.name}`} store={store} dir={store.dir} file={file} writable={store.isWritable} />;
+          return <File key={`${file.isDir}_${file.name}`} dir={store.dir} file={file} writable={store.isWritable} />;
         })}
       </List>
       {store.isWritable && (

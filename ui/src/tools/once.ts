@@ -1,4 +1,4 @@
-function once<T extends Function>(callback: T) {
+function once<T extends() => unknown>(callback: T) {
   let cb: undefined | T = callback;
   return () => {
     if (!cb) return;

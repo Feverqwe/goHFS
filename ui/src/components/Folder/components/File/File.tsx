@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {SyntheticEvent, useMemo} from 'react';
+import {SyntheticEvent, useContext, useMemo} from 'react';
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
@@ -10,10 +10,11 @@ import {
 } from '@mui/icons-material';
 import {Box, CardActionArea, IconButton, ListItemText, styled} from '@mui/material';
 import Path from 'path-browserify';
-import {FileInfo, RootStore} from '../../../../folder';
+import {filesize} from 'filesize';
 import FileMenu from '../FileMenu';
 import RenameDialog from '../RenameDialog';
-import {filesize} from 'filesize';
+import {FileInfo} from '../../../../types';
+import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 
 const mime = require('mime');
 
@@ -22,7 +23,6 @@ const NameSx = {
 };
 
 interface FileProps {
-  store: RootStore,
   file: FileInfo,
   dir: string,
   writable: boolean,
@@ -35,7 +35,8 @@ const SubLine = styled('div')(() => {
   };
 });
 
-const File = React.memo(({store, file, dir, writable}: FileProps) => {
+const File = React.memo(({file, dir, writable}: FileProps) => {
+  const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir} = file;
   const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
