@@ -37,6 +37,10 @@ export const api = {
     method: 'POST',
     path: '/~/storage/set',
   }),
+  storageDel: action<string[], string>({
+    method: 'POST',
+    path: '/~/storage/del',
+  }),
   rename: action<{place: string, name: string, newName: string}, string>({
     method: 'POST',
     path: '/~/rename',
