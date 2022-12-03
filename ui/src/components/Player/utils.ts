@@ -15,12 +15,10 @@ export function getSidV1(url: string) {
 }
 
 export function getSidV2(url: string) {
-  let m = /\/\/[^\/]+(.+?)(?:\.[a-z0-9]+)?$/i.exec(url);
-  if (!m) {
-    m = /(.+?)(?:\.[a-z0-9]+)?$/i.exec(url);
-  }
-  if (m) {
-    return m[1];
+  try {
+     return new URL(url, location.href).pathname;
+  } catch (err) {
+    // pass
   }
   return url;
 }
