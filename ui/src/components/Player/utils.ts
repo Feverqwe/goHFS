@@ -16,7 +16,12 @@ export function getSidV1(url: string) {
 
 export function getSidV2(url: string) {
   try {
-     return new URL(url, location.href).pathname;
+    const path = new URL(url, location.href).pathname;
+    const m = /(.+?)(?:\.[a-z0-9]+)?$/i.exec(url);
+    if (m) {
+      return m[1];
+    }
+    return path;
   } catch (err) {
     // pass
   }
