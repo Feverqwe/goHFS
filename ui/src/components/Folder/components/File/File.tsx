@@ -96,9 +96,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
   const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
     if (!handleUrl) return;
     e.preventDefault();
-    const a = document.createElement('a');
-    a.href = Path.join(dir, encodeURIComponent(name));
-    const fileUrl = a.href;
+    const fileUrl = Path.join(dir, encodeURIComponent(name));
     const url = handleUrl.replace('{url}', encodeURIComponent(fileUrl));
     const win = window.open(url, '_blank');
     if (win) {
