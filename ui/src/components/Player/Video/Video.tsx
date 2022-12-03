@@ -196,6 +196,9 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
 
     const disposeLoadedMetadata = addEvent(video, (on) => on('loadedmetadata', () => {
       disposeLoadedMetadata();
+      api.storageSet({
+        [`${sid}.openAt`]: Math.trunc(Date.now() / 1000),
+      });
       if (refStartTime.current > 0) {
         video.currentTime = refStartTime.current;
       }
