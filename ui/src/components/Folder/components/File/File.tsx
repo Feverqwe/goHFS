@@ -130,40 +130,51 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
   const handleCtxMenu = writable && handleMenuClick || undefined;
   const href = Path.join(dir, encodeURIComponent(name));
 
+  const body = useMemo(() => {
+    return (
+      <ListItemText
+        primary={name}
+        secondary={(
+          <SubLine>
+            <div>{dateStr}</div>
+            <div>{sizeStr}</div>
+          </SubLine>
+        )}
+        secondaryTypographyProps={{component: 'div'}}
+        sx={NameSx}
+      />
+    );
+  }, [dateStr, name, sizeStr]);
+
   if (removed) {
     return null;
   }
 
   return (
     <>
-      <Box display="flex" alignItems="stretch">
-        <Box pl={1} display="flex" alignItems="center">
-          {handleUrl ? (
+      {handleUrl ? (
+        <Box display="flex" alignItems="stretch">
+          <Box pl={1} display="flex" alignItems="center">
             <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu}>
               <Icon />
             </IconButton>
-          ) : (
-            <IconButton href={href} onContextMenu={handleCtxMenu}>
-              <Icon />
-            </IconButton>
-          )}
+          </Box>
+          <Box flexGrow={1}>
+            <CardActionArea sx={{p: 1}} href={href}>
+              {body}
+            </CardActionArea>
+          </Box>
         </Box>
-        <Box flexGrow={1}>
-          <CardActionArea sx={{p: 1}} href={href}>
-            <ListItemText
-              primary={name}
-              secondary={(
-                <SubLine>
-                  <div>{dateStr}</div>
-                  <div>{sizeStr}</div>
-                </SubLine>
-              )}
-              secondaryTypographyProps={{component: 'div'}}
-              sx={NameSx}
-            />
-          </CardActionArea>
-        </Box>
-      </Box>
+      ) : (
+        <CardActionArea sx={{display: 'flex', alignItems: 'stretch', px: 1}} href={href}>
+          <Box p={1} pr={2} display="flex" alignItems="center" onContextMenu={handleCtxMenu}>
+            <Icon />
+          </Box>
+          <Box flexGrow={1}>
+            {body}
+          </Box>
+        </CardActionArea>
+      )}
       {menuAnchorEl ? (
         <FileMenu
           anchorEl={menuAnchorEl}

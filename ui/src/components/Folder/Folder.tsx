@@ -1,6 +1,15 @@
 import * as React from 'react';
 import {SyntheticEvent, useContext} from 'react';
-import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
+import {
+  Box,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  ListSubheader,
+  styled,
+} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   QrCode2 as QrCode2Icon,
@@ -153,12 +162,12 @@ const Folder = React.memo(() => {
         sx={RootSx}
       >
         {!store.isRoot && (
-          <ListItem button component="a" href={Path.join(store.dir, '/', '..')}>
+          <ListItemButton component="a" href={Path.join(store.dir, '/', '..')}>
             <ListItemIcon style={iconStyle}>
               <ArrowBackIcon />
             </ListItemIcon>
             <ListItemText primary="Back" />
-          </ListItem>
+          </ListItemButton>
         )}
         {sortedFiles.map((file) => {
           return <File key={`${file.isDir}_${file.name}`} dir={store.dir} file={file} writable={store.isWritable} />;
