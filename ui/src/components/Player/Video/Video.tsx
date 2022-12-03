@@ -1,15 +1,17 @@
 import * as React from 'react';
-import {memo, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import addEvent from '../../../tools/addEvent';
-import UrlFormContext from '../UrlForm/UrlFormContext';
-import Storage from '../../../tools/storage';
+import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {TITLE} from '../constants';
+import {VideoMetadata} from '../types';
+import {getSidV2} from '../utils';
+import {api} from '../../../tools/api';
 
-interface PlayerProps {
+interface VideoProps {
   url: string,
-  starTime: number,
+  metadata?: VideoMetadata;
 }
 
 const VideoTag = styled('video')(() => {
@@ -21,42 +23,27 @@ const VideoTag = styled('video')(() => {
   };
 });
 
-type StorageValue = number;
-
-const Video = memo(({url, starTime}: PlayerProps) => {
-  const showUrlForm = useContext(UrlFormContext);
+const Video: FC<VideoProps> = ({url, metadata}) => {
+  const toggleUrlDialog = useContext(UrlDialogCtx);
   const refVideo = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setPlaying] = useState(false);
 
-  const [scope] = useState(() => {
-    return {starTime, metadataLoaded: false};
-  });
-
-  useMemo(() => {
-    scope.starTime = starTime;
-  }, [scope, starTime]);
-
-  const oldSid = useMemo(() => {
-    const m = /\/\/[^\/]+(.+)$/.exec(url);
-    if (m) {
-      return m[1];
+  const startTime = useMemo(() => {
+    let time = 0;
+    if (typeof metadata === 'number') {
+      time = metadata;
     }
-    return url;
-  }, [url]);
-
-  const sid = useMemo(() => {
-    const m = /\/\/[^\/]+(.+?)(?:\.[a-z0-9]+)?$/i.exec(url);
-    if (m) {
-      return m[1];
-    }
-    return url;
-  }, [url]);
+    return time;
+  }, [metadata]);
+  const refStartTime = useRef(startTime);
 
   useEffect(() => {
     let uri;
     try {
       uri = url && new URL(url);
-    } catch (err) {}
+    } catch (err) {
+      // pass
+    }
     if (uri) {
       const name = Path.basename(uri.pathname);
       document.title = `[${isPlaying ? '>' : '||'}] ${decodeURIComponent(name)}`;
@@ -67,29 +54,8 @@ const Video = memo(({url, starTime}: PlayerProps) => {
   }, [url, isPlaying]);
 
   useEffect(() => {
-    let unmount = false;
-    Storage.get<Partial<Record<string, StorageValue>>>([sid, oldSid]).then((result) => {
-      if (unmount) return;
-      const value = result[sid] || result[oldSid];
-      if (typeof value === 'number') {
-        scope.starTime = value;
-        if (refVideo.current && scope.metadataLoaded) {
-          refVideo.current.currentTime = value;
-        }
-      }
-    }).catch((err) => {
-      console.error('Storage.get error: %O', err);
-    });
-
-    return () => {
-      unmount = true;
-    };
-  }, [oldSid, scope, sid, url]);
-
-  useEffect(() => {
-    if (!url || !refVideo.current) return;
-
     const video = refVideo.current;
+    if (!url || !video) return;
 
     const disposers: Array<() => void> = [];
 
@@ -168,7 +134,7 @@ const Video = memo(({url, starTime}: PlayerProps) => {
         case 'KeyN': {
           if (isRepeat) return;
           e.preventDefault();
-          showUrlForm();
+          toggleUrlDialog();
           break;
         }
       }
@@ -187,19 +153,24 @@ const Video = memo(({url, starTime}: PlayerProps) => {
       }
     }), disposers);
 
+    const sid = getSidV2(url);
     let lastSyncAt = 0;
-    addEvent(video, (on) => on('timeupdate', (e: Event) => {
+    addEvent(video, (on) => on('timeupdate', async (e: Event) => {
       const now = Date.now();
+
       if (!lastSyncAt) {
         lastSyncAt = now;
-      } else
+      }
+
       if (lastSyncAt < now - 5 * 1000) {
         lastSyncAt = now;
-        Storage.set<StorageValue>({
-          [sid]: video.currentTime,
-        }).catch((err) => {
+        try {
+          await api.storageSet({
+            [sid]: video.currentTime,
+          });
+        } catch (err) {
           console.error('Storage.set error: %O', err);
-        });
+        }
       }
     }), disposers);
 
@@ -225,9 +196,8 @@ const Video = memo(({url, starTime}: PlayerProps) => {
 
     const disposeLoadedMetadata = addEvent(video, (on) => on('loadedmetadata', () => {
       disposeLoadedMetadata();
-      scope.metadataLoaded = true;
-      if (scope.starTime > 0) {
-        video.currentTime = scope.starTime;
+      if (refStartTime.current > 0) {
+        video.currentTime = refStartTime.current;
       }
       video.play().catch((err) => {
         console.error('auto play error: %O', err);
@@ -241,13 +211,12 @@ const Video = memo(({url, starTime}: PlayerProps) => {
       disposers.splice(0).forEach((disposer) => disposer());
 
       video.src = '';
-      scope.metadataLoaded = false;
     };
-  }, [scope, showUrlForm, sid, url]);
+  }, [toggleUrlDialog, url]);
 
   return (
     <VideoTag ref={refVideo} controls={true} />
   );
-});
+};
 
 export default Video;
