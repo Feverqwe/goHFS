@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {SyntheticEvent, useContext, useMemo} from 'react';
+import {FC, memo, SyntheticEvent, useContext, useMemo} from 'react';
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
@@ -35,7 +35,7 @@ const SubLine = styled('div')(() => {
   };
 });
 
-const File = React.memo(({file, dir, writable}: FileProps) => {
+const File: FC<FileProps> = ({file, dir, writable}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir} = file;
   const [removed, setRemoved] = React.useState(false);
@@ -168,14 +168,18 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
           </Box>
         </Box>
       ) : (
-        <CardActionArea sx={{display: 'flex', alignItems: 'stretch', p: 1}} href={href}>
-          <Box p={1} pr={2} display="flex" alignItems="center" onContextMenu={handleCtxMenu}>
-            <Icon />
-          </Box>
-          <Box flexGrow={1}>
-            {body}
-          </Box>
-        </CardActionArea>
+        <Box display="flex" alignItems="stretch">
+          <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
+            <Box pl={1} display="flex" alignItems="center">
+              <Box p={1} display="flex" alignItems="center" onContextMenu={handleCtxMenu}>
+                <Icon />
+              </Box>
+            </Box>
+            <Box flexGrow={1} sx={{p: 1}}>
+              {body}
+            </Box>
+          </CardActionArea>
+        </Box>
       )}
       {menuAnchorEl ? (
         <FileMenu
@@ -192,7 +196,7 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
       ) : null}
     </>
   );
-});
+};
 
 function dateToStr(date: Date) {
   const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((v) => (v < 10 ? '0' : '') + v).join('-');
@@ -200,4 +204,4 @@ function dateToStr(date: Date) {
   return `${dateStr} ${timeStr}`;
 }
 
-export default File;
+export default memo(File);
