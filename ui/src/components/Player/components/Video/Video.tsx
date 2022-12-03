@@ -2,12 +2,12 @@ import * as React from 'react';
 import {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
-import addEvent from '../../../tools/addEvent';
+import addEvent from '../../../../tools/addEvent';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
-import {TITLE} from '../constants';
-import {VideoMetadata} from '../types';
-import {getSidV2} from '../utils';
-import {api} from '../../../tools/api';
+import {TITLE} from '../../constants';
+import {VideoMetadata} from '../../types';
+import {getSidV2} from '../../utils';
+import {api} from '../../../../tools/api';
 
 interface VideoProps {
   url: string,

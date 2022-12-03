@@ -93,16 +93,19 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
     }
   }, [name, isDir]);
 
+  const href = useMemo(() => {
+    return Path.join(dir.split('/').map(encodeURIComponent).join('/'), encodeURIComponent(name));
+  }, [dir, name]);
+
   const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
     if (!handleUrl) return;
     e.preventDefault();
-    const fileUrl = Path.join(dir, encodeURIComponent(name));
-    const url = handleUrl.replace('{url}', encodeURIComponent(fileUrl));
+    const url = handleUrl.replace('{url}', encodeURIComponent(href));
     const win = window.open(url, '_blank');
     if (win) {
       win.focus();
     }
-  }, [dir, handleUrl, name]);
+  }, [href, handleUrl]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -128,7 +131,6 @@ const File = React.memo(({file, dir, writable}: FileProps) => {
   }, []);
 
   const handleCtxMenu = writable && handleMenuClick || undefined;
-  const href = Path.join(dir, encodeURIComponent(name));
 
   const body = useMemo(() => {
     return (

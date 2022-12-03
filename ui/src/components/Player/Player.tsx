@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {useState} from 'react';
 import {GlobalStyles} from '@mui/material';
-import Video from './Video/Video';
-import UrlDialog from './UrlDialog/UrlDialog';
-import UrlDialogCtx from './UrlDialog/UrlDialogCtx';
+import Video from './components/Video/Video';
+import UrlDialog from './components/UrlDialog/UrlDialog';
+import UrlDialogCtx from './components/UrlDialog/UrlDialogCtx';
 import {changeUrlParams} from '../../tools/urlParams';
 import {getParamsFromUrl} from './utils';
-import FetchMetadata from './FetchMetadata/FetchMetadata';
+import FetchMetadata from './components/FetchMetadata/FetchMetadata';
 import {VideoMetadata} from './types';
 
 const RootStyles = {
