@@ -3,9 +3,10 @@ import {SyntheticEvent, useCallback, useState} from 'react';
 import {Box, Button, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import {ApiError, doReq, handleApiResponse} from '../../../../tools/apiRequest';
+import {ApiError} from '../../../../tools/apiRequest';
 import MyDialog from '../MyDialog';
 import Report from '../Report';
+import {api} from '../../../../tools/api';
 
 export interface UploadFileResult {
   ok: boolean,
@@ -115,16 +116,13 @@ const upload = async (dir: string, files: File[], setProgress: (val: number) => 
     data.append('size', String(chunk.size));
     data.append('chunk', chunk);
 
-    await fetch('/~/upload/chunk', {
-      method: 'POST',
-      body: data,
-    }).then(handleApiResponse);
+    await api.uploadChunk(data);
 
     updateProgress(chunk.size);
   };
 
   const uploadFile = async (file: File) => {
-    const {key, chunkSize} = await doReq<{key: string, chunkSize: number}>('/~/upload/init', {
+    const {key, chunkSize} = await api.uploadInit({
       fileName: file.name,
       size: file.size,
       place: dir,

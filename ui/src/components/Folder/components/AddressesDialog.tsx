@@ -2,6 +2,7 @@ import * as React from 'react';
 import {SyntheticEvent} from 'react';
 import {Box, Button, DialogActions, DialogContent, Input, LinearProgress, Typography} from '@mui/material';
 import MyDialog from './MyDialog';
+import {api} from '../../../tools/api';
 
 const QRCode = require('qrcode');
 
@@ -15,34 +16,16 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
   const [addresses, setAddresses] = React.useState<null | string[]>(null);
 
   React.useEffect(() => {
-    let mounted = true;
-
-    fetch('/~/addresses').then(async (response) => {
-      if (!response.ok) {
-        throw new Error(`Response code ${response.status} (${response.statusText})`);
+    (async () => {
+      try {
+        const addresses = await api.addresses();
+        setAddresses(addresses);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
       }
-
-      const body: {result: string[]} = await response.json();
-
-      if (!body.result.length) {
-        throw new Error('Addresses is empty');
-      }
-
-      return body.result;
-    }).then((addresses) => {
-      if (!mounted) return;
-      setAddresses(addresses);
-    }, (err) => {
-      if (!mounted) return;
-      setError(err);
-    }).finally(() => {
-      if (!mounted) return;
-      setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-    };
+    })();
   }, []);
 
   const handleClose = React.useCallback((e: SyntheticEvent, reason?: string) => {

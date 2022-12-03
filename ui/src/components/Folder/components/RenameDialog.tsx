@@ -11,9 +11,9 @@ import {
   Tooltip,
 } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
-import {doReq} from '../../../tools/apiRequest';
 import MyDialog from './MyDialog';
 import {FileInfo} from '../../../types';
+import {api} from '../../../tools/api';
 
 interface RenameDialogProps {
   dir: string;
@@ -30,21 +30,22 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
     onClose();
   }, [onClose]);
 
-  const handleRename = React.useCallback((e: FormEvent) => {
+  const handleRename = React.useCallback(async (e: FormEvent) => {
     e.preventDefault();
     const newName = (e.currentTarget as any).elements.new_name.value;
     setLoading(true);
-    doReq('/~/rename', {
-      place: dir,
-      name: file.name,
-      newName,
-    }).finally(() => {
-      setLoading(false);
-    }).then(() => {
+    try {
+      await api.rename({
+        place: dir,
+        name: file.name,
+        newName,
+      });
       onClose();
-    }, (err) => {
-      setError(err);
-    });
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
   }, [dir, file.name, onClose]);
 
   return (

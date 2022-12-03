@@ -11,7 +11,11 @@ function action<RequestParams = unknown, ResponseData = unknown>({method = 'GET'
     let body;
     if (params) {
       if (method === 'POST') {
-        body = JSON.stringify(params);
+        if (params instanceof FormData) {
+          body = params;
+        } else {
+          body = JSON.stringify(params);
+        }
       } else {
         query = new URLSearchParams(params).toString();
       }
@@ -29,9 +33,28 @@ export const api = {
     method: 'POST',
     path: '/~/storage/get',
   }),
-
   storageSet: action<unknown, string>({
     method: 'POST',
     path: '/~/storage/set',
+  }),
+  rename: action<{place: string, name: string, newName: string}, string>({
+    method: 'POST',
+    path: '/~/rename',
+  }),
+  uploadInit: action<{fileName: string, size: number, place: string}, {key: string, chunkSize: number}>({
+    method: 'POST',
+    path: '/~/upload/init',
+  }),
+  uploadChunk: action<FormData, boolean>({
+    method: 'POST',
+    path: '/~/upload/chunk',
+  }),
+  remove: action<{place: string, name: string, isDir: boolean}, string>({
+    method: 'POST',
+    path: '/~/remove',
+  }),
+  addresses: action<void, string[]>({
+    method: 'GET',
+    path: '/~/addresses',
   }),
 };

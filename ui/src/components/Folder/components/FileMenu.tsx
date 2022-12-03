@@ -5,8 +5,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
-import {doReq} from '../../../tools/apiRequest';
 import {FileInfo} from '../../../types';
+import {api} from '../../../tools/api';
 
 const MyListItemIcon = styled(ListItemIcon)(({theme}) => {
   return {
@@ -65,21 +65,19 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
   scope.isLoading = isLoading;
   scope.isDone = isDone;
 
-  const [Icon, label, url, payload] = React.useMemo(() => {
+  const [Icon, label, reqFn] = React.useMemo(() => {
     let icon;
     let label;
-    let url;
-    let payload;
+    let reqFn;
     switch (action) {
       case 'remove': {
         label = 'Delete';
         icon = DeleteForeverIcon;
-        url = '/~/remove';
-        payload = {
+        reqFn = api.remove.bind(null, {
           place: dir,
           name: file.name,
           isDir: file.isDir,
-        };
+        });
         break;
       }
       case 'rename': {
@@ -92,15 +90,15 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
       }
     }
 
-    return [icon, label, url, payload];
+    return [icon, label, reqFn];
   }, [action, dir, file.isDir, file.name]);
 
   const handleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     if (scope.isLoading) return;
-    if (payload && url) {
+    if (reqFn) {
       setLoading(true);
-      doReq(url, payload).then(() => {
+      reqFn().then(() => {
         onSuccess && onSuccess();
       }, (err) => {
         setError(err);
@@ -111,7 +109,7 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
     } else {
       onSuccess && onSuccess();
     }
-  }, [scope.isLoading, payload, url, onSuccess]);
+  }, [scope.isLoading, reqFn, onSuccess]);
 
   return (
     <MenuItem onClick={handleClick}>

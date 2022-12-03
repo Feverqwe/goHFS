@@ -12,13 +12,6 @@ export class HTTPError extends Error {
   }
 }
 
-export function doReq<T>(url: string, data: string[] | Record<string, any>) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }).then(handleApiResponse<T>);
-}
-
 export async function handleApiResponse<T>(response: Response) {
   const body: {error: string} | {result: T} | null = await response.json().catch((err) => null);
 
