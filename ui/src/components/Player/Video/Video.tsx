@@ -40,7 +40,7 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
   useEffect(() => {
     let uri;
     try {
-      uri = url && new URL(url);
+      uri = url && new URL(url, location.href);
     } catch (err) {
       // pass
     }
