@@ -1,5 +1,5 @@
-import React, {FC, ReactNode, useCallback, useState} from "react";
-import {SelectChangeModeCtx, SelectChangeSelectedCtx, SelectModeCtx, SelectSelectedCtx} from "./SelectCtx";
+import React, {FC, ReactNode, useCallback, useState} from 'react';
+import {SelectChangeModeCtx, SelectChangeSelectedCtx, SelectModeCtx, SelectSelectedCtx} from './SelectCtx';
 
 interface SelectProviderProps {
   children: ReactNode;

@@ -1,4 +1,4 @@
-import {createContext, Dispatch, SetStateAction} from "react";
+import {createContext, Dispatch, SetStateAction} from 'react';
 
 export const SelectSelectedCtx = createContext<string[]>([]);
 export const SelectChangeSelectedCtx = createContext<Dispatch<SetStateAction<string[]>>>(() => {});

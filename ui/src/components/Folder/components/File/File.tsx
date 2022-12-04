@@ -15,8 +15,8 @@ import FileMenu from '../FileMenu';
 import RenameDialog from '../RenameDialog';
 import {FileInfo} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
-import {SelectModeCtx} from "../SelectProvider/SelectCtx";
-import SelectBox from "./components/SelectBox";
+import {SelectModeCtx} from '../SelectProvider/SelectCtx';
+import SelectBox from './components/SelectBox';
 
 const mime = require('mime');
 
@@ -160,7 +160,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
       {handleUrl ? (
         <Box display="flex" alignItems="stretch">
           {selectMode && (
-            <SelectBox name={name}/>
+            <SelectBox name={name} />
           )}
           <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
             <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu}>
@@ -176,7 +176,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
       ) : (
         <Box display="flex" alignItems="stretch">
           {selectMode && (
-            <SelectBox name={name}/>
+            <SelectBox name={name} />
           )}
           <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
             <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">

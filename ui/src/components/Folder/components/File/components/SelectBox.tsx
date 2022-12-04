@@ -1,7 +1,7 @@
-import * as React from "react";
-import {ChangeEvent, FC, memo, useCallback, useContext} from "react";
-import {Box, Checkbox} from "@mui/material";
-import {SelectChangeSelectedCtx, SelectSelectedCtx} from "../../SelectProvider/SelectCtx";
+import * as React from 'react';
+import {ChangeEvent, FC, memo, useCallback, useContext} from 'react';
+import {Box, Checkbox} from '@mui/material';
+import {SelectChangeSelectedCtx, SelectSelectedCtx} from '../../SelectProvider/SelectCtx';
 
 interface SelectBoxProps {
   name: string;
@@ -22,13 +22,13 @@ const SelectBox: FC<SelectBoxProps> = ({name}) => {
       }
       return ids;
     });
-  }, [name]);
+  }, [name, changeSelect]);
 
   return (
     <Box pl={1} display="flex" alignItems="center">
       <Checkbox checked={selected.includes(name)} onChange={handleSelect} />
     </Box>
   );
-}
+};
 
 export default memo(SelectBox);

@@ -9,6 +9,7 @@ import {
 } from '@mui/icons-material';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import Path from 'path-browserify';
+import SelectAllIcon from '@mui/icons-material/SelectAll';
 import SortChooseDialog from './components/SortChooseDialog';
 import AddressesDialog from './components/AddressesDialog';
 import File from './components/File/File';
@@ -17,9 +18,8 @@ import useUpload from './components/hooks/useUpload';
 import {FileInfo} from '../../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import {getOption, setOption} from './utils';
-import {SelectChangeModeCtx, SelectModeCtx} from "./components/SelectProvider/SelectCtx";
-import SelectHeader from "./components/SelectHeader";
-import SelectAllIcon from '@mui/icons-material/SelectAll';
+import {SelectChangeModeCtx, SelectModeCtx} from './components/SelectProvider/SelectCtx';
+import SelectHeader from './components/SelectHeader';
 
 const RootSx = {
   width: '100%',
@@ -84,7 +84,7 @@ const Folder: FC = () => {
 
   const handleSelect = useCallback(() => {
     changeSelect(true);
-  }, []);
+  }, [changeSelect]);
 
   const handleUploadBtn = useCallback(() => {
     const input = document.createElement('input');
@@ -139,20 +139,20 @@ const Folder: FC = () => {
               {store.dir}
             </Box>
             {store.isWritable ? (
-              <IconButton title={"Upload"} onClick={handleUploadBtn} size="small">
+              <IconButton title="Upload" onClick={handleUploadBtn} size="small">
                 <UploadIcon fontSize="inherit" />
               </IconButton>
             ) : null}
-            <IconButton title={"Get playlist"} onClick={handlePlaylistBtn} size="small">
+            <IconButton title="Get playlist" onClick={handlePlaylistBtn} size="small">
               <PlaylistPlayIcon fontSize="inherit" />
             </IconButton>
-            <IconButton title={"Sort"} onClick={handleSortBtn} size="small">
+            <IconButton title="Sort" onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
             </IconButton>
-            <IconButton title={"Select"} onClick={handleSelect} size="small">
+            <IconButton title="Select" onClick={handleSelect} size="small">
               <SelectAllIcon fontSize="inherit" />
             </IconButton>
-            <IconButton title={"Open addresses"} onClick={handleAddressesBtn} size="small">
+            <IconButton title="Open addresses" onClick={handleAddressesBtn} size="small">
               <QrCode2Icon fontSize="inherit" />
             </IconButton>
           </ListSubheaderMy>
@@ -182,7 +182,7 @@ const Folder: FC = () => {
       )}
       {dialog}
       {selectMode && (
-        <SelectHeader/>
+        <SelectHeader />
       )}
     </>
   );
