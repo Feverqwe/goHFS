@@ -26,7 +26,7 @@ const SelectBox: FC<SelectBoxProps> = ({name}) => {
 
   return (
     <Box display="flex" alignItems="center">
-      <Checkbox size={"small"} checked={selected.includes(name)} onChange={handleSelect} />
+      <Checkbox size="small" checked={selected.includes(name)} onChange={handleSelect} />
     </Box>
   );
 };

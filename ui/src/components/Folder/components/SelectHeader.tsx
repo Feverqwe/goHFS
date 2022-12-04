@@ -32,6 +32,17 @@ const SelectHeader: FC = () => {
     setDialog({
       type: DialogType.Confirm,
       title: 'Delete selected files?',
+      content: (
+        <>
+          {selected.map((name, index) => {
+            return (
+              <div key={index}>
+                {name}
+              </div>
+            );
+          })}
+        </>
+      ),
       okText: 'Yes',
       onSubmit: async () => {
         await api.removeAll({
@@ -48,7 +59,7 @@ const SelectHeader: FC = () => {
     <Paper sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
       <Box display="flex" alignItems="center">
         <Box pr={1}>
-          <Checkbox size={"small"} checked={selected.length === files.length} onChange={handleSelectAll} />
+          <Checkbox size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
         </Box>
         <Box flexGrow={1}>
           Selected: {selected.length}
