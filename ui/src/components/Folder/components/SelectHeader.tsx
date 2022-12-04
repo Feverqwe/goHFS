@@ -47,8 +47,8 @@ const SelectHeader: FC = () => {
   return (
     <Paper sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
       <Box display="flex" alignItems="center">
-        <Box px={1}>
-          <Checkbox checked={selected.length === files.length} onChange={handleSelectAll} />
+        <Box pr={1}>
+          <Checkbox size={"small"} checked={selected.length === files.length} onChange={handleSelectAll} />
         </Box>
         <Box flexGrow={1}>
           Selected: {selected.length}
