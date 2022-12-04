@@ -7,6 +7,7 @@ import theme from './tools/muiTheme';
 import cache from './tools/muiCache';
 import RootStoreProvider from './components/RootStore/RootStoreProvider';
 import SelectProvider from './components/Folder/components/SelectProvider/SelectProvider';
+import DialogProvider from './components/Folder/components/DialogProvider/DialogProvider';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -15,9 +16,11 @@ root.render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <RootStoreProvider>
-        <SelectProvider>
-          <Folder />
-        </SelectProvider>
+        <DialogProvider>
+          <SelectProvider>
+            <Folder />
+          </SelectProvider>
+        </DialogProvider>
       </RootStoreProvider>
     </ThemeProvider>
   </CacheProvider>,

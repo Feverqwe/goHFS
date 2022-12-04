@@ -5,12 +5,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import {SelectChangeModeCtx, SelectChangeSelectedCtx, SelectSelectedCtx} from './SelectProvider/SelectCtx';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {api} from '../../../tools/api';
+import {DialogSetDataCtx} from './DialogProvider/DialogSetDataCtx';
+import {DialogType} from './DialogProvider/types';
 
 const SelectHeader: FC = () => {
   const {dir, files} = useContext(RootStoreCtx);
   const selected = useContext(SelectSelectedCtx);
   const changeSelected = useContext(SelectChangeSelectedCtx);
   const changeMode = useContext(SelectChangeModeCtx);
+  const setDialog = useContext(DialogSetDataCtx);
 
   const handleSelectAll = useCallback((e: ChangeEvent, checked: boolean) => {
     changeSelected(() => {
@@ -26,13 +29,20 @@ const SelectHeader: FC = () => {
   }, [changeMode]);
 
   const handleDelete = useCallback(async () => {
-    await api.removeAll({
-      place: dir,
-      names: selected,
-    });
+    setDialog({
+      type: DialogType.Confirm,
+      title: 'Delete selected files?',
+      okText: 'Yes',
+      onSubmit: async () => {
+        await api.removeAll({
+          place: dir,
+          names: selected,
+        });
 
-    location.reload();
-  }, [dir, selected]);
+        location.reload();
+      },
+    });
+  }, [dir, selected, setDialog]);
 
   return (
     <Paper sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
