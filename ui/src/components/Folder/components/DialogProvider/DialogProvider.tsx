@@ -1,4 +1,4 @@
-import React, {FC, ReactNode, useCallback, useState} from 'react';
+import React, {FC, ReactNode, SyntheticEvent, useCallback, useState} from 'react';
 import {Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip} from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
 import {DialogData} from './types';
@@ -17,7 +17,8 @@ const DialogProvider: FC<{children: ReactNode}> = ({children}) => {
     setDialogData(null);
   }, []);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       setLoading(true);
       setError(null);
