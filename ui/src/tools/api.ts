@@ -41,6 +41,14 @@ export const api = {
     method: 'POST',
     path: '/~/storage/del',
   }),
+  remove: action<{place: string, name: string, isDir: boolean}, string>({
+    method: 'POST',
+    path: '/~/remove',
+  }),
+  removeAll: action<{place: string, names: string[]}, string>({
+    method: 'POST',
+    path: '/~/removeAll',
+  }),
   rename: action<{place: string, name: string, newName: string}, string>({
     method: 'POST',
     path: '/~/rename',
@@ -52,10 +60,6 @@ export const api = {
   uploadChunk: action<FormData, boolean>({
     method: 'POST',
     path: '/~/upload/chunk',
-  }),
-  remove: action<{place: string, name: string, isDir: boolean}, string>({
-    method: 'POST',
-    path: '/~/remove',
   }),
   addresses: action<void, string[]>({
     method: 'GET',

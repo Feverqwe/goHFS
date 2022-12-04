@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
+import {FC, memo, useCallback, useContext, useMemo, useState} from 'react';
 import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -17,6 +17,9 @@ import useUpload from './components/hooks/useUpload';
 import {FileInfo} from '../../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import {getOption, setOption} from './utils';
+import {SelectChangeModeCtx, SelectModeCtx} from "./components/SelectProvider/SelectCtx";
+import SelectHeader from "./components/SelectHeader";
+import SelectAllIcon from '@mui/icons-material/SelectAll';
 
 const RootSx = {
   width: '100%',
@@ -43,6 +46,8 @@ const iconStyle = {
 
 const Folder: FC = () => {
   const store = useContext(RootStoreCtx);
+  const selectMode = useContext(SelectModeCtx);
+  const changeSelect = useContext(SelectChangeModeCtx);
   const [files] = useState(store.files);
   const [sortKey, setSortKey] = useState(() => {
     return getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]);
@@ -69,17 +74,19 @@ const Folder: FC = () => {
     return result;
   }, [files, sortKey]);
 
-  const handleSortBtn = useCallback((e: SyntheticEvent) => {
-    e.preventDefault();
+  const handleSortBtn = useCallback(() => {
     setShowSortDialog(true);
   }, []);
 
-  const handleAddressesBtn = useCallback((e: SyntheticEvent) => {
-    e.preventDefault();
+  const handleAddressesBtn = useCallback(() => {
     setShowAddressesDialog(true);
   }, []);
 
-  const handleUploadBtn = useCallback((e: SyntheticEvent) => {
+  const handleSelect = useCallback(() => {
+    changeSelect(true);
+  }, []);
+
+  const handleUploadBtn = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
@@ -132,17 +139,20 @@ const Folder: FC = () => {
               {store.dir}
             </Box>
             {store.isWritable ? (
-              <IconButton onClick={handleUploadBtn} size="small">
+              <IconButton title={"Upload"} onClick={handleUploadBtn} size="small">
                 <UploadIcon fontSize="inherit" />
               </IconButton>
             ) : null}
-            <IconButton onClick={handlePlaylistBtn} size="small">
+            <IconButton title={"Get playlist"} onClick={handlePlaylistBtn} size="small">
               <PlaylistPlayIcon fontSize="inherit" />
             </IconButton>
-            <IconButton onClick={handleSortBtn} size="small">
+            <IconButton title={"Sort"} onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
             </IconButton>
-            <IconButton onClick={handleAddressesBtn} size="small">
+            <IconButton title={"Select"} onClick={handleSelect} size="small">
+              <SelectAllIcon fontSize="inherit" />
+            </IconButton>
+            <IconButton title={"Open addresses"} onClick={handleAddressesBtn} size="small">
               <QrCode2Icon fontSize="inherit" />
             </IconButton>
           </ListSubheaderMy>
@@ -171,6 +181,9 @@ const Folder: FC = () => {
         <AddressesDialog onClose={handleCloseAddressesDialog} />
       )}
       {dialog}
+      {selectMode && (
+        <SelectHeader/>
+      )}
     </>
   );
 };

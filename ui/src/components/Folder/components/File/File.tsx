@@ -15,6 +15,8 @@ import FileMenu from '../FileMenu';
 import RenameDialog from '../RenameDialog';
 import {FileInfo} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
+import {SelectModeCtx} from "../SelectProvider/SelectCtx";
+import SelectBox from "./components/SelectBox";
 
 const mime = require('mime');
 
@@ -38,6 +40,7 @@ const SubLine = styled('div')(() => {
 const File: FC<FileProps> = ({file, dir, writable}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir} = file;
+  const selectMode = useContext(SelectModeCtx);
   const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
   const handleUrl = useMemo(() => {
@@ -156,7 +159,10 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     <>
       {handleUrl ? (
         <Box display="flex" alignItems="stretch">
-          <Box pl={1} display="flex" alignItems="center">
+          {selectMode && (
+            <SelectBox name={name}/>
+          )}
+          <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
             <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu}>
               <Icon />
             </IconButton>
@@ -169,8 +175,11 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
         </Box>
       ) : (
         <Box display="flex" alignItems="stretch">
+          {selectMode && (
+            <SelectBox name={name}/>
+          )}
           <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
-            <Box pl={1} display="flex" alignItems="center">
+            <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
               <Box p={1} display="flex" alignItems="center" onContextMenu={handleCtxMenu}>
                 <Icon />
               </Box>

@@ -6,6 +6,7 @@ import Folder from './components/Folder/Folder';
 import theme from './tools/muiTheme';
 import cache from './tools/muiCache';
 import RootStoreProvider from './components/RootStore/RootStoreProvider';
+import SelectProvider from "./components/Folder/components/SelectProvider/SelectProvider";
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -14,7 +15,9 @@ root.render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <RootStoreProvider>
-        <Folder />
+        <SelectProvider>
+          <Folder />
+        </SelectProvider>
       </RootStoreProvider>
     </ThemeProvider>
   </CacheProvider>,
