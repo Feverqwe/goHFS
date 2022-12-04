@@ -1,15 +1,6 @@
 import * as React from 'react';
-import {SyntheticEvent, useContext} from 'react';
-import {
-  Box,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  ListSubheader,
-  styled,
-} from '@mui/material';
+import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
+import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   QrCode2 as QrCode2Icon,
@@ -23,8 +14,9 @@ import AddressesDialog from './components/AddressesDialog';
 import File from './components/File/File';
 import DropZone from './components/DropZone';
 import useUpload from './components/hooks/useUpload';
-import {FileInfo, RootStore} from '../../types';
+import {FileInfo} from '../../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
+import {getOption, setOption} from './utils';
 
 const RootSx = {
   width: '100%',
@@ -49,26 +41,22 @@ const iconStyle = {
   minWidth: '42px',
 };
 
-interface FolderProps {
-  store: RootStore,
-}
-
-const Folder = React.memo(() => {
+const Folder: FC = () => {
   const store = useContext(RootStoreCtx);
-  const [files] = React.useState(store.files);
-  const [sortKey, setSortKey] = React.useState(() => {
+  const [files] = useState(store.files);
+  const [sortKey, setSortKey] = useState(() => {
     return getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]);
   });
-  const [showSortDialog, setShowSortDialog] = React.useState(false);
-  const [showAddressesDialog, setShowAddressesDialog] = React.useState(false);
+  const [showSortDialog, setShowSortDialog] = useState(false);
+  const [showAddressesDialog, setShowAddressesDialog] = useState(false);
   const {dialog, handleUpload} = useUpload(store.dir);
 
-  const changeSort = React.useCallback((keyDir: [string, boolean]) => {
+  const changeSort = useCallback((keyDir: [string, boolean]) => {
     setSortKey(keyDir as [keyof FileInfo, boolean]);
     setOption('sort', keyDir);
   }, []);
 
-  const sortedFiles = React.useMemo(() => {
+  const sortedFiles = useMemo(() => {
     const [key, d] = sortKey;
     const [r1, r2] = d ? [1, -1] : [-1, 1];
     const result = files.slice(0);
@@ -81,17 +69,17 @@ const Folder = React.memo(() => {
     return result;
   }, [files, sortKey]);
 
-  const handleSortBtn = React.useCallback((e: SyntheticEvent) => {
+  const handleSortBtn = useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     setShowSortDialog(true);
   }, []);
 
-  const handleAddressesBtn = React.useCallback((e: SyntheticEvent) => {
+  const handleAddressesBtn = useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     setShowAddressesDialog(true);
   }, []);
 
-  const handleUploadBtn = React.useCallback((e: SyntheticEvent) => {
+  const handleUploadBtn = useCallback((e: SyntheticEvent) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
@@ -103,15 +91,15 @@ const Folder = React.memo(() => {
     input.dispatchEvent(new MouseEvent('click'));
   }, [handleUpload]);
 
-  const handleCloseSortDialog = React.useCallback(() => {
+  const handleCloseSortDialog = useCallback(() => {
     setShowSortDialog(false);
   }, []);
 
-  const handleCloseAddressesDialog = React.useCallback(() => {
+  const handleCloseAddressesDialog = useCallback(() => {
     setShowAddressesDialog(false);
   }, []);
 
-  const handlePlaylistBtn = React.useCallback(() => {
+  const handlePlaylistBtn = useCallback(() => {
     const lines = [];
     lines.push('#EXTM3U');
     sortedFiles.forEach((file) => {
@@ -169,9 +157,9 @@ const Folder = React.memo(() => {
             <ListItemText primary="Back" />
           </ListItemButton>
         )}
-        {sortedFiles.map((file) => {
-          return <File key={`${file.isDir}_${file.name}`} dir={store.dir} file={file} writable={store.isWritable} />;
-        })}
+        {sortedFiles.map((file) => (
+          <File key={`${file.isDir}_${file.name}`} dir={store.dir} file={file} writable={store.isWritable} />
+        ))}
       </List>
       {store.isWritable && (
         <DropZone onUpload={handleUpload} />
@@ -185,27 +173,6 @@ const Folder = React.memo(() => {
       {dialog}
     </>
   );
-});
+};
 
-function getOption<T>(key: string, defaultValue: T) {
-  let value: T | null = null;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      throw new Error('Value is empty');
-    }
-    value = JSON.parse(raw);
-  } catch (err) {
-    // pass
-  }
-  if (value === null) {
-    value = defaultValue;
-  }
-  return value;
-}
-
-function setOption<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-export default Folder;
+export default memo(Folder);
