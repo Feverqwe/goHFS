@@ -320,6 +320,11 @@ func handleAction(router *Router, config *Config) {
 		IsDir bool   `json:"isDir"`
 	}
 
+	type RemoveAllPayload struct {
+		Place string   `json:"place"`
+		Names []string `json:"names"`
+	}
+
 	type RenamePayload struct {
 		Place   string `json:"place"`
 		Name    string `json:"name"`
@@ -386,6 +391,37 @@ func handleAction(router *Router, config *Config) {
 				err = os.RemoveAll(osTargetPath)
 			} else {
 				err = os.Remove(osTargetPath)
+			}
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/~/removeAll", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[RemoveAllPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			rawPlace := payload.Place
+			rawNames := payload.Names
+			for _, rawName := range rawNames {
+				rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
+				osTargetPath, err := GetFullPath(public, rTargetPath)
+				if err != nil {
+					return "", err
+				}
+
+				isWritable := config.IsWritable(rTargetPath)
+				if !isWritable {
+					return "", errors.New("place is not writable")
+				}
+
+				err = os.RemoveAll(osTargetPath)
+				if err != nil {
+					return "", err
+				}
 			}
 
 			return "ok", err
