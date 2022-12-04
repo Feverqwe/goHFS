@@ -61,15 +61,17 @@ const SelectHeader: FC = () => {
         <Box pr={1}>
           <Checkbox size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
         </Box>
-        <Box flexGrow={1}>
+        <Box flexGrow={1} pr={1}>
           Selected: {selected.length}
         </Box>
-        <Box>
-          <IconButton title="Delete" sx={{pl: 1}} size="small" onClick={handleDelete} disabled={selected.length === 0}>
-            <DeleteIcon />
+        <Box pr={1}>
+          <IconButton title="Delete" size="small" onClick={handleDelete} disabled={selected.length === 0}>
+            <DeleteIcon fontSize="inherit" />
           </IconButton>
-          <IconButton title="Cancel" sx={{pl: 1}} size="small" onClick={handleClose}>
-            <CloseIcon />
+        </Box>
+        <Box pr={1}>
+          <IconButton title="Cancel" size="small" onClick={handleClose}>
+            <CloseIcon fontSize="inherit" />
           </IconButton>
         </Box>
       </Box>

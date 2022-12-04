@@ -1,15 +1,10 @@
 import * as React from 'react';
-import {FC, memo, useCallback, useContext, useMemo, useState} from 'react';
+import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
 import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  QrCode2 as QrCode2Icon,
-  Sort as SortIcon,
-  Upload as UploadIcon,
-} from '@mui/icons-material';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import {ArrowBack as ArrowBackIcon, Sort as SortIcon, Upload as UploadIcon} from '@mui/icons-material';
 import Path from 'path-browserify';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
+import MenuIcon from '@mui/icons-material/Menu';
 import SortChooseDialog from './components/SortChooseDialog';
 import AddressesDialog from './components/AddressesDialog';
 import File from './components/File/File';
@@ -20,6 +15,7 @@ import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import {getOption, setOption} from './utils';
 import {SelectChangeModeCtx, SelectModeCtx} from './components/SelectProvider/SelectCtx';
 import SelectHeader from './components/SelectHeader';
+import FolderMenu from './components/FolderMenu/FolderMenu';
 
 const RootSx = {
   width: '100%',
@@ -55,6 +51,7 @@ const Folder: FC = () => {
   const [showSortDialog, setShowSortDialog] = useState(false);
   const [showAddressesDialog, setShowAddressesDialog] = useState(false);
   const {dialog, handleUpload} = useUpload(store.dir);
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
   const changeSort = useCallback((keyDir: [string, boolean]) => {
     setSortKey(keyDir as [keyof FileInfo, boolean]);
@@ -106,28 +103,13 @@ const Folder: FC = () => {
     setShowAddressesDialog(false);
   }, []);
 
-  const handlePlaylistBtn = useCallback(() => {
-    const lines = [];
-    lines.push('#EXTM3U');
-    sortedFiles.forEach((file) => {
-      if (!file.isDir) {
-        const url = new URL(Path.join(store.dir, file.name), location.href).toString();
-        const {name} = file;
-        lines.push(`#EXTINF:-1,${name}`);
-        lines.push(url);
-      }
-    });
+  const handleCloseMenu = useCallback(() => {
+    setMenuAnchorEl(null);
+  }, []);
 
-    const dirname = store.isRoot ? 'root' : Path.basename(store.dir);
-
-    const blob = new Blob([lines.join('\n')], {type: 'application/mpegurl'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${dirname}.m3u8`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [sortedFiles, store]);
+  const handleShowMenu = useCallback((e: SyntheticEvent) => {
+    setMenuAnchorEl(e.currentTarget);
+  }, []);
 
   return (
     <>
@@ -143,17 +125,14 @@ const Folder: FC = () => {
                 <UploadIcon fontSize="inherit" />
               </IconButton>
             ) : null}
-            <IconButton title="Get playlist" onClick={handlePlaylistBtn} size="small">
-              <PlaylistPlayIcon fontSize="inherit" />
-            </IconButton>
             <IconButton title="Sort" onClick={handleSortBtn} size="small">
               <SortIcon fontSize="inherit" />
             </IconButton>
             <IconButton title="Select" onClick={handleSelect} size="small">
               <SelectAllIcon fontSize="inherit" />
             </IconButton>
-            <IconButton title="Open addresses" onClick={handleAddressesBtn} size="small">
-              <QrCode2Icon fontSize="inherit" />
+            <IconButton title="Menu" onClick={handleShowMenu} size="small">
+              <MenuIcon fontSize="inherit" />
             </IconButton>
           </ListSubheaderMy>
         )}
@@ -184,6 +163,14 @@ const Folder: FC = () => {
       {selectMode && (
         <SelectHeader />
       )}
+      {menuAnchorEl ? (
+        <FolderMenu
+          anchorEl={menuAnchorEl}
+          onClose={handleCloseMenu}
+          sortedFiles={sortedFiles}
+          onAddressesClick={handleAddressesBtn}
+        />
+      ) : null}
     </>
   );
 };
