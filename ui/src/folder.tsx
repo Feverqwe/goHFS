@@ -5,63 +5,7 @@ import {CacheProvider} from '@emotion/react';
 import Folder from './components/Folder/Folder';
 import theme from './tools/muiTheme';
 import cache from './tools/muiCache';
-import {RootStore} from './types';
 import RootStoreProvider from './components/RootStore/RootStoreProvider';
-
-declare const ROOT_STORE: RootStore | undefined;
-
-const rootStore = ('ROOT_STORE' in window && ROOT_STORE) || {
-  dir: '/',
-  isRoot: true,
-  isWritable: true,
-  files: [
-    {
-      name: 'test',
-      isDir: true,
-      ctime: Date.now(),
-      size: 0,
-    },
-    {
-      name: 'text.txt',
-      isDir: false,
-      ctime: Date.now(),
-      size: 10,
-    },
-    {
-      name: 'audio.mp3',
-      isDir: false,
-      ctime: Date.now(),
-      size: 5 * 1024 * 1024,
-    },
-    {
-      name: 'image.png',
-      isDir: false,
-      ctime: Date.now(),
-      size: 256 * 1024,
-    },
-    {
-      name: 'test.mp4',
-      isDir: false,
-      ctime: Date.now(),
-      size: 550 * 1024 * 1024,
-    },
-    {
-      name: 'test2.mp4',
-      isDir: false,
-      ctime: Date.now(),
-      size: 1545 * 1024 * 1024,
-    },
-    {
-      name: 'playable.mp4',
-      isDir: false,
-      ctime: Date.now(),
-      size: 1545 * 1024 * 1024,
-    },
-  ],
-  extHandle: {
-    '.mp4': '/~/www/player.html?url={url}',
-  },
-};
 
 const root = createRoot(document.getElementById('root')!);
 
