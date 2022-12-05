@@ -10,6 +10,7 @@ interface BaseDialog {
   cancelText?: string;
   okText?: string;
   onSubmit: () => Promise<void>;
+  onCancel: () => void;
 }
 
 export interface ConfirmDialog extends BaseDialog {

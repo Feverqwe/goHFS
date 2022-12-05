@@ -13,7 +13,7 @@ const DialogProvider: FC<{children: ReactNode}> = ({children}) => {
     setDialogData(data);
   }, []);
 
-  const handleClose = useCallback(() => {
+  const close = useCallback(() => {
     setDialogData(null);
   }, []);
 
@@ -23,14 +23,19 @@ const DialogProvider: FC<{children: ReactNode}> = ({children}) => {
       setLoading(true);
       setError(null);
       await dialogData?.onSubmit();
-      handleClose();
+      close();
     } catch (err) {
       console.error('Submit error: $O', err);
       setError(err as Error);
     } finally {
       setLoading(false);
     }
-  }, [dialogData, handleClose]);
+  }, [dialogData, close]);
+
+  const handleCancel = useCallback(() => {
+    dialogData?.onCancel();
+    close();
+  }, [dialogData, close]);
 
   return (
     <DialogSetDataCtx.Provider value={handleSetDialog}>
@@ -38,7 +43,7 @@ const DialogProvider: FC<{children: ReactNode}> = ({children}) => {
       {dialogData && (
         <Dialog
           open={true}
-          onClose={handleClose}
+          onClose={handleCancel}
         >
           <Box component="form" onSubmit={handleSubmit}>
             {dialogData.title && (
@@ -52,7 +57,7 @@ const DialogProvider: FC<{children: ReactNode}> = ({children}) => {
             </DialogContent>
             )}
             <DialogActions>
-              <Button onClick={handleClose}>
+              <Button onClick={handleCancel}>
                 {dialogData.cancelText || 'Cancel'}
               </Button>
               <Button type="submit" disabled={loading}>

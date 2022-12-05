@@ -125,7 +125,6 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
   }, []);
 
   const handleRename = React.useCallback(() => {
-    setMenuAnchorEl(null);
     setRenameDialog(true);
   }, []);
 

@@ -54,8 +54,11 @@ const SelectHeader: FC = () => {
 
         location.reload();
       },
+      onCancel: () => {
+        changeMode(false);
+      },
     });
-  }, [dir, selected, setDialog]);
+  }, [dir, selected, setDialog, changeMode]);
 
   return (
     <Paper square={true} sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>

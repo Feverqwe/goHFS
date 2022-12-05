@@ -10,8 +10,12 @@ const SelectProvider: FC<SelectProviderProps> = ({children}) => {
   const [selected, setSelected] = useState<string[]>([]);
 
   const handleChangeSelected = useCallback((enabled: boolean) => {
-    setSelectMode(enabled);
-    setSelected([]);
+    setSelectMode((prevState) => {
+      if (prevState !== enabled) {
+        setSelected([]);
+      }
+      return enabled;
+    });
   }, []);
 
   return (
