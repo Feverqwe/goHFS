@@ -144,7 +144,7 @@ const upload = async (dir: string, files: File[], setProgress: (val: number) => 
             throw err;
           }
           setRetry(true);
-          await new Promise((r) => setTimeout(r, 5 * 1000));
+          await new Promise((r) => window.setTimeout(r, 5 * 1000));
         }
       }
       setRetry(false);

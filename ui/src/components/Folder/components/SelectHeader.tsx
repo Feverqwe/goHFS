@@ -1,5 +1,5 @@
 import React, {ChangeEvent, FC, useCallback, useContext} from 'react';
-import {Box, Checkbox, IconButton, Paper} from '@mui/material';
+import {Box, Checkbox, IconButton, Paper, Table, TableBody, TableCell, TableRow} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import {SelectChangeModeCtx, SelectChangeSelectedCtx, SelectSelectedCtx} from './SelectProvider/SelectCtx';
@@ -33,15 +33,17 @@ const SelectHeader: FC = () => {
       type: DialogType.Confirm,
       title: 'Delete selected files?',
       content: (
-        <>
-          {selected.map((name, index) => {
-            return (
-              <div key={index}>
-                {name}
-              </div>
-            );
-          })}
-        </>
+        <Table sx={{wordBreak: 'break-all'}}>
+          <TableBody>
+            {selected.map((name, index) => (
+              <TableRow key={index}>
+                <TableCell size="small">
+                  {name}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       ),
       okText: 'Yes',
       onSubmit: async () => {
@@ -56,10 +58,10 @@ const SelectHeader: FC = () => {
   }, [dir, selected, setDialog]);
 
   return (
-    <Paper sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
-      <Box display="flex" alignItems="center">
+    <Paper square={true} sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
+      <Box p={1} py={0.5} display="flex" alignItems="center">
         <Box pr={1}>
-          <Checkbox size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
+          <Checkbox sx={{m: -1}} size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
         </Box>
         <Box flexGrow={1} pr={1}>
           Selected: {selected.length}
@@ -69,7 +71,7 @@ const SelectHeader: FC = () => {
             <DeleteIcon fontSize="inherit" />
           </IconButton>
         </Box>
-        <Box pr={1}>
+        <Box>
           <IconButton title="Cancel" size="small" onClick={handleClose}>
             <CloseIcon fontSize="inherit" />
           </IconButton>

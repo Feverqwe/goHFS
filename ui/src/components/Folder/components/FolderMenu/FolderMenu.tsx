@@ -57,7 +57,7 @@ const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClic
         onClose();
       },
     },
-  ], [store, sortedFiles, onAddressesClick]);
+  ], [onClose, store, sortedFiles, onAddressesClick]);
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>

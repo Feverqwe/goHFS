@@ -56,7 +56,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
       if (!isDir) {
         const [value, symbol] = filesize(size, {
           output: 'array',
-        }) as any[];
+        }) as [number, string];
         hSize = `${Math.trunc(value * 10) / 10} ${symbol}`;
       }
     } catch (err) {

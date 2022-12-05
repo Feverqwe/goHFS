@@ -30,9 +30,10 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
     onClose();
   }, [onClose]);
 
-  const handleRename = React.useCallback(async (e: FormEvent) => {
+  const handleRename = React.useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newName = (e.currentTarget as any).elements.new_name.value;
+    const {elements} = e.currentTarget;
+    const newName = (elements as HTMLFormControlsCollection & Record<string, HTMLInputElement>).new_name.value;
     setLoading(true);
     try {
       await api.rename({

@@ -37,7 +37,9 @@ const DropZone: FC<DropZoneProps> = ({onUpload}) => {
 
       setVisible(true);
 
-      dragTimeout && clearTimeout(dragTimeout);
+      if (dragTimeout) {
+        clearTimeout(dragTimeout);
+      }
       dragTimeout = window.setTimeout(() => {
         setVisible(false);
       }, 150);
@@ -54,7 +56,9 @@ const DropZone: FC<DropZoneProps> = ({onUpload}) => {
     }
 
     return () => {
-      dragTimeout && clearTimeout(dragTimeout);
+      if (dragTimeout) {
+        clearTimeout(dragTimeout);
+      }
       window.removeEventListener('dragover', handleDragOver);
       window.removeEventListener('drop', handleDrop);
     };

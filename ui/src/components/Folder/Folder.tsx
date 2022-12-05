@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
-import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, styled} from '@mui/material';
+import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Paper, Typography} from '@mui/material';
 import {ArrowBack as ArrowBackIcon, Sort as SortIcon, Upload as UploadIcon} from '@mui/icons-material';
 import Path from 'path-browserify';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
@@ -23,9 +23,12 @@ const RootSx = {
 
 const PathLinePathSx = {
   flexGrow: 1,
+  wordBreak: 'break-all',
+  lineHeight: 'normal',
+  color: 'text.secondary',
 };
 
-const ListSubheaderMy = styled<any>(ListSubheader)(({theme}) => {
+/* const ListSubheaderMy = styled<unknown>(ListSubheader)(({theme}) => {
   return {
     display: 'flex',
     alignItems: 'center',
@@ -34,7 +37,7 @@ const ListSubheaderMy = styled<any>(ListSubheader)(({theme}) => {
     padding: '6px',
     backgroundColor: theme.palette.background.paper,
   };
-});
+}); */
 
 const iconStyle = {
   minWidth: '42px',
@@ -116,25 +119,27 @@ const Folder: FC = () => {
       <List
         component="nav"
         subheader={(
-          <ListSubheaderMy component="div">
-            <Box sx={PathLinePathSx}>
-              {store.dir}
-            </Box>
-            {store.isWritable ? (
-              <IconButton title="Upload" onClick={handleUploadBtn} size="small">
-                <UploadIcon fontSize="inherit" />
+          <Paper elevation={0} square={true}>
+            <Box p={1} py={0.5} display="flex" alignItems="center">
+              <Typography component={Box} sx={PathLinePathSx} variant="body2">
+                {store.dir}
+              </Typography>
+              {store.isWritable ? (
+                <IconButton title="Upload" onClick={handleUploadBtn} size="small">
+                  <UploadIcon fontSize="inherit" />
+                </IconButton>
+              ) : null}
+              <IconButton title="Sort" onClick={handleSortBtn} size="small">
+                <SortIcon fontSize="inherit" />
               </IconButton>
-            ) : null}
-            <IconButton title="Sort" onClick={handleSortBtn} size="small">
-              <SortIcon fontSize="inherit" />
-            </IconButton>
-            <IconButton title="Select" onClick={handleSelect} size="small">
-              <SelectAllIcon fontSize="inherit" />
-            </IconButton>
-            <IconButton title="Menu" onClick={handleShowMenu} size="small">
-              <MenuIcon fontSize="inherit" />
-            </IconButton>
-          </ListSubheaderMy>
+              <IconButton title="Select" onClick={handleSelect} size="small">
+                <SelectAllIcon fontSize="inherit" />
+              </IconButton>
+              <IconButton title="Menu" onClick={handleShowMenu} size="small">
+                <MenuIcon fontSize="inherit" />
+              </IconButton>
+            </Box>
+          </Paper>
         )}
         sx={RootSx}
       >

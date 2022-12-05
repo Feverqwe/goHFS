@@ -61,10 +61,6 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
   const [isDone, setDone] = React.useState(false);
   const [error, setError] = React.useState<null | Error>(null);
 
-  const scope = React.useMemo(() => ({} as Record<string, any>), []);
-  scope.isLoading = isLoading;
-  scope.isDone = isDone;
-
   const [Icon, label, reqFn] = React.useMemo(() => {
     let icon;
     let label;
@@ -95,11 +91,10 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
 
   const handleClick = React.useCallback((e: SyntheticEvent) => {
     e.preventDefault();
-    if (scope.isLoading) return;
     if (reqFn) {
       setLoading(true);
       reqFn().then(() => {
-        onSuccess && onSuccess();
+        onSuccess?.();
       }, (err) => {
         setError(err);
       }).finally(() => {
@@ -107,12 +102,12 @@ const ActionBtn = React.memo(({action, file, dir, onSuccess}: ActionBtnProps) =>
         setDone(true);
       });
     } else {
-      onSuccess && onSuccess();
+      onSuccess?.();
     }
-  }, [scope.isLoading, reqFn, onSuccess]);
+  }, [reqFn, onSuccess]);
 
   return (
-    <MenuItem onClick={handleClick}>
+    <MenuItem onClick={handleClick} disabled={isLoading}>
       <ListItemIcon>
         <Icon />
       </ListItemIcon>
