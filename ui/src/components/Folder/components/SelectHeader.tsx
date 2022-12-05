@@ -37,7 +37,7 @@ const SelectHeader: FC = () => {
           <TableBody>
             {selected.map((name, index) => (
               <TableRow key={index}>
-                <TableCell size="small">
+                <TableCell sx={{px: 0}} size="small">
                   {name}
                 </TableCell>
               </TableRow>
