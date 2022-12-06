@@ -126,17 +126,17 @@ const Folder: FC = () => {
               </Typography>
               {store.isWritable ? (
                 <IconButton title="Upload" onClick={handleUploadBtn} size="small">
-                  <UploadIcon fontSize="inherit" />
+                  <UploadIcon fontSize="small" />
                 </IconButton>
               ) : null}
               <IconButton title="Sort" onClick={handleSortBtn} size="small">
-                <SortIcon fontSize="inherit" />
+                <SortIcon fontSize="small" />
               </IconButton>
               <IconButton title="Select" onClick={handleSelect} size="small">
-                <SelectAllIcon fontSize="inherit" />
+                <SelectAllIcon fontSize="small" />
               </IconButton>
               <IconButton title="Menu" onClick={handleShowMenu} size="small">
-                <MenuIcon fontSize="inherit" />
+                <MenuIcon fontSize="small" />
               </IconButton>
             </Box>
           </Paper>

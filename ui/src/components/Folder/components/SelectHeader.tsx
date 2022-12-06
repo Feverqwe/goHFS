@@ -64,19 +64,19 @@ const SelectHeader: FC = () => {
     <Paper square={true} sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
       <Box p={1} py={0.5} display="flex" alignItems="center">
         <Box pr={1}>
-          <Checkbox sx={{m: -1}} size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
+          <Checkbox sx={{ml: -1}} size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
         </Box>
         <Box flexGrow={1} pr={1}>
           Selected: {selected.length}
         </Box>
         <Box pr={1}>
           <IconButton title="Delete" size="small" onClick={handleDelete} disabled={selected.length === 0}>
-            <DeleteIcon fontSize="inherit" />
+            <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
         <Box>
           <IconButton title="Cancel" size="small" onClick={handleClose}>
-            <CloseIcon fontSize="inherit" />
+            <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
       </Box>
