@@ -18,3 +18,7 @@ export function getOption<T>(key: string, defaultValue: T) {
 export function setOption<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
+
+export function unicLast<T>(list: T[]): T[] {
+  return list.filter((n, i, arr) => arr.lastIndexOf(n) === i);
+}

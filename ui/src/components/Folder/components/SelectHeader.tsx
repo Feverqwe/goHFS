@@ -2,7 +2,7 @@ import React, {ChangeEvent, FC, useCallback, useContext} from 'react';
 import {Box, Checkbox, IconButton, Paper, Table, TableBody, TableCell, TableRow} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
-import {SelectChangeModeCtx, SelectChangeSelectedCtx, SelectSelectedCtx} from './SelectProvider/SelectCtx';
+import {SelectChangeSelectedCtx, SelectSelectedCtx} from './SelectProvider/SelectCtx';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {api} from '../../../tools/api';
 import {DialogSetDataCtx} from './DialogProvider/DialogSetDataCtx';
@@ -12,21 +12,20 @@ const SelectHeader: FC = () => {
   const {dir, files} = useContext(RootStoreCtx);
   const selected = useContext(SelectSelectedCtx);
   const changeSelected = useContext(SelectChangeSelectedCtx);
-  const changeMode = useContext(SelectChangeModeCtx);
   const setDialog = useContext(DialogSetDataCtx);
 
   const handleSelectAll = useCallback((e: ChangeEvent, checked: boolean) => {
-    changeSelected(() => {
+    changeSelected((_, files) => {
       if (!checked) {
         return [];
       }
       return files.map((f) => f.name);
     });
-  }, [files, changeSelected]);
+  }, [changeSelected]);
 
   const handleClose = useCallback(() => {
-    changeMode(false);
-  }, [changeMode]);
+    changeSelected(() => []);
+  }, [changeSelected]);
 
   const handleDelete = useCallback(async () => {
     setDialog({
@@ -55,10 +54,10 @@ const SelectHeader: FC = () => {
         location.reload();
       },
       onCancel: () => {
-        changeMode(false);
+        handleClose();
       },
     });
-  }, [dir, selected, setDialog, changeMode]);
+  }, [dir, selected, setDialog, handleClose]);
 
   return (
     <Paper square={true} sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>

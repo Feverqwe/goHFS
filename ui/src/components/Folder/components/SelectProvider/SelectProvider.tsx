@@ -1,30 +1,28 @@
-import React, {FC, ReactNode, useCallback, useState} from 'react';
-import {SelectChangeModeCtx, SelectChangeSelectedCtx, SelectModeCtx, SelectSelectedCtx} from './SelectCtx';
+import React, {FC, ReactNode, useCallback, useRef, useState} from 'react';
+import {ChangeSelectedCallback, SelectChangeSelectedCtx, SelectModeCtx, SelectSelectedCtx} from './SelectCtx';
+import {FileInfo} from '../../../../types';
 
 interface SelectProviderProps {
+  files: FileInfo[];
   children: ReactNode;
 }
 
-const SelectProvider: FC<SelectProviderProps> = ({children}) => {
-  const [selectMode, setSelectMode] = useState<boolean>(false);
+const SelectProvider: FC<SelectProviderProps> = ({children, files}) => {
   const [selected, setSelected] = useState<string[]>([]);
+  const refSelected = useRef(selected);
+  const refFiles = useRef(files);
+  refFiles.current = files;
+  refSelected.current = selected;
 
-  const handleChangeSelected = useCallback((enabled: boolean) => {
-    setSelectMode((prevState) => {
-      if (prevState !== enabled) {
-        setSelected([]);
-      }
-      return enabled;
-    });
+  const handleChangeSelected = useCallback((callback: ChangeSelectedCallback) => {
+    setSelected(callback(refSelected.current, refFiles.current));
   }, []);
 
   return (
     <SelectSelectedCtx.Provider value={selected}>
-      <SelectChangeSelectedCtx.Provider value={setSelected}>
-        <SelectModeCtx.Provider value={selectMode}>
-          <SelectChangeModeCtx.Provider value={handleChangeSelected}>
-            {children}
-          </SelectChangeModeCtx.Provider>
+      <SelectChangeSelectedCtx.Provider value={handleChangeSelected}>
+        <SelectModeCtx.Provider value={Boolean(selected.length)}>
+          {children}
         </SelectModeCtx.Provider>
       </SelectChangeSelectedCtx.Provider>
     </SelectSelectedCtx.Provider>

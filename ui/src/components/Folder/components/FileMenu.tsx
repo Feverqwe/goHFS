@@ -8,7 +8,8 @@ import DoneIcon from '@mui/icons-material/Done';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import {FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
-import {SelectChangeModeCtx, SelectChangeSelectedCtx} from './SelectProvider/SelectCtx';
+import {SelectChangeSelectedCtx} from './SelectProvider/SelectCtx';
+import {unicLast} from '../utils';
 
 const MyListItemIcon = styled(ListItemIcon)(() => {
   return {
@@ -33,7 +34,6 @@ interface FileDialogProps {
 }
 
 const FileMenu: FC<FileDialogProps> = ({anchorEl, file, dir, onRemoved, onRename, onClose}) => {
-  const changeMode = useContext(SelectChangeModeCtx);
   const changeSelected = useContext(SelectChangeSelectedCtx);
 
   const menu = useMemo<Item[]>(() => {
@@ -43,13 +43,16 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, file, dir, onRemoved, onRename
         label: 'Select',
         icon: <HighlightAltIcon />,
         onSubmit: () => {
-          changeMode(true);
-          changeSelected((prevArr) => {
-            const arr = prevArr.slice(0);
-            if (!arr.includes(file.name)) {
-              arr.push(file.name);
+          changeSelected((selected_) => {
+            const selected = selected_.slice(0);
+            const {name} = file;
+            const pos = selected.indexOf(name);
+            if (pos === -1) {
+              selected.push(name);
+            } else {
+              selected.splice(pos, 1);
             }
-            return arr;
+            return unicLast(selected);
           });
           onClose();
         },
@@ -78,7 +81,7 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, file, dir, onRemoved, onRename
         },
       },
     ];
-  }, [dir, file, onRemoved, onRename, changeMode, changeSelected, onClose]);
+  }, [dir, file, onRemoved, onRename, changeSelected, onClose]);
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
