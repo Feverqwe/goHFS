@@ -51,8 +51,9 @@ func (s *Storage) SaveQueue() {
 
 func (s *Storage) Save() error {
 	path := s.path
+	reader := bytes.NewReader(nil)
 	if data, err := json.Marshal(s.keyValue); err == nil {
-		reader := bytes.NewReader(data)
+		reader.Reset(data)
 		err = atomic.WriteFile(path, reader)
 		return err
 	}

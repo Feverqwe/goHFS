@@ -142,8 +142,9 @@ func LoadConfig() Config {
 
 func SaveConfig(config Config) error {
 	path := getConfigPath()
+	reader := bytes.NewReader(nil)
 	if data, err := json.MarshalIndent(config, "", "  "); err == nil {
-		reader := bytes.NewReader(data)
+		reader.Reset(data)
 		err = atomic.WriteFile(path, reader)
 		return err
 	}
