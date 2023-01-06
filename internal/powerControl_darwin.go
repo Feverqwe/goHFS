@@ -13,17 +13,17 @@ type PowerControl struct {
 	ch    chan int
 }
 
-func (self *PowerControl) Inc() {
-	if self.count == 0 {
-		self.ch <- 1
+func (s *PowerControl) Inc() {
+	if s.count == 0 {
+		s.ch <- 1
 	}
-	self.count++
+	s.count++
 }
 
-func (self *PowerControl) Dec() {
-	self.count--
-	if self.count == 0 {
-		self.ch <- 0
+func (s *PowerControl) Dec() {
+	s.count--
+	if s.count == 0 {
+		s.ch <- 0
 	}
 }
 
