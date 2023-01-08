@@ -6,7 +6,7 @@ import addEvent from '../../../../tools/addEvent';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {TITLE} from '../../constants';
 import {VideoMetadata} from '../../types';
-import {getSidV2} from '../../utils';
+import {getSidV2, isSafari} from '../../utils';
 import {api} from '../../../../tools/api';
 
 interface VideoProps {
@@ -117,6 +117,7 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
           break;
         }
         case 'KeyF': {
+          if (isSafari) return;
           if (isRepeat) return;
           if (isFullscreen) {
             document.exitFullscreen().catch((err) => {
@@ -142,16 +143,18 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
       lastKey = code;
     }, true), disposers);
 
-    addEvent(video, (on) => on('click', (e: MouseEvent) => {
-      e.preventDefault();
-      if (video.paused) {
-        video.play().catch((err) => {
-          console.log('play error: %O', err);
-        });
-      } else {
-        video.pause();
-      }
-    }), disposers);
+    if (!isSafari) {
+      addEvent(video, (on) => on('click', (e: MouseEvent) => {
+        e.preventDefault();
+        if (video.paused) {
+          video.play().catch((err) => {
+            console.log('play error: %O', err);
+          });
+        } else {
+          video.pause();
+        }
+      }), disposers);
+    }
 
     const sid = getSidV2(url);
     let lastSyncAt = 0;

@@ -27,3 +27,6 @@ export function getSidV2(url: string) {
   }
   return url;
 }
+
+
+export const isSafari = 'safari' in window;
