@@ -88,6 +88,7 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
       switch (code) {
         case 'Space': {
           if (isRepeat) return;
+          if (isSafari && (document as any).webkitIsFullScreen) return;
           e.preventDefault();
           if (video.paused) {
             video.play().catch((err) => {
