@@ -8,6 +8,7 @@ import {TITLE} from '../../constants';
 import {VideoMetadata} from '../../types';
 import {getSidV2, isSafari} from '../../utils';
 import {api} from '../../../../tools/api';
+import Hls from "hls.js";
 
 interface VideoProps {
   url: string,
@@ -56,6 +57,11 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
   useEffect(() => {
     const video = refVideo.current;
     if (!url || !video) return;
+
+    let hls: Hls | undefined;
+    if (/\.m3u8$/.test(url)) {
+      hls = new Hls();
+    }
 
     const disposers: Array<() => void> = [];
 
@@ -211,12 +217,21 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
       });
     }), disposers);
 
-    video.src = url;
+    if (hls) {
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    } else {
+      video.src = url;
+    }
     video.focus();
 
     return () => {
       disposers.splice(0).forEach((disposer) => disposer());
 
+      if (hls) {
+        hls.detachMedia();
+        hls.destroy();
+      }
       video.src = '';
     };
   }, [toggleUrlDialog, url]);
