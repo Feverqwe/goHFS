@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"path/filepath"
+	"sync"
 
 	"github.com/natefinch/atomic"
 )
@@ -13,16 +13,20 @@ import (
 type Storage struct {
 	path     string
 	keyValue map[string]interface{}
+	mrw      sync.RWMutex
 	ch       chan int
 }
 
 func (s *Storage) GetKeys(keys []string) map[string]interface{} {
-	result := make(map[string]interface{})
+	var result map[string]interface{}
 	if keys == nil {
+		s.mrw.RLock()
 		result = s.keyValue
+		s.mrw.RUnlock()
 	} else {
+		result = make(map[string]interface{})
 		for _, key := range keys {
-			if val, ok := s.keyValue[key]; ok {
+			if val, ok := s.GetKey(key); ok {
 				result[key] = val
 			}
 		}
@@ -30,19 +34,39 @@ func (s *Storage) GetKeys(keys []string) map[string]interface{} {
 	return result
 }
 
+func (s *Storage) GetKey(key string) (interface{}, bool) {
+	s.mrw.RLock()
+	defer s.mrw.RUnlock()
+	val, ok := s.keyValue[key]
+	return val, ok
+}
+
 func (s *Storage) SetObject(keyValue map[string]interface{}) error {
 	for key, value := range keyValue {
-		s.keyValue[key] = value
+		s.SetKey(key, value)
 	}
 	s.SaveQueue()
 	return nil
 }
+
+func (s *Storage) SetKey(key string, value interface{}) {
+	s.mrw.Lock()
+	defer s.mrw.Unlock()
+	s.keyValue[key] = value
+}
+
 func (s *Storage) DelKeys(keys []string) error {
 	for _, key := range keys {
-		delete(s.keyValue, key)
+		s.DelKey(key)
 	}
 	s.SaveQueue()
 	return nil
+}
+
+func (s *Storage) DelKey(key string) {
+	s.mrw.Lock()
+	defer s.mrw.Unlock()
+	delete(s.keyValue, key)
 }
 
 func (s *Storage) SaveQueue() {
@@ -52,7 +76,10 @@ func (s *Storage) SaveQueue() {
 func (s *Storage) Save() error {
 	path := s.path
 	reader := bytes.NewReader(nil)
-	if data, err := json.Marshal(s.keyValue); err == nil {
+	s.mrw.RLock()
+	data, err := json.Marshal(s.keyValue)
+	s.mrw.RUnlock()
+	if err == nil {
 		reader.Reset(data)
 		err = atomic.WriteFile(path, reader)
 		return err
@@ -76,9 +103,9 @@ func (s *Storage) Load() error {
 	return nil
 }
 
-func GetStorage() *Storage {
+func GetStorage(path string) *Storage {
 	storage := &Storage{
-		path:     getStoragePath(),
+		path:     path,
 		ch:       make(chan int),
 		keyValue: make(map[string]interface{}),
 	}
@@ -96,9 +123,4 @@ func GetStorage() *Storage {
 		}
 	}()
 	return storage
-}
-
-func getStoragePath() string {
-	place := getProfilePath()
-	return filepath.Join(place, "storage.json")
 }

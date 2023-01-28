@@ -20,7 +20,7 @@ func main() {
 
 	var powerControl = internal.GetPowerControl()
 
-	storage := internal.GetStorage()
+	storage := internal.GetStorage(internal.GetStoragePath())
 
 	callChan := make(chan string)
 
