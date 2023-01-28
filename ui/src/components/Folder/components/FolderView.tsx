@@ -1,9 +1,8 @@
 import * as React from 'react';
-import {FC, memo, SyntheticEvent, useCallback, useContext, useState} from 'react';
+import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
 import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Paper, Typography} from '@mui/material';
 import {ArrowBack as ArrowBackIcon, Sort as SortIcon, Upload as UploadIcon} from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Path from 'path-browserify';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from './SelectProvider/SelectCtx';
 import {FileInfo} from '../../../types';
@@ -69,6 +68,12 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     setMenuAnchorEl(e.currentTarget);
   }, []);
 
+  const backLink = useMemo(() => {
+    const parts = store.dir.split('/');
+    parts.pop();
+    return parts.map((p) => encodeURIComponent(p)).join('/') || '/';
+  }, [store]);
+
   return (
     <>
       <List
@@ -96,7 +101,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
         sx={RootSx}
       >
         {!store.isRoot && (
-          <ListItemButton component="a" href={Path.join(store.dir, '/', '..')}>
+          <ListItemButton component="a" href={backLink}>
             <ListItemIcon style={iconStyle}>
               <ArrowBackIcon />
             </ListItemIcon>

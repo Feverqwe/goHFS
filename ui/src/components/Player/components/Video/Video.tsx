@@ -2,13 +2,13 @@ import * as React from 'react';
 import {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
+import Hls from 'hls.js';
 import addEvent from '../../../../tools/addEvent';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {TITLE} from '../../constants';
 import {VideoMetadata} from '../../types';
 import {getSidV2, isSafari} from '../../utils';
 import {api} from '../../../../tools/api';
-import Hls from "hls.js";
 
 interface VideoProps {
   url: string,
