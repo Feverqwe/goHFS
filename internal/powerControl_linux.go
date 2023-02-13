@@ -5,11 +5,11 @@ package internal
 type PowerControl struct {
 }
 
-func (s *PowerControl) Inc() {
+func (self *PowerControl) Inc() {
 
 }
 
-func (s *PowerControl) Dec() {
+func (self *PowerControl) Dec() {
 
 }
 

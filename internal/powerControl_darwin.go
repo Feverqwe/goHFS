@@ -3,27 +3,28 @@
 package internal
 
 import (
+	"sync/atomic"
 	"time"
 
 	"github.com/caseymrm/go-caffeinate"
 )
 
 type PowerControl struct {
-	count int
+	count int32
 	ch    chan int
 }
 
-func (s *PowerControl) Inc() {
-	if s.count == 0 {
-		s.ch <- 1
+func (self *PowerControl) Inc() {
+	if atomic.LoadInt32(&self.count) == 0 {
+		self.ch <- 1
 	}
-	s.count++
+	atomic.AddInt32(&self.count, 1)
 }
 
-func (s *PowerControl) Dec() {
-	s.count--
-	if s.count == 0 {
-		s.ch <- 0
+func (self *PowerControl) Dec() {
+	count := atomic.AddInt32(&self.count, -1)
+	if count == 0 {
+		self.ch <- 0
 	}
 }
 
