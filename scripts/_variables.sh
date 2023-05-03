@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd $(dirname $0)/..
+
 BINARY="goHFS"
 NAME="goHFS"
 AUTHOR="Anton V"

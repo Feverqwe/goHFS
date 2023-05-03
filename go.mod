@@ -15,6 +15,8 @@ require (
 )
 
 require (
+	github.com/JackMordaunt/icns v1.0.0 // indirect
+	github.com/Strosel/appify v0.0.0-20190622132957-08b76e1e20fc // indirect
 	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/bmatcuk/doublestar/v3 v3.0.0 // indirect
 	github.com/caseymrm/go-assertions v0.0.0-20180523040700-6ea0307b5bc5 // indirect
@@ -44,6 +46,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/otiai10/copy v1.9.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pkg/errors v0.9.1 // indirect

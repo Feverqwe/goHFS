@@ -1,9 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd $SCRIPT_DIR/..
+set -e
 
-source ./scripts/_variables.sh
+source "$(dirname $0)/_variables.sh"
 
-rm ./${BINARY}
+if [ -f "./${BINARY}" ]; then
+    rm ./${BINARY}
+fi
+
 go build -trimpath -o ${BINARY}
