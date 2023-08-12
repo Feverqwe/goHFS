@@ -190,7 +190,12 @@ func getDefaultProfilePath() string {
 	return place
 }
 
-func GetStoragePath() string {
+func GetLegacyStoragePath() string {
 	place := getProfilePath()
 	return filepath.Join(place, "storage.json")
+}
+
+func GetStoragePath() string {
+	place := getProfilePath()
+	return filepath.Join(place, "storage-v2.json")
 }
