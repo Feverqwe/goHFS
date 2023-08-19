@@ -7,11 +7,10 @@ import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import Path from 'path-browserify';
 import {ExtAction, FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
 import {SelectChangeSelectedCtx} from './SelectProvider/SelectCtx';
-import {unicLast} from '../utils';
+import {formatUrl, unicLast} from '../utils';
 
 const MyListItemIcon = styled(ListItemIcon)(() => {
   return {
@@ -32,7 +31,6 @@ interface FileDialogProps {
   writable: boolean;
   file: FileInfo,
   dir: string,
-  href: string,
   onClose: () => void,
   onRemoved: () => void,
   onRename: () => void,
@@ -40,7 +38,7 @@ interface FileDialogProps {
   customActions: ExtAction[],
 }
 
-const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, href, onRemoved, onRename, onClose, customActions}) => {
+const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved, onRename, onClose, customActions}) => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
 
   const menu = useMemo<Item[]>(() => {
@@ -50,9 +48,7 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, href, onR
           id: String(index),
           label: name,
           icon: <OpenInNewIcon />,
-          href: url
-            .replace('{path}', encodeURIComponent(Path.join(dir, file.name)))
-            .replace('{url}', encodeURIComponent(href)),
+          href: formatUrl(url, {dir, name: file.name}),
           newPage,
         };
       }),
@@ -101,7 +97,7 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, href, onR
         },
       ]),
     ];
-  }, [dir, file, onRemoved, onRename, changeSelected, onClose, customActions, href, writable]);
+  }, [dir, file, onRemoved, onRename, changeSelected, onClose, customActions, writable]);
 
   if (!menu.length) return null;
 

@@ -17,6 +17,7 @@ import {FileInfo} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
+import {formatUrl} from '../../utils';
 
 const mime = require('mime');
 
@@ -103,14 +104,12 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
   const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
     if (!handleUrl) return;
     e.preventDefault();
-    const url = handleUrl
-      .replace('{path}', encodeURIComponent(Path.join(dir, file.name)))
-      .replace('{url}', encodeURIComponent(href));
+    const url = formatUrl(handleUrl, {dir, name: file.name});
     const win = window.open(url, '_blank');
     if (win) {
       win.focus();
     }
-  }, [href, handleUrl, dir, file.name]);
+  }, [handleUrl, dir, file.name]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -199,7 +198,6 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
           onClose={handleMenuClose}
           file={file}
           dir={dir}
-          href={href}
           customActions={customActions}
           writable={writable}
         />
