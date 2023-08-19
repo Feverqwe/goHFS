@@ -17,12 +17,12 @@ import (
 )
 
 type RootStore struct {
-	Dir        string               `json:"dir"`
-	IsRoot     bool                 `json:"isRoot"`
-	IsWritable bool                 `json:"isWritable"`
-	Files      []File               `json:"files"`
-	ExtHandle  map[string]string    `json:"extHandle"`
-	ExtAction  map[string]ExtAction `json:"extAction"`
+	Dir        string                 `json:"dir"`
+	IsRoot     bool                   `json:"isRoot"`
+	IsWritable bool                   `json:"isWritable"`
+	Files      []File                 `json:"files"`
+	ExtHandle  map[string]string      `json:"extHandle"`
+	ExtActions map[string][]ExtAction `json:"extActions"`
 }
 
 type File struct {
@@ -96,7 +96,7 @@ func HandleDir(router *Router, config *Config, debugUi bool) {
 			IsWritable: isWritable,
 			Files:      files,
 			ExtHandle:  config.ExtHandle,
-			ExtAction:  config.ExtAction,
+			ExtActions: config.ExtActions,
 		}
 
 		if debugUi {
