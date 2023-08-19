@@ -43,10 +43,10 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
   const selectMode = useContext(SelectModeCtx);
   const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
-  const handleUrl = useMemo(() => {
-    const ext = Path.extname(name).toLowerCase();
-    return store.extHandle[ext];
-  }, [store, name]);
+
+  const ext = useMemo(() => Path.extname(name).toLowerCase(), [name]);
+  const handleUrl = useMemo(() => store.extHandle[ext], [store, ext]);
+  const customActions = useMemo(() => store.extActions[ext] ?? [], [store, ext]);
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
@@ -103,12 +103,14 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
   const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
     if (!handleUrl) return;
     e.preventDefault();
-    const url = handleUrl.replace('{url}', encodeURIComponent(href));
+    const url = handleUrl
+      .replace('{path}', encodeURIComponent(Path.join(dir, file.name)))
+      .replace('{url}', encodeURIComponent(href));
     const win = window.open(url, '_blank');
     if (win) {
       win.focus();
     }
-  }, [href, handleUrl]);
+  }, [href, handleUrl, dir, file.name]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -132,7 +134,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     setRenameDialog(false);
   }, []);
 
-  const handleCtxMenu = writable && handleMenuClick || undefined;
+  const handleCtxMenu = handleMenuClick;
 
   const body = useMemo(() => {
     return (
@@ -197,6 +199,9 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
           onClose={handleMenuClose}
           file={file}
           dir={dir}
+          href={href}
+          customActions={customActions}
+          writable={writable}
         />
       ) : null}
       {renameDialog ? (

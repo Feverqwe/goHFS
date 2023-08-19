@@ -5,10 +5,17 @@ export interface FileInfo {
   isDir: boolean,
 }
 
+export interface ExtAction {
+  name: string;
+  url: string;
+  newPage?: boolean;
+}
+
 export interface RootStore {
   dir: string,
   isRoot: boolean,
   isWritable: boolean,
   files: FileInfo[],
   extHandle: Partial<Record<string, string>>,
+  extActions: Partial<Record<string, ExtAction[]>>
 }

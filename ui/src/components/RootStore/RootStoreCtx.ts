@@ -7,6 +7,7 @@ const defaultStore = {
   isWritable: true,
   files: [],
   extHandle: {},
+  extActions: {},
 };
 
 export const RootStoreCtx = createContext<RootStore>(defaultStore);

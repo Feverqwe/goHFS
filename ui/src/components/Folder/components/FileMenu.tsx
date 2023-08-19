@@ -6,7 +6,9 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import ErrorIcon from '@mui/icons-material/Error';
 import DoneIcon from '@mui/icons-material/Done';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
-import {FileInfo} from '../../../types';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import Path from 'path-browserify';
+import {ExtAction, FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
 import {SelectChangeSelectedCtx} from './SelectProvider/SelectCtx';
 import {unicLast} from '../utils';
@@ -21,67 +23,87 @@ interface Item {
   id: string;
   label: string;
   icon: ReactNode,
-  onSubmit: () => Promise<void> | void,
+  onSubmit?: () => Promise<void> | void,
+  href?: string;
+  newPage?: boolean;
 }
 
 interface FileDialogProps {
+  writable: boolean;
   file: FileInfo,
   dir: string,
+  href: string,
   onClose: () => void,
   onRemoved: () => void,
   onRename: () => void,
   anchorEl: Element,
+  customActions: ExtAction[],
 }
 
-const FileMenu: FC<FileDialogProps> = ({anchorEl, file, dir, onRemoved, onRename, onClose}) => {
+const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, href, onRemoved, onRename, onClose, customActions}) => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
 
   const menu = useMemo<Item[]>(() => {
     return [
-      {
-        id: 'select',
-        label: 'Select',
-        icon: <HighlightAltIcon />,
-        onSubmit: () => {
-          changeSelected((selected_) => {
-            const selected = selected_.slice(0);
-            const {name} = file;
-            const pos = selected.indexOf(name);
-            if (pos === -1) {
-              selected.push(name);
-            } else {
-              selected.splice(pos, 1);
-            }
-            return unicLast(selected);
-          });
-          onClose();
+      ...customActions.map(({name, url, newPage}, index) => {
+        return {
+          id: String(index),
+          label: name,
+          icon: <OpenInNewIcon />,
+          href: url
+            .replace('{path}', encodeURIComponent(Path.join(dir, file.name)))
+            .replace('{url}', encodeURIComponent(href)),
+          newPage,
+        };
+      }),
+      ...(!writable ? [] : [
+        {
+          id: 'select',
+          label: 'Select',
+          icon: <HighlightAltIcon />,
+          onSubmit: () => {
+            changeSelected((selected_) => {
+              const selected = selected_.slice(0);
+              const {name} = file;
+              const pos = selected.indexOf(name);
+              if (pos === -1) {
+                selected.push(name);
+              } else {
+                selected.splice(pos, 1);
+              }
+              return unicLast(selected);
+            });
+            onClose();
+          },
         },
-      },
-      {
-        id: 'rename',
-        label: 'Rename',
-        icon: <DriveFileRenameOutlineIcon />,
-        onSubmit: () => {
-          onRename();
-          onClose();
+        {
+          id: 'rename',
+          label: 'Rename',
+          icon: <DriveFileRenameOutlineIcon />,
+          onSubmit: () => {
+            onRename();
+            onClose();
+          },
         },
-      },
-      {
-        id: 'remove',
-        label: 'Delete',
-        icon: <DeleteForeverIcon />,
-        onSubmit: async () => {
-          await api.remove({
-            place: dir,
-            name: file.name,
-            isDir: file.isDir,
-          });
-          onRemoved();
-          onClose();
+        {
+          id: 'remove',
+          label: 'Delete',
+          icon: <DeleteForeverIcon />,
+          onSubmit: async () => {
+            await api.remove({
+              place: dir,
+              name: file.name,
+              isDir: file.isDir,
+            });
+            onRemoved();
+            onClose();
+          },
         },
-      },
+      ]),
     ];
-  }, [dir, file, onRemoved, onRename, changeSelected, onClose]);
+  }, [dir, file, onRemoved, onRename, changeSelected, onClose, customActions, href, writable]);
+
+  if (!menu.length) return null;
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
@@ -102,13 +124,14 @@ interface ActionBtnProps {
 }
 
 const ActionBtn: FC<ActionBtnProps> = ({item}) => {
-  const {label, icon, onSubmit} = item;
+  const {label, icon, onSubmit, href, newPage} = item;
   const [loading, setLoading] = useState(false);
   const [pressed, setPressed] = useState(false);
   const [error, setError] = useState<null | Error>(null);
 
   const handleClick = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
+    if (!onSubmit) return;
 
     try {
       setPressed(true);
@@ -121,8 +144,15 @@ const ActionBtn: FC<ActionBtnProps> = ({item}) => {
     }
   }, [onSubmit]);
 
+  const itemProps = useMemo(() => {
+    if (href) {
+      return {component: 'a', href, target: newPage ? '_blank' : undefined};
+    }
+    return {onClick: handleClick};
+  }, [handleClick, href, newPage]);
+
   return (
-    <MenuItem onClick={handleClick} disabled={loading}>
+    <MenuItem {...itemProps} disabled={loading}>
       <ListItemIcon>
         {icon}
       </ListItemIcon>
