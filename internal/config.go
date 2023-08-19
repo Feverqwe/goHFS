@@ -25,6 +25,12 @@ type PrepPattern struct {
 	partCount   int
 }
 
+type ExtAction struct {
+	Name    string `json:"name"`
+	Url     string `json:"url"`
+	NewPage bool   `json:"newPage"`
+}
+
 type Config struct {
 	Port                 int
 	Address              string
@@ -32,6 +38,7 @@ type Config struct {
 	Name                 string
 	ShowHiddenFiles      bool
 	ExtHandle            map[string]string
+	ExtAction            map[string]ExtAction
 	WritablePatterns     []string
 	Salt                 string
 	prepWritablePatterns []PrepPattern
@@ -96,6 +103,7 @@ func PrepPatterns(patterns []string) []PrepPattern {
 func getNewConfig() Config {
 	var config = Config{
 		ExtHandle:        make(map[string]string),
+		ExtAction:        make(map[string]ExtAction),
 		WritablePatterns: make([]string, 0),
 	}
 	pwd := getProfilePath()
@@ -132,6 +140,9 @@ func LoadConfig() Config {
 		}
 		if config.ExtHandle == nil {
 			config.ExtHandle = make(map[string]string)
+		}
+		if config.ExtAction == nil {
+			config.ExtAction = make(map[string]ExtAction)
 		}
 	}
 
