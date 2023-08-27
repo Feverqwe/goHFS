@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {FC, ReactNode, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
-import {CircularProgress, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from '@mui/material';
+import {CircularProgress, Divider, ListItemIcon, ListItemText, Menu, MenuItem, styled, Tooltip} from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -17,6 +17,10 @@ const MyListItemIcon = styled(ListItemIcon)(() => {
     justifyContent: 'flex-end',
   };
 });
+
+interface DividerItem {
+  isDivider: true
+}
 
 interface Item {
   id: string;
@@ -41,7 +45,7 @@ interface FileDialogProps {
 const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved, onRename, onClose, customActions}) => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
 
-  const menu = useMemo<Item[]>(() => {
+  const menu = useMemo<(Item | DividerItem)[]>(() => {
     return [
       ...customActions.map(({name, url, newPage}, index) => {
         return {
@@ -52,6 +56,9 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
           newPage,
         };
       }),
+      ...(customActions.length ? [
+        {isDivider: true} as DividerItem,
+      ] : []),
       ...(!writable ? [] : [
         {
           id: 'select',
@@ -104,6 +111,10 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
       {menu.map((item) => {
+        if ('isDivider' in item) {
+          return (<Divider />);
+        }
+
         return (
           <ActionBtn
             key={item.id}
