@@ -76,7 +76,6 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
               }
               return unicLast(selected);
             });
-            onClose();
           },
         },
         {
@@ -85,7 +84,6 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
           icon: <DriveFileRenameOutlineIcon />,
           onSubmit: () => {
             onRename();
-            onClose();
           },
         },
         {
@@ -99,7 +97,6 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
               isDir: file.isDir,
             });
             onRemoved();
-            onClose();
           },
         },
       ]),
@@ -119,6 +116,7 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
           <ActionBtn
             key={item.id}
             item={item}
+            onSuccess={onClose}
           />
         );
       })}
@@ -128,9 +126,10 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
 
 interface ActionBtnProps {
   item: Item,
+  onSuccess: () => void;
 }
 
-const ActionBtn: FC<ActionBtnProps> = ({item}) => {
+const ActionBtn: FC<ActionBtnProps> = ({item, onSuccess}) => {
   const {label, icon, onSubmit, href, newPage} = item;
   const [loading, setLoading] = useState(false);
   const [pressed, setPressed] = useState(false);
@@ -144,6 +143,7 @@ const ActionBtn: FC<ActionBtnProps> = ({item}) => {
       setPressed(true);
       setLoading(true);
       await onSubmit();
+      onSuccess();
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -151,9 +151,13 @@ const ActionBtn: FC<ActionBtnProps> = ({item}) => {
     }
   }, [onSubmit]);
 
+  const handleLinkClick = useCallback(() => {
+    onSuccess();
+  }, []);
+
   const itemProps = useMemo(() => {
     if (href) {
-      return {component: 'a', href, target: newPage ? '_blank' : undefined};
+      return {component: 'a', href, target: newPage ? '_blank' : undefined, onClick: handleLinkClick};
     }
     return {onClick: handleClick};
   }, [handleClick, href, newPage]);
