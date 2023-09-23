@@ -12,6 +12,7 @@
 Build exe
 ---
 ````
+rename FILE_windows.syso FILE.syso
 go build -ldflags -H=windowsgui -trimpath -o goHFS.exe
 ````
 
@@ -30,5 +31,5 @@ Build resources with go-bindata
 File icon, use rsrc 
 ---
 ````
-.\rsrc_windows_amd64.exe -ico .\icon.ico -o FILE.syso
+.\rsrc_windows_amd64.exe -ico .\icon.ico -o FILE_windows.syso
 ````
