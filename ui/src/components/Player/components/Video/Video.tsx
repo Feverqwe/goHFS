@@ -84,8 +84,34 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
       const {code} = e;
       const isRepeat = e.code === lastKey;
 
+      const isMeta = e.ctrlKey || e.metaKey || e.shiftKey;
+
+      if (isMeta) {
+        switch (code) {
+          case 'Period': {
+            e.preventDefault();
+            if (video.playbackRate < 2) {
+              video.playbackRate += 0.25;
+            }
+            break;
+          }
+          case 'Comma': {
+            e.preventDefault();
+            if (video.playbackRate > 0.25) {
+              video.playbackRate -= 0.25;
+            }
+            break;
+          }
+          case 'Digit0': {
+            e.preventDefault();
+            video.playbackRate = 1;
+            break;
+          }
+        }
+      }
+
       // Bail if a modifier key is set
-      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      if (isMeta) {
         return;
       }
 
