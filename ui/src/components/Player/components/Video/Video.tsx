@@ -139,13 +139,13 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
         } */
         case 'ArrowLeft': {
           e.preventDefault();
-          const offset = e.altKey ? 3 : 10;
+          const offset = e.altKey ? 10 : 3;
           video.currentTime -= offset;
           break;
         }
         case 'ArrowRight': {
           e.preventDefault();
-          const offset = e.altKey ? 3 : 10;
+          const offset = e.altKey ? 10 : 3;
           video.currentTime += offset;
           break;
         }
