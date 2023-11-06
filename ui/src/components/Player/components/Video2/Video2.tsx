@@ -4,6 +4,7 @@ import OUI from '@oplayer/ui';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
+import {isMobile as isMobilePlayer} from '@oplayer/core/src/utils/platform';
 import {api} from '../../../../tools/api';
 import {getSidV2} from '../../utils';
 import {VideoMetadata} from '../../types';
@@ -64,7 +65,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       autoFocus: true,
       pictureInPicture: true,
       miniProgressBar: false,
-      coverButton: false,
+      coverButton: isMobilePlayer,
       theme: {
         primaryColor: '#90caf9',
       },
@@ -85,8 +86,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     };
 
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      console.log('keydown: %s', e.code);
+    let onKeydown: (e: KeyboardEvent) => void;
+    document.addEventListener('keydown', onKeydown = (e: KeyboardEvent) => {
+      // console.log('keydown: %s', e.code);
       const target = e.target as HTMLElement;
       if (target && target.tagName === 'INPUT') return;
 
@@ -151,6 +153,38 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       }
     });
 
+    let onTouchstart: (e: TouchEvent) => void;
+    if (isMobilePlayer) {
+      let startAt = 0;
+      document.addEventListener('touchstart', onTouchstart = (e: TouchEvent) => {
+        const touch = e.changedTouches[0];
+        if (!touch) return;
+        const {clientX, target} = touch;
+        const targetEl = target as HTMLElement;
+        const w = targetEl.clientWidth;
+        const now = Date.now();
+
+        if (now - startAt > 300) {
+          startAt = now;
+        } else {
+          // center click
+          if (clientX > (w / 3) && clientX < (w / 3) * 2) {
+            if (player.isPlaying) {
+              player.pause();
+            }
+            return;
+          }
+
+          let offset = 5;
+          if (clientX < targetEl.clientWidth / 2) {
+            offset *= -1;
+          }
+          player.seek(player.currentTime + offset);
+          emitTime();
+        }
+      });
+    }
+
     player.on('play', () => {
       setPlaying(player.isPlaying);
     });
@@ -198,6 +232,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     }
 
     return () => {
+      document.removeEventListener('keydown', onKeydown);
+      document.removeEventListener('touchstart', onTouchstart);
+
       if (hls) {
         hls.detachMedia();
         hls.destroy();
