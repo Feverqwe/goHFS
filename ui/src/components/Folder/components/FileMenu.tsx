@@ -101,7 +101,7 @@ const FileMenu: FC<FileDialogProps> = ({anchorEl, writable, file, dir, onRemoved
         },
       ]),
     ];
-  }, [dir, file, onRemoved, onRename, changeSelected, onClose, customActions, writable]);
+  }, [dir, file, onRemoved, onRename, changeSelected, customActions, writable]);
 
   if (!menu.length) return null;
 
@@ -149,18 +149,18 @@ const ActionBtn: FC<ActionBtnProps> = ({item, onSuccess}) => {
     } finally {
       setLoading(false);
     }
-  }, [onSubmit]);
+  }, [onSubmit, onSuccess]);
 
   const handleLinkClick = useCallback(() => {
     onSuccess();
-  }, []);
+  }, [onSuccess]);
 
   const itemProps = useMemo(() => {
     if (href) {
       return {component: 'a', href, target: newPage ? '_blank' : undefined, onClick: handleLinkClick};
     }
     return {onClick: handleClick};
-  }, [handleClick, href, newPage]);
+  }, [handleClick, href, newPage, handleLinkClick]);
 
   return (
     <MenuItem {...itemProps} disabled={loading}>

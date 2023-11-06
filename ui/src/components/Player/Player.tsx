@@ -1,13 +1,13 @@
 import * as React from 'react';
 import {useState} from 'react';
 import {GlobalStyles} from '@mui/material';
-import Video from './components/Video/Video';
 import UrlDialog from './components/UrlDialog/UrlDialog';
 import UrlDialogCtx from './components/UrlDialog/UrlDialogCtx';
 import {changeUrlParams} from '../../tools/urlParams';
 import {getParamsFromUrl} from './utils';
 import FetchMetadata from './components/FetchMetadata/FetchMetadata';
 import {VideoMetadata} from './types';
+import Video2 from './components/Video2/Video2';
 
 const RootStyles = {
   html: {
@@ -52,7 +52,7 @@ const Player = React.memo(() => {
       {url ? (
         <FetchMetadata url={url}>
           {(metadata) => (
-            <Video metadata={metadata as VideoMetadata} url={url} />
+            <Video2 metadata={metadata as VideoMetadata} url={url} />
           )}
         </FetchMetadata>
       ) : null}
