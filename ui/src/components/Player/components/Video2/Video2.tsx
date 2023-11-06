@@ -71,7 +71,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     })])
       .create();
 
-    ui.keyboard?.unregister(['s', 'ArrowLeft', 'ArrowRight']);
+    ui.keyboard.unregister?.(['s', 'ArrowLeft', 'ArrowRight']);
 
     const emitTime = () => {
       player.emit('notice', {
