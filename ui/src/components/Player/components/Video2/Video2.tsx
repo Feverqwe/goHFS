@@ -63,19 +63,29 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     let ui: ReturnType<typeof OUI>;
     player.use([ui = OUI({
       autoFocus: true,
-      pictureInPicture: true,
+      pictureInPicture: false,
       miniProgressBar: false,
       coverButton: isMobilePlayer,
       ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
       speeds: ['2.0', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
-      settings: [],
+      settings: [{
+        name: 'Picture in Picture',
+        type: 'switcher',
+        onChange: () => {
+          if (player.isInPip) {
+            player.exitPip();
+          } else {
+            player.enterPip();
+          }
+        },
+      }],
       theme: {
         primaryColor: '#90caf9',
       },
     })])
       .create();
 
-    ui.keyboard.unregister?.(['s', 'ArrowLeft', 'ArrowRight']);
+    ui.keyboard.unregister?.(['s', 'f', 'ArrowLeft', 'ArrowRight']);
 
     const emitTime = () => {
       player.emit('notice', {
@@ -146,6 +156,18 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           const offset = e.altKey ? 10 : 3;
           player.seek(player.currentTime + offset);
           emitTime();
+          break;
+        }
+        case 'KeyF': {
+          if (player.isFullScreen) {
+            player.exitFullscreen().catch((err) => {
+              console.error('exitFullscreen error: %O', err);
+            });
+          } else {
+            player.enterFullscreen().catch((err) => {
+              console.error('requestFullscreen error: %O', err);
+            });
+          }
           break;
         }
         case 'KeyN': {
