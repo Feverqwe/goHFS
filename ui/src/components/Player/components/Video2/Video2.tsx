@@ -60,12 +60,15 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       autoplay: false,
     });
 
-    let ui;
+    let ui: ReturnType<typeof OUI>;
     player.use([ui = OUI({
       autoFocus: true,
       pictureInPicture: true,
       miniProgressBar: false,
       coverButton: isMobilePlayer,
+      ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
+      speeds: ['2.0', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
+      settings: [],
       theme: {
         primaryColor: '#90caf9',
       },
@@ -157,6 +160,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     if (isMobilePlayer) {
       let startAt = 0;
       document.addEventListener('touchstart', onTouchstart = (e: TouchEvent) => {
+        if (e.target !== ui.$mask) return;
+
         const touch = e.changedTouches[0];
         if (!touch) return;
         const {clientX, target} = touch;
@@ -175,7 +180,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
             return;
           }
 
-          let offset = 5;
+          let offset = 10;
           if (clientX < targetEl.clientWidth / 2) {
             offset *= -1;
           }
@@ -183,6 +188,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           emitTime();
         }
       });
+
+      ui.$controllerBottom.setAttribute('style', 'zoom: 1.25');
     }
 
     player.on('play', () => {
