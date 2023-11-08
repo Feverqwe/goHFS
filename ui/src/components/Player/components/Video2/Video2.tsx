@@ -11,6 +11,7 @@ import {VideoMetadata} from '../../types';
 import {TITLE} from '../../constants';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {getOption, setOption} from '../../../Folder/utils';
+import {SHORT_SKIP, SKIP} from "./constants";
 
 const PLAYER_MPB = 'player.mpb';
 
@@ -157,14 +158,14 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       switch (code) {
         case 'ArrowLeft': {
           e.preventDefault();
-          const offset = e.altKey ? 10 : 3;
+          const offset = e.altKey ? SHORT_SKIP : SKIP;
           player.seek(player.currentTime - offset);
           emitTime();
           break;
         }
         case 'ArrowRight': {
           e.preventDefault();
-          const offset = e.altKey ? 10 : 3;
+          const offset = e.altKey ? SHORT_SKIP : SKIP;
           player.seek(player.currentTime + offset);
           emitTime();
           break;
@@ -213,7 +214,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
             return;
           }
 
-          let offset = 10;
+          let offset = SKIP;
           if (clientX < targetEl.clientWidth / 2) {
             offset *= -1;
           }
