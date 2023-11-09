@@ -71,7 +71,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       miniProgressBar: getOption(PLAYER_MPB, false),
       coverButton: isMobilePlayer,
       ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
-      speeds: ['2.0', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
+      speeds: ['2.0', '1.75', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
       settings: [{
         name: 'Picture in Picture',
         type: 'switcher',
