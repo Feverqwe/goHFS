@@ -18,8 +18,7 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
 import {formatUrl} from '../../utils';
-
-const mime = require('mime');
+import mime from 'mime';
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -76,7 +75,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     }
 
     const mimeType = mime.getType(name);
-    const m = /^([^\/]+)/.exec(mimeType);
+    const m = /^([^\/]+)/.exec(mimeType || '');
     const generalType = m && m[1];
     switch (generalType) {
       case 'video': {
