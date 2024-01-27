@@ -11,7 +11,7 @@ import {VideoMetadata} from '../../types';
 import {TITLE} from '../../constants';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {getOption, setOption} from '../../../Folder/utils';
-import {SHORT_SKIP, SKIP} from "./constants";
+import {SHORT_SKIP, SKIP} from './constants';
 
 const PLAYER_MPB = 'player.mpb';
 
