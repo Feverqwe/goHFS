@@ -64,8 +64,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       autoplay: false,
     });
 
-    let ui: ReturnType<typeof OUI>;
-    player.use([ui = OUI({
+    const ui = OUI({
       autoFocus: true,
       pictureInPicture: false,
       miniProgressBar: getOption(PLAYER_MPB, false),
@@ -94,8 +93,11 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       theme: {
         primaryColor: '#90caf9',
       },
-    })])
-      .create();
+    });
+
+    const plugins = [ui];
+
+    player.use(plugins).create();
 
     ui.keyboard.unregister?.(['s', 'f', 'ArrowLeft', 'ArrowRight']);
 
