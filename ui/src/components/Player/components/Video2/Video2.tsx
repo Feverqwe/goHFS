@@ -55,7 +55,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
 
     let hls: Hls | undefined;
     if (/\.m3u8$/.test(url)) {
-      hls = new Hls();
+      hls = new Hls({
+        preferManagedMediaSource: false,
+      });
     }
 
     const startTime = refStartTime.current;
