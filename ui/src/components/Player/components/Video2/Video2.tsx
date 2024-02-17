@@ -19,6 +19,17 @@ const CtrTag = styled('div')(() => {
   return {
     width: '100%',
     height: '100%',
+
+    '.progress-wrapper:hover': {
+      '.progress': {
+        height: '6px',
+        marginBottom: '-1px',
+      },
+      '.progress > div:nth-child(4) > span': {
+        top: '-3px',
+        transition: 'none',
+      },
+    },
   };
 });
 
@@ -275,6 +286,10 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         src: url,
       });
     }
+
+    const progressEl = (ui as unknown as {'$progress': HTMLElement}).$progress;
+    progressEl.classList.add('progress-wrapper');
+    progressEl.children[0].classList.add('progress');
 
     return () => {
       document.removeEventListener('keydown', onKeydown);

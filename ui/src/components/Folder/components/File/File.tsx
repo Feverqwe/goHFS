@@ -11,6 +11,7 @@ import {
 import {Box, CardActionArea, IconButton, ListItemText, styled} from '@mui/material';
 import Path from 'path-browserify';
 import {filesize} from 'filesize';
+import mime from 'mime';
 import FileMenu from '../FileMenu';
 import RenameDialog from '../RenameDialog';
 import {FileInfo} from '../../../../types';
@@ -18,7 +19,6 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
 import {formatUrl} from '../../utils';
-import mime from 'mime';
 
 const NameSx = {
   wordBreak: 'break-word',
