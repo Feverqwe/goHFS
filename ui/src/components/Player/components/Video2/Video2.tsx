@@ -20,14 +20,25 @@ const CtrTag = styled('div')(() => {
     width: '100%',
     height: '100%',
 
-    '.progress-wrapper:hover': {
-      '.progress': {
-        height: '6px',
-        marginBottom: '-1px',
+    '.progress-wrapper': {
+      padding: '6px 0px 6px',
+      transition: 'height, margin-bottom .1s',
+      '& .progress > div:nth-child(4) > span': {
+        transition: '.1s',
       },
-      '.progress > div:nth-child(4) > span': {
-        top: '-3px',
-        transition: 'none',
+      '&:hover': {
+        '& .progress': {
+          height: '6px',
+          marginBottom: '-1px',
+          '& > div:nth-child(4) > span': {
+            top: '-3px',
+          },
+        },
+      },
+    },
+    '.fullscreen': {
+      '.progress-wrapper:hover .progress > div:nth-child(4) > span': {
+        top: '-5px',
       },
     },
   };
@@ -113,6 +124,14 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     player.use(plugins).create();
 
     ui.keyboard.unregister?.(['s', 'f', 'ArrowLeft', 'ArrowRight']);
+
+    window.addEventListener('fullscreenchange', () => {
+      if (player.isFullScreen) {
+        player.$root.classList.add('fullscreen');
+      } else {
+        player.$root.classList.remove('fullscreen');
+      }
+    });
 
     const emitTime = () => {
       player.emit('notice', {
