@@ -14,6 +14,7 @@ import {getOption, setOption} from '../../../Folder/utils';
 import {SHORT_SKIP, SKIP} from './constants';
 
 const PLAYER_MPB = 'player.mpb';
+const DEBUG_EVENTS = false;
 
 const CtrTag = styled('div')(() => {
   return {
@@ -267,16 +268,17 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       setPlaying(player.isPlaying);
     });
 
-    /*[
+    // eslint-disable-next-line no-unused-expressions
+    DEBUG_EVENTS && [
       'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'ended',
       'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play',
       'playing', 'ratechange', 'seeked', 'seeking', 'stalled',
-      /!*'progress', 'suspend',*!/ /!*'timeupdate',*!/ 'volumechange', 'waiting',
+      'volumechange', 'waiting', // 'progress', 'suspend', 'timeupdate',
     ].forEach((type) => {
       player.$video.addEventListener(type, (e: Event) => {
         console.log('Event %s: %O', type, e);
       });
-    });*/
+    });
 
     const continuePlaying = () => {
       if (startTime > 0) {
@@ -300,6 +302,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
 
+    const SAVE_INTERVAL = 5 * 1000;
+    let isSeeking = false;
+    let isPlaying = true;
     const sid = getSidV2(url);
     let lastSyncAt = 0;
     player.on('timeupdate', async () => {
@@ -309,9 +314,13 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         lastSyncAt = now;
       }
 
-      if (lastSyncAt < now - 5 * 1000) {
+      if (lastSyncAt < now - SAVE_INTERVAL) {
         lastSyncAt = now;
+        if (isSeeking || !isPlaying) {
+          return;
+        }
         try {
+          // console.log('save', player.currentTime);
           await api.storageSet({
             [sid]: player.currentTime,
           });
@@ -319,6 +328,20 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           console.error('Storage.set error: %O', err);
         }
       }
+    });
+    player.on('seeking', () => {
+      isSeeking = true;
+    });
+    player.on('seeked', () => {
+      isSeeking = false;
+      lastSyncAt = Date.now() + SAVE_INTERVAL;
+    });
+    player.on('pause', () => {
+      isPlaying = false;
+    });
+    player.on('play', () => {
+      isPlaying = true;
+      lastSyncAt = Date.now() + SAVE_INTERVAL;
     });
 
     if (hls) {
