@@ -267,14 +267,38 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       setPlaying(player.isPlaying);
     });
 
-    player.once('loadedmetadata', () => {
+    /*[
+      'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'ended',
+      'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play',
+      'playing', 'ratechange', 'seeked', 'seeking', 'stalled',
+      /!*'progress', 'suspend',*!/ /!*'timeupdate',*!/ 'volumechange', 'waiting',
+    ].forEach((type) => {
+      player.$video.addEventListener(type, (e: Event) => {
+        console.log('Event %s: %O', type, e);
+      });
+    });*/
+
+    const continuePlaying = () => {
       if (startTime > 0) {
         player.seek(startTime);
       }
       player.play()?.catch((err) => {
         console.error('auto play error: %O', err);
       });
-    });
+    };
+
+    const isBrokenAndroidEdgePlayer = /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
+    if (isBrokenAndroidEdgePlayer) {
+      player.once('loadedmetadata', () => {
+        player.once('durationchange', () => {
+          continuePlaying();
+        });
+      });
+    } else {
+      player.once('loadedmetadata', () => {
+        continuePlaying();
+      });
+    }
 
     const sid = getSidV2(url);
     let lastSyncAt = 0;
