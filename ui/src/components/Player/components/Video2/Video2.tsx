@@ -318,9 +318,13 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
     if (isBrokenAndroidEdgePlayer) {
       player.once('loadedmetadata', () => {
-        player.once('durationchange', () => {
+        if (player.duration > 0) {
           continuePlaying();
-        });
+        } else {
+          player.once('durationchange', () => {
+            continuePlaying();
+          });
+        }
       });
     } else {
       player.once('loadedmetadata', () => {
