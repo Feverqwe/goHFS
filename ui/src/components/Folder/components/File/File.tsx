@@ -25,9 +25,9 @@ const NameSx = {
 };
 
 interface FileProps {
-  file: FileInfo,
-  dir: string,
-  writable: boolean,
+  file: FileInfo;
+  dir: string;
+  writable: boolean;
 }
 
 const SubLine = styled('div')(() => {
@@ -100,15 +100,18 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     return Path.join(dir.split('/').map(encodeURIComponent).join('/'), encodeURIComponent(name));
   }, [dir, name]);
 
-  const handleHandleClick = React.useCallback((e: SyntheticEvent) => {
-    if (!handleUrl) return;
-    e.preventDefault();
-    const url = formatUrl(handleUrl, {dir, name: file.name});
-    const win = window.open(url, '_blank');
-    if (win) {
-      win.focus();
-    }
-  }, [handleUrl, dir, file.name]);
+  const handleHandleClick = React.useCallback(
+    (e: SyntheticEvent) => {
+      if (!handleUrl) return;
+      e.preventDefault();
+      const url = formatUrl(handleUrl, {dir, name: file.name});
+      const win = window.open(url, '_blank');
+      if (win) {
+        win.focus();
+      }
+    },
+    [handleUrl, dir, file.name],
+  );
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -138,12 +141,12 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     return (
       <ListItemText
         primary={name}
-        secondary={(
+        secondary={
           <SubLine>
             <div>{dateStr}</div>
             <div>{sizeStr}</div>
           </SubLine>
-        )}
+        }
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
       />
@@ -158,9 +161,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     <>
       {handleUrl ? (
         <Box display="flex" alignItems="stretch">
-          {selectMode && (
-            <SelectBox name={name} />
-          )}
+          {selectMode && <SelectBox name={name} />}
           <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
             <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu}>
               <Icon />
@@ -174,9 +175,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
         </Box>
       ) : (
         <Box display="flex" alignItems="stretch">
-          {selectMode && (
-            <SelectBox name={name} />
-          )}
+          {selectMode && <SelectBox name={name} />}
           <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
             <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
               <Box p={1} display="flex" alignItems="center" onContextMenu={handleCtxMenu}>
@@ -201,16 +200,18 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
           writable={writable}
         />
       ) : null}
-      {renameDialog ? (
-        <RenameDialog onClose={handleCloseDialog} dir={dir} file={file} />
-      ) : null}
+      {renameDialog ? <RenameDialog onClose={handleCloseDialog} dir={dir} file={file} /> : null}
     </>
   );
 };
 
 function dateToStr(date: Date) {
-  const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((v) => (v < 10 ? '0' : '') + v).join('-');
-  const timeStr = [date.getHours(), date.getMinutes(), date.getSeconds()].map((v) => (v < 10 ? '0' : '') + v).join(':');
+  const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+    .map((v) => (v < 10 ? '0' : '') + v)
+    .join('-');
+  const timeStr = [date.getHours(), date.getMinutes(), date.getSeconds()]
+    .map((v) => (v < 10 ? '0' : '') + v)
+    .join(':');
   return `${dateStr} ${timeStr}`;
 }
 

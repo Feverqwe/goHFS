@@ -1,6 +1,13 @@
 import * as React from 'react';
 import {SyntheticEvent, useCallback, useState} from 'react';
-import {Box, Button, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
+import {
+  Box,
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import {ApiError} from '../../../../tools/apiRequest';
@@ -9,14 +16,14 @@ import Report from '../Report';
 import {api} from '../../../../tools/api';
 
 export interface UploadFileResult {
-  ok: boolean,
-  filename: string,
-  error: string,
+  ok: boolean;
+  filename: string;
+  error: string;
 }
 
 export interface UploadResponse {
-  error?: string,
-  result?: UploadFileResult[],
+  error?: string;
+  result?: UploadFileResult[];
 }
 
 const useUpload = (dir: string) => {
@@ -35,31 +42,37 @@ const useUpload = (dir: string) => {
     setOk(false);
   }, []);
 
-  const handleUpload = useCallback(async (files: File[]) => {
-    queueFiles.push(...files);
+  const handleUpload = useCallback(
+    async (files: File[]) => {
+      queueFiles.push(...files);
 
-    if (queueFiles.length > files.length) return;
+      if (queueFiles.length > files.length) return;
 
-    setVisible(true);
-    setDone(false);
+      setVisible(true);
+      setDone(false);
 
-    const newReport = await upload(dir, queueFiles, setProgress, setRetry);
-    queueFiles.splice(0);
+      const newReport = await upload(dir, queueFiles, setProgress, setRetry);
+      queueFiles.splice(0);
 
-    setReport((prevReport) => {
-      const sumReport = (prevReport || []).concat(newReport);
-      setOk(sumReport.every((file) => file.ok));
-      setDone(true);
-      return sumReport;
-    });
-  }, [dir, queueFiles]);
+      setReport((prevReport) => {
+        const sumReport = (prevReport || []).concat(newReport);
+        setOk(sumReport.every((file) => file.ok));
+        setDone(true);
+        return sumReport;
+      });
+    },
+    [dir, queueFiles],
+  );
 
-  const handleClose = useCallback((e: SyntheticEvent, reason?: string) => {
-    e.preventDefault();
-    if (!ok && reason === 'backdropClick') return;
-    setVisible(false);
-    resetState();
-  }, [ok, resetState]);
+  const handleClose = useCallback(
+    (e: SyntheticEvent, reason?: string) => {
+      e.preventDefault();
+      if (!ok && reason === 'backdropClick') return;
+      setVisible(false);
+      resetState();
+    },
+    [ok, resetState],
+  );
 
   let dialog = null;
   if (visible) {
@@ -77,7 +90,11 @@ const useUpload = (dir: string) => {
         ) : null}
         <DialogContent>
           {!isDone ? (
-            <LinearProgress color={isRetry ? 'warning' : 'primary'} variant="determinate" value={progress} />
+            <LinearProgress
+              color={isRetry ? 'warning' : 'primary'}
+              variant="determinate"
+              value={progress}
+            />
           ) : report ? (
             <Report report={report} />
           ) : null}
@@ -94,19 +111,24 @@ const useUpload = (dir: string) => {
   return {handleUpload, dialog};
 };
 
-const upload = async (dir: string, files: File[], setProgress: (val: number) => void, setRetry: (bool: boolean) => void) => {
+const upload = async (
+  dir: string,
+  files: File[],
+  setProgress: (val: number) => void,
+  setRetry: (bool: boolean) => void,
+) => {
   let sumBytesLen = 0;
   let sumBytes = 0;
 
   let uploadedBytes = 0;
   const updateProgress = (bytes: number) => {
     if (sumBytesLen !== files.length) {
-      sumBytes = files.slice(sumBytesLen).reduce((r, file) => r += file.size, sumBytes);
+      sumBytes = files.slice(sumBytesLen).reduce((r, file) => (r += file.size), sumBytes);
       sumBytesLen = files.length;
     }
 
     uploadedBytes += bytes;
-    setProgress(100 / sumBytes * uploadedBytes);
+    setProgress((100 / sumBytes) * uploadedBytes);
   };
 
   const sendChunk = async (key: string, chunk: Blob, pos: number) => {
@@ -155,7 +177,7 @@ const upload = async (dir: string, files: File[], setProgress: (val: number) => 
 
   const results: UploadFileResult[] = [];
 
-  for (let i = 0, file; file = files[i]; i++) {
+  for (let i = 0, file; (file = files[i]); i++) {
     let error = '';
     try {
       await uploadFile(file);

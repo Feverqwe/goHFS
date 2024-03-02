@@ -8,7 +8,7 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {FileInfo} from '../../../../types';
 
 interface FolderMenuProps {
-  anchorEl: Element,
+  anchorEl: Element;
   onClose: () => void;
   sortedFiles: FileInfo[];
   onAddressesClick: () => void;
@@ -17,58 +17,57 @@ interface FolderMenuProps {
 const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClick, onClose}) => {
   const store = useContext(RootStoreCtx);
 
-  const menu = useMemo(() => [
-    {
-      type: 'playlist',
-      title: 'Get playlist',
-      icon: <PlaylistPlayIcon />,
-      onClick: () => {
-        const lines = [];
-        lines.push('#EXTM3U');
-        sortedFiles.forEach((file) => {
-          if (!file.isDir) {
-            const url = new URL(Path.join(store.dir, file.name), location.href).toString();
-            const {name} = file;
-            lines.push(`#EXTINF:-1,${name}`);
-            lines.push(url);
-          }
-        });
+  const menu = useMemo(
+    () => [
+      {
+        type: 'playlist',
+        title: 'Get playlist',
+        icon: <PlaylistPlayIcon />,
+        onClick: () => {
+          const lines = [];
+          lines.push('#EXTM3U');
+          sortedFiles.forEach((file) => {
+            if (!file.isDir) {
+              const url = new URL(Path.join(store.dir, file.name), location.href).toString();
+              const {name} = file;
+              lines.push(`#EXTINF:-1,${name}`);
+              lines.push(url);
+            }
+          });
 
-        const dirname = store.isRoot ? 'root' : Path.basename(store.dir);
+          const dirname = store.isRoot ? 'root' : Path.basename(store.dir);
 
-        const blob = new Blob([lines.join('\n')], {type: 'application/mpegurl'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${dirname}.m3u8`;
-        a.click();
-        URL.revokeObjectURL(url);
+          const blob = new Blob([lines.join('\n')], {type: 'application/mpegurl'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${dirname}.m3u8`;
+          a.click();
+          URL.revokeObjectURL(url);
 
-        onClose();
+          onClose();
+        },
       },
-    },
-    {
-      type: 'addresses',
-      title: 'Open addresses',
-      icon: <QrCode2Icon />,
-      onClick: () => {
-        onAddressesClick();
+      {
+        type: 'addresses',
+        title: 'Open addresses',
+        icon: <QrCode2Icon />,
+        onClick: () => {
+          onAddressesClick();
 
-        onClose();
+          onClose();
+        },
       },
-    },
-  ], [onClose, store, sortedFiles, onAddressesClick]);
+    ],
+    [onClose, store, sortedFiles, onAddressesClick],
+  );
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
       {menu.map(({type, title, icon, onClick}) => {
         return (
           <MenuItem key={type} onClick={onClick}>
-            {icon && (
-            <ListItemIcon>
-              {icon}
-            </ListItemIcon>
-            )}
+            {icon && <ListItemIcon>{icon}</ListItemIcon>}
             <ListItemText>{title}</ListItemText>
           </MenuItem>
         );

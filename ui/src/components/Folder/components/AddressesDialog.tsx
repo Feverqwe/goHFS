@@ -1,13 +1,21 @@
 import * as React from 'react';
 import {SyntheticEvent} from 'react';
-import {Box, Button, DialogActions, DialogContent, Input, LinearProgress, Typography} from '@mui/material';
+import {
+  Box,
+  Button,
+  DialogActions,
+  DialogContent,
+  Input,
+  LinearProgress,
+  Typography,
+} from '@mui/material';
 import MyDialog from './MyDialog';
 import {api} from '../../../tools/api';
 
 const QRCode = require('qrcode');
 
 interface AddressesDialogProps {
-  onClose: () => void,
+  onClose: () => void;
 }
 
 const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
@@ -28,10 +36,13 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
     })();
   }, []);
 
-  const handleClose = React.useCallback((e: SyntheticEvent, reason?: string) => {
-    e.preventDefault();
-    onClose();
-  }, [onClose]);
+  const handleClose = React.useCallback(
+    (e: SyntheticEvent, reason?: string) => {
+      e.preventDefault();
+      onClose();
+    },
+    [onClose],
+  );
 
   return (
     <MyDialog fullWidth={true} onClose={handleClose} open={true}>
@@ -46,9 +57,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
         ) : (
           <Box justifyContent="space-around" display="flex" flexWrap="wrap">
             {addresses!.map((address) => {
-              return (
-                <AddressItem key={address} address={address} />
-              );
+              return <AddressItem key={address} address={address} />;
             })}
           </Box>
         )}
@@ -61,7 +70,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
 });
 
 interface AddressItemProps {
-  address: string,
+  address: string;
 }
 
 const QR_CODE_SIZE = 196;
@@ -72,14 +81,19 @@ const AddressItem = React.memo(({address}: AddressItemProps) => {
   React.useEffect(() => {
     const canvas = refCanvas.current!;
 
-    QRCode.toCanvas(canvas, address, {
-      version: 2,
-      width: QR_CODE_SIZE,
-    }, (err: Error) => {
-      if (err) {
-        console.error('Create QRCode error: %O', err);
-      }
-    });
+    QRCode.toCanvas(
+      canvas,
+      address,
+      {
+        version: 2,
+        width: QR_CODE_SIZE,
+      },
+      (err: Error) => {
+        if (err) {
+          console.error('Create QRCode error: %O', err);
+        }
+      },
+    );
   }, [address]);
 
   return (

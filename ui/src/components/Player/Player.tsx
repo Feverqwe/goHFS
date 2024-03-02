@@ -51,14 +51,10 @@ const Player = React.memo(() => {
       <GlobalStyles styles={RootStyles} />
       {url ? (
         <FetchMetadata url={url}>
-          {(metadata) => (
-            <Video2 metadata={metadata as VideoMetadata} url={url} />
-          )}
+          {(metadata) => <Video2 metadata={metadata as VideoMetadata} url={url} />}
         </FetchMetadata>
       ) : null}
-      {isShowDialog ? (
-        <UrlDialog onClose={handleClose} onSubmit={handleChangeUrl} />
-      ) : null}
+      {isShowDialog ? <UrlDialog onClose={handleClose} onSubmit={handleChangeUrl} /> : null}
     </UrlDialogCtx.Provider>
   );
 });

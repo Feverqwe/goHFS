@@ -1,5 +1,14 @@
 import React, {ChangeEvent, FC, useCallback, useContext} from 'react';
-import {Box, Checkbox, IconButton, Paper, Table, TableBody, TableCell, TableRow} from '@mui/material';
+import {
+  Box,
+  Checkbox,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import {SelectChangeSelectedCtx, SelectSelectedCtx} from './SelectProvider/SelectCtx';
@@ -14,14 +23,17 @@ const SelectHeader: FC = () => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
   const setDialog = useContext(DialogSetDataCtx);
 
-  const handleSelectAll = useCallback((e: ChangeEvent, checked: boolean) => {
-    changeSelected((_, files) => {
-      if (!checked) {
-        return [];
-      }
-      return files.map((f) => f.name);
-    });
-  }, [changeSelected]);
+  const handleSelectAll = useCallback(
+    (e: ChangeEvent, checked: boolean) => {
+      changeSelected((_, files) => {
+        if (!checked) {
+          return [];
+        }
+        return files.map((f) => f.name);
+      });
+    },
+    [changeSelected],
+  );
 
   const handleClose = useCallback(() => {
     changeSelected(() => []);
@@ -60,16 +72,26 @@ const SelectHeader: FC = () => {
   }, [dir, selected, setDialog, handleClose]);
 
   return (
-    <Paper square={true} sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1 }}>
+    <Paper square={true} sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1}}>
       <Box p={1} py={0.5} display="flex" alignItems="center">
         <Box pr={1}>
-          <Checkbox sx={{m: -1}} size="small" checked={selected.length === files.length} onChange={handleSelectAll} />
+          <Checkbox
+            sx={{m: -1}}
+            size="small"
+            checked={selected.length === files.length}
+            onChange={handleSelectAll}
+          />
         </Box>
         <Box flexGrow={1} pr={1}>
           Selected: {selected.length}
         </Box>
         <Box pr={1}>
-          <IconButton title="Delete" size="small" onClick={handleDelete} disabled={selected.length === 0}>
+          <IconButton
+            title="Delete"
+            size="small"
+            onClick={handleDelete}
+            disabled={selected.length === 0}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>

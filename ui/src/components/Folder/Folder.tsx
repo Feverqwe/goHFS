@@ -45,7 +45,11 @@ const Folder: FC = () => {
     <SelectProvider files={sortedFiles}>
       <FolderView files={sortedFiles} onShowSortDialog={handleSortBtn} />
       {showSortDialog && (
-        <SortChooseDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />
+        <SortChooseDialog
+          sortKey={sortKey}
+          changeSort={changeSort}
+          onClose={handleCloseSortDialog}
+        />
       )}
     </SelectProvider>
   );

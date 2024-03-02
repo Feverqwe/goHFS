@@ -1,11 +1,14 @@
 import {handleApiResponse} from './apiRequest';
 
 interface ActionParams {
-  method?: 'GET' | 'POST',
-  path: string,
+  method?: 'GET' | 'POST';
+  path: string;
 }
 
-function action<RequestParams = unknown, ResponseData = unknown>({method = 'GET', path}: ActionParams) {
+function action<RequestParams = unknown, ResponseData = unknown>({
+  method = 'GET',
+  path,
+}: ActionParams) {
   return async <T = ResponseData>(params: RequestParams): Promise<T> => {
     let query = '';
     let body;
@@ -41,19 +44,22 @@ export const api = {
     method: 'POST',
     path: '/~/storage/del',
   }),
-  remove: action<{place: string, name: string, isDir: boolean}, string>({
+  remove: action<{place: string; name: string; isDir: boolean}, string>({
     method: 'POST',
     path: '/~/remove',
   }),
-  removeAll: action<{place: string, names: string[]}, string>({
+  removeAll: action<{place: string; names: string[]}, string>({
     method: 'POST',
     path: '/~/removeAll',
   }),
-  rename: action<{place: string, name: string, newName: string}, string>({
+  rename: action<{place: string; name: string; newName: string}, string>({
     method: 'POST',
     path: '/~/rename',
   }),
-  uploadInit: action<{fileName: string, size: number, place: string}, {key: string, chunkSize: number}>({
+  uploadInit: action<
+    {fileName: string; size: number; place: string},
+    {key: string; chunkSize: number}
+  >({
     method: 'POST',
     path: '/~/upload/init',
   }),

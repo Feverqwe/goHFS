@@ -1,5 +1,10 @@
 import React, {FC, ReactNode, useCallback, useRef, useState} from 'react';
-import {ChangeSelectedCallback, SelectChangeSelectedCtx, SelectModeCtx, SelectSelectedCtx} from './SelectCtx';
+import {
+  ChangeSelectedCallback,
+  SelectChangeSelectedCtx,
+  SelectModeCtx,
+  SelectSelectedCtx,
+} from './SelectCtx';
 import {FileInfo} from '../../../../types';
 
 interface SelectProviderProps {
@@ -21,9 +26,7 @@ const SelectProvider: FC<SelectProviderProps> = ({children, files}) => {
   return (
     <SelectSelectedCtx.Provider value={selected}>
       <SelectChangeSelectedCtx.Provider value={handleChangeSelected}>
-        <SelectModeCtx.Provider value={Boolean(selected.length)}>
-          {children}
-        </SelectModeCtx.Provider>
+        <SelectModeCtx.Provider value={Boolean(selected.length)}>{children}</SelectModeCtx.Provider>
       </SelectChangeSelectedCtx.Provider>
     </SelectSelectedCtx.Provider>
   );

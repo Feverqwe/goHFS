@@ -39,11 +39,7 @@ const FetchMetadata: FC<FetchMetadataProps> = ({url, children}) => {
 
   if (!isDone) return null;
 
-  return (
-    <>
-      {children(data)}
-    </>
-  );
+  return <>{children(data)}</>;
 };
 
 export default FetchMetadata;

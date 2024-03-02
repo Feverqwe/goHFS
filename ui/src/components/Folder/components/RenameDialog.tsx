@@ -25,36 +25,41 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
   const [isLoading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<null | Error>(null);
 
-  const handleClose = React.useCallback((e: SyntheticEvent) => {
-    e.preventDefault();
-    onClose();
-  }, [onClose]);
-
-  const handleRename = React.useCallback(async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const {elements} = e.currentTarget;
-    const newName = (elements as HTMLFormControlsCollection & Record<string, HTMLInputElement>).new_name.value;
-    setLoading(true);
-    try {
-      await api.rename({
-        place: dir,
-        name: file.name,
-        newName,
-      });
+  const handleClose = React.useCallback(
+    (e: SyntheticEvent) => {
+      e.preventDefault();
       onClose();
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  }, [dir, file.name, onClose]);
+    },
+    [onClose],
+  );
+
+  const handleRename = React.useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const {elements} = e.currentTarget;
+      const newName = (elements as HTMLFormControlsCollection & Record<string, HTMLInputElement>)
+        .new_name.value;
+      setLoading(true);
+      try {
+        await api.rename({
+          place: dir,
+          name: file.name,
+          newName,
+        });
+        onClose();
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [dir, file.name, onClose],
+  );
 
   return (
     <MyDialog fullWidth={true} onClose={handleClose} open={true}>
       <form onSubmit={handleRename}>
-        <DialogTitle>
-          Rename
-        </DialogTitle>
+        <DialogTitle>Rename</DialogTitle>
         <DialogContent>
           <TextField
             margin="dense"

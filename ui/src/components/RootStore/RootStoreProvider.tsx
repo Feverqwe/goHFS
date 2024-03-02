@@ -11,11 +11,7 @@ interface RootStoreProviderProps {
 }
 
 const RootStoreProvider: FC<RootStoreProviderProps> = ({children}) => {
-  return (
-    <RootStoreCtx.Provider value={rootStore}>
-      {children}
-    </RootStoreCtx.Provider>
-  );
+  return <RootStoreCtx.Provider value={rootStore}>{children}</RootStoreCtx.Provider>;
 };
 
 export default RootStoreProvider;

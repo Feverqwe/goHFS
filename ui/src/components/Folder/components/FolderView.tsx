@@ -1,7 +1,20 @@
 import * as React from 'react';
 import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
-import {Box, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Paper, Typography} from '@mui/material';
-import {ArrowBack as ArrowBackIcon, Sort as SortIcon, Upload as UploadIcon} from '@mui/icons-material';
+import {
+  Box,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Typography,
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Sort as SortIcon,
+  Upload as UploadIcon,
+} from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from './SelectProvider/SelectCtx';
@@ -78,7 +91,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     <>
       <List
         component="nav"
-        subheader={(
+        subheader={
           <Paper elevation={0} square={true}>
             <Box p={1} py={0.5} display="flex" alignItems="center">
               <Typography component={Box} sx={PathLinePathSx} variant="body2">
@@ -97,7 +110,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
               </IconButton>
             </Box>
           </Paper>
-        )}
+        }
         sx={RootSx}
       >
         {!store.isRoot && (
@@ -109,19 +122,18 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
           </ListItemButton>
         )}
         {files.map((file) => (
-          <File key={`${file.isDir}_${file.name}`} dir={store.dir} file={file} writable={store.isWritable} />
+          <File
+            key={`${file.isDir}_${file.name}`}
+            dir={store.dir}
+            file={file}
+            writable={store.isWritable}
+          />
         ))}
       </List>
-      {store.isWritable && (
-        <DropZone onUpload={handleUpload} />
-      )}
-      {showAddressesDialog && (
-        <AddressesDialog onClose={handleCloseAddressesDialog} />
-      )}
+      {store.isWritable && <DropZone onUpload={handleUpload} />}
+      {showAddressesDialog && <AddressesDialog onClose={handleCloseAddressesDialog} />}
       {dialog}
-      {selectMode && (
-        <SelectHeader />
-      )}
+      {selectMode && <SelectHeader />}
       {menuAnchorEl ? (
         <FolderMenu
           anchorEl={menuAnchorEl}

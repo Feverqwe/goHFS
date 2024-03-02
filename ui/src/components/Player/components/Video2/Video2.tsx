@@ -46,7 +46,7 @@ const CtrTag = styled('div')(() => {
 });
 
 interface Video2Props {
-  url: string,
+  url: string;
   metadata?: VideoMetadata;
 }
 
@@ -96,25 +96,28 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       coverButton: isMobilePlayer,
       ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
       speeds: ['2.0', '1.75', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
-      settings: [{
-        name: 'Picture in Picture',
-        type: 'switcher',
-        onChange: async () => {
-          if (player.isInPip) {
-            await player.exitPip();
-          } else {
-            await player.enterPip();
-          }
+      settings: [
+        {
+          name: 'Picture in Picture',
+          type: 'switcher',
+          onChange: async () => {
+            if (player.isInPip) {
+              await player.exitPip();
+            } else {
+              await player.enterPip();
+            }
+          },
         },
-      }, {
-        name: 'Mini progress bar',
-        type: 'switcher',
-        onChange: () => {
-          const value = getOption(PLAYER_MPB, false);
-          setOption(PLAYER_MPB, !value);
+        {
+          name: 'Mini progress bar',
+          type: 'switcher',
+          onChange: () => {
+            const value = getOption(PLAYER_MPB, false);
+            setOption(PLAYER_MPB, !value);
+          },
+          default: getOption(PLAYER_MPB, false),
         },
-        default: getOption(PLAYER_MPB, false),
-      }],
+      ],
       theme: {
         primaryColor: '#90caf9',
       },
@@ -147,116 +150,122 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     };
 
     let onKeydown: (e: KeyboardEvent) => void;
-    document.addEventListener('keydown', onKeydown = (e: KeyboardEvent) => {
-      // console.log('keydown: %s', e.code);
-      const target = e.target as HTMLElement;
-      if (target && target.tagName === 'INPUT') return;
+    document.addEventListener(
+      'keydown',
+      (onKeydown = (e: KeyboardEvent) => {
+        // console.log('keydown: %s', e.code);
+        const target = e.target as HTMLElement;
+        if (target && target.tagName === 'INPUT') return;
 
-      const {code} = e;
+        const {code} = e;
 
-      const isMeta = e.ctrlKey || e.metaKey || e.shiftKey;
+        const isMeta = e.ctrlKey || e.metaKey || e.shiftKey;
 
-      if (isMeta) {
+        if (isMeta) {
+          switch (code) {
+            case 'Period': {
+              e.preventDefault();
+              if (player.playbackRate < 2) {
+                player.setPlaybackRate(player.playbackRate + 0.25);
+              }
+              emitPlaybackRate();
+              break;
+            }
+            case 'Comma': {
+              e.preventDefault();
+              if (player.playbackRate > 0.25) {
+                player.setPlaybackRate(player.playbackRate - 0.25);
+              }
+              emitPlaybackRate();
+              break;
+            }
+            case 'Digit0': {
+              e.preventDefault();
+              player.setPlaybackRate(1);
+              emitPlaybackRate();
+              break;
+            }
+          }
+        }
+
+        // Bail if a modifier key is set
+        if (isMeta) {
+          return;
+        }
+
+        // showUrlForm(true);
+
         switch (code) {
-          case 'Period': {
+          case 'ArrowLeft': {
             e.preventDefault();
-            if (player.playbackRate < 2) {
-              player.setPlaybackRate(player.playbackRate + 0.25);
+            const offset = e.altKey ? SHORT_SKIP : SKIP;
+            player.seek(player.currentTime - offset);
+            emitTime();
+            break;
+          }
+          case 'ArrowRight': {
+            e.preventDefault();
+            const offset = e.altKey ? SHORT_SKIP : SKIP;
+            player.seek(player.currentTime + offset);
+            emitTime();
+            break;
+          }
+          case 'KeyF': {
+            if (player.isFullScreen) {
+              player.exitFullscreen().catch((err) => {
+                console.error('exitFullscreen error: %O', err);
+              });
+            } else {
+              player.enterFullscreen().catch((err) => {
+                console.error('requestFullscreen error: %O', err);
+              });
             }
-            emitPlaybackRate();
             break;
           }
-          case 'Comma': {
+          case 'KeyN': {
             e.preventDefault();
-            if (player.playbackRate > 0.25) {
-              player.setPlaybackRate(player.playbackRate - 0.25);
-            }
-            emitPlaybackRate();
-            break;
-          }
-          case 'Digit0': {
-            e.preventDefault();
-            player.setPlaybackRate(1);
-            emitPlaybackRate();
+            toggleUrlDialog();
             break;
           }
         }
-      }
-
-      // Bail if a modifier key is set
-      if (isMeta) {
-        return;
-      }
-
-      // showUrlForm(true);
-
-      switch (code) {
-        case 'ArrowLeft': {
-          e.preventDefault();
-          const offset = e.altKey ? SHORT_SKIP : SKIP;
-          player.seek(player.currentTime - offset);
-          emitTime();
-          break;
-        }
-        case 'ArrowRight': {
-          e.preventDefault();
-          const offset = e.altKey ? SHORT_SKIP : SKIP;
-          player.seek(player.currentTime + offset);
-          emitTime();
-          break;
-        }
-        case 'KeyF': {
-          if (player.isFullScreen) {
-            player.exitFullscreen().catch((err) => {
-              console.error('exitFullscreen error: %O', err);
-            });
-          } else {
-            player.enterFullscreen().catch((err) => {
-              console.error('requestFullscreen error: %O', err);
-            });
-          }
-          break;
-        }
-        case 'KeyN': {
-          e.preventDefault();
-          toggleUrlDialog();
-          break;
-        }
-      }
-    });
+      }),
+    );
 
     let onTouchstart: (e: TouchEvent) => void;
     if (isMobilePlayer) {
       let startAt = 0;
-      document.addEventListener('touchstart', onTouchstart = (e: TouchEvent) => {
-        if (e.target !== ui.$mask) return;
+      document.addEventListener(
+        'touchstart',
+        (onTouchstart = (e: TouchEvent) => {
+          if (e.target !== ui.$mask) return;
 
-        const touch = e.changedTouches[0];
-        if (!touch) return;
-        const {clientX, target} = touch;
-        const targetEl = target as HTMLElement;
-        const w = targetEl.clientWidth;
-        const now = Date.now();
+          const touch = e.changedTouches[0];
+          if (!touch) return;
+          const {clientX, target} = touch;
+          const targetEl = target as HTMLElement;
+          const w = targetEl.clientWidth;
+          const now = Date.now();
 
-        if (now - startAt > 300) {
-          startAt = now;
-        } else {
-          // center click
-          if (clientX > (w / 3) && clientX < (w / 3) * 2) {
-            if (player.isPlaying) {
-              player.pause();
+          if (now - startAt > 300) {
+            startAt = now;
+          } else {
+            // center click
+            if (clientX > w / 3 && clientX < (w / 3) * 2) {
+              if (player.isPlaying) {
+                player.pause();
+              }
+              return;
             }
-            return;
-          }
 
-          let offset = SKIP;
-          if (clientX < targetEl.clientWidth / 2) {
-            offset *= -1;
+            let offset = SKIP;
+            if (clientX < targetEl.clientWidth / 2) {
+              offset *= -1;
+            }
+            player.seek(player.currentTime + offset);
+            emitTime();
           }
-          player.seek(player.currentTime + offset);
-          emitTime();
-        }
-      });
+        }),
+      );
 
       ui.$controllerBottom.setAttribute('style', 'zoom: 1.25');
     }
@@ -269,16 +278,32 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     });
 
     // eslint-disable-next-line no-unused-expressions
-    DEBUG_EVENTS && [
-      'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'ended',
-      'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play',
-      'playing', 'ratechange', 'seeked', 'seeking', 'stalled',
-      'volumechange', 'waiting', // 'progress', 'suspend', 'timeupdate',
-    ].forEach((type) => {
-      player.$video.addEventListener(type, (e: Event) => {
-        console.log('Event %s: %O', type, e);
+    DEBUG_EVENTS &&
+      [
+        'abort',
+        'canplay',
+        'canplaythrough',
+        'durationchange',
+        'emptied',
+        'ended',
+        'error',
+        'loadeddata',
+        'loadedmetadata',
+        'loadstart',
+        'pause',
+        'play',
+        'playing',
+        'ratechange',
+        'seeked',
+        'seeking',
+        'stalled',
+        'volumechange',
+        'waiting', // 'progress', 'suspend', 'timeupdate',
+      ].forEach((type) => {
+        player.$video.addEventListener(type, (e: Event) => {
+          console.log('Event %s: %O', type, e);
+        });
       });
-    });
 
     const continuePlaying = () => {
       if (startTime > 0) {
@@ -289,7 +314,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     };
 
-    const isBrokenAndroidEdgePlayer = /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
+    const isBrokenAndroidEdgePlayer =
+      /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
     if (isBrokenAndroidEdgePlayer) {
       player.once('loadedmetadata', () => {
         player.once('durationchange', () => {
@@ -353,7 +379,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
 
-    const progressEl = (ui as unknown as {'$progress': HTMLElement}).$progress;
+    const progressEl = (ui as unknown as {$progress: HTMLElement}).$progress;
     progressEl.classList.add('progress-wrapper');
     progressEl.children[0].classList.add('progress');
 
@@ -370,9 +396,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     };
   }, [url, toggleUrlDialog]);
 
-  return (
-    <CtrTag ref={refCtr} />
-  );
+  return <CtrTag ref={refCtr} />;
 };
 
 function padZero(time: number): string {

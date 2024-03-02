@@ -1,8 +1,8 @@
 export interface FileInfo {
-  size: number,
-  ctime: number,
-  name: string,
-  isDir: boolean,
+  size: number;
+  ctime: number;
+  name: string;
+  isDir: boolean;
 }
 
 export interface ExtAction {
@@ -12,10 +12,10 @@ export interface ExtAction {
 }
 
 export interface RootStore {
-  dir: string,
-  isRoot: boolean,
-  isWritable: boolean,
-  files: FileInfo[],
-  extHandle: Partial<Record<string, string>>,
-  extActions: Partial<Record<string, ExtAction[]>>
+  dir: string;
+  isRoot: boolean;
+  isWritable: boolean;
+  files: FileInfo[];
+  extHandle: Partial<Record<string, string>>;
+  extActions: Partial<Record<string, ExtAction[]>>;
 }

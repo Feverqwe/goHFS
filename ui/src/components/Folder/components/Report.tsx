@@ -16,14 +16,10 @@ const Report: React.FC<ReportProps> = ({report}) => {
           <TableRow key={file.filename}>
             <TableCell>
               {file.filename}
-              {!file.ok ? (
-                <Input fullWidth={true} value={file.error} readOnly />
-              ) : null}
+              {!file.ok ? <Input fullWidth={true} value={file.error} readOnly /> : null}
             </TableCell>
             <TableCell padding="none" align="right">
-              <Box textAlign="center">
-                {file.ok ? <CheckIcon /> : <ErrorOutlineIcon />}
-              </Box>
+              <Box textAlign="center">{file.ok ? <CheckIcon /> : <ErrorOutlineIcon />}</Box>
             </TableCell>
           </TableRow>
         ))}

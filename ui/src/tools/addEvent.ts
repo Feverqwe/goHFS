@@ -1,4 +1,8 @@
-function addEvent<T extends HTMLElement | Window>(target: T, on: (target: T['addEventListener']) => void, disposers?: Array<() => void>) {
+function addEvent<T extends HTMLElement | Window>(
+  target: T,
+  on: (target: T['addEventListener']) => void,
+  disposers?: Array<() => void>,
+) {
   const events: Parameters<T['addEventListener']>[] = [];
   const vOn = (...args: Parameters<T['addEventListener']>) => {
     events.push(args);

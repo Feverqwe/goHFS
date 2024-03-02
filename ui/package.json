@@ -11,8 +11,10 @@
     "dev": "webpack --mode development --watch",
     "release": "npm run clean:dist && npm run build && npm run clean:www && npm run copy:dist",
     "tsc": "tsc --noEmit",
-    "lint": "npx eslint ./src",
-    "lint:fix": "npx eslint --fix ./src"
+    "lint": "npx eslint ./src && npm run prettier",
+    "prettier": "npx prettier --check ./src",
+    "prettier:fix": "npx prettier --write ./src",
+    "lint:fix": "npx eslint --fix ./src && npm run prettier:fix"
   },
   "author": "",
   "license": "ISC",
@@ -58,6 +60,7 @@
     "typescript": "^5.0.4",
     "url-loader": "^4.1.1",
     "webpack": "^5.64.2",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.0.1",
+    "prettier": "^3.0.2"
   }
 }
