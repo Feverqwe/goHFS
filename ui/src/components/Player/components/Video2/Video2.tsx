@@ -330,7 +330,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
 
     const SAVE_INTERVAL = 5 * 1000;
     let isSeeking = false;
-    let isPlaying = true;
+    let isPlaying = false;
     const sid = getSidV2(url);
     let lastSyncAt = 0;
     player.on('timeupdate', async () => {
