@@ -49,7 +49,7 @@ func main() {
 
 				powerLock(router, powerControl)
 				internal.HandleApi(router, &config, storage, DEBUG_UI)
-				internal.HandleDir(router, &config, DEBUG_UI)
+				internal.HandleDir(router, &config, storage, DEBUG_UI)
 				fsServer(router, &config)
 
 				address := config.GetAddress()

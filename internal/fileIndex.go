@@ -23,6 +23,7 @@ type RootStore struct {
 	Files      []File                 `json:"files"`
 	ExtHandle  map[string]string      `json:"extHandle"`
 	ExtActions map[string][]ExtAction `json:"extActions"`
+	DirSort    interface{}            `json:"dirSort"`
 }
 
 type File struct {
@@ -32,7 +33,7 @@ type File struct {
 	Size  int64  `json:"size"`  // bytes
 }
 
-func HandleDir(router *Router, config *Config, debugUi bool) {
+func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 	public := config.Public
 	showHiddenFiles := config.ShowHiddenFiles
 
@@ -90,6 +91,8 @@ func HandleDir(router *Router, config *Config, debugUi bool) {
 			placeName = place + " – " + placeName
 		}
 
+		dirSort, _ := storage.GetKey("dirSort-" + place)
+
 		result := RootStore{
 			Dir:        place,
 			IsRoot:     isRoot,
@@ -97,6 +100,7 @@ func HandleDir(router *Router, config *Config, debugUi bool) {
 			Files:      files,
 			ExtHandle:  config.ExtHandle,
 			ExtActions: config.ExtActions,
+			DirSort:    dirSort,
 		}
 
 		if debugUi {
