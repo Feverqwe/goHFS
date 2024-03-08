@@ -13,7 +13,7 @@ const Folder: FC = () => {
   const [files] = useState(store.files);
   const [showSortDialog, setShowSortDialog] = useState(false);
   const [sortKey, setSortKey] = useState(() => {
-    return prepDirSort(store.dirSort) ?? {key: 'ctime', revers: false};
+    return prepDirSort(store.dirSort) ?? {key: 'ctime', revers: true};
   });
 
   const handleSortBtn = useCallback(() => {
