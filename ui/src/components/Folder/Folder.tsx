@@ -2,37 +2,44 @@ import * as React from 'react';
 import {FC, memo, useCallback, useContext, useMemo, useState} from 'react';
 import SelectProvider from './components/SelectProvider/SelectProvider';
 import FolderView from './components/FolderView';
-import {FileInfo} from '../../types';
-import {getOption, setOption} from './utils';
+import {DirSort, FileInfo} from '../../types';
+import {prepDirSort} from './utils';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
-import SortChooseDialog from './components/SortChooseDialog';
+import SortDialog from './components/SortDialog/SortDialog';
+import {api} from '../../tools/api';
 
 const Folder: FC = () => {
   const store = useContext(RootStoreCtx);
   const [files] = useState(store.files);
   const [showSortDialog, setShowSortDialog] = useState(false);
   const [sortKey, setSortKey] = useState(() => {
-    return getOption<[keyof FileInfo, boolean]>('sort', ['ctime', false]);
+    return prepDirSort(store.dirSort) ?? {key: 'ctime', revers: false};
   });
 
   const handleSortBtn = useCallback(() => {
     setShowSortDialog(true);
   }, []);
 
-  const changeSort = useCallback((keyDir: [string, boolean]) => {
-    setSortKey(keyDir as [keyof FileInfo, boolean]);
-    setOption('sort', keyDir);
-  }, []);
+  const changeSort = useCallback(
+    async (dirSort: DirSort) => {
+      setSortKey(dirSort);
+      await api.storageSet<Record<string, DirSort>>({
+        [`dirSort-${store.dir}`]: dirSort,
+      });
+    },
+    [store.dir],
+  );
 
   const handleCloseSortDialog = useCallback(() => {
     setShowSortDialog(false);
   }, []);
 
   const sortedFiles = useMemo(() => {
-    const [key, d] = sortKey;
-    const [r1, r2] = d ? [1, -1] : [-1, 1];
+    const {key, revers: d} = sortKey;
+    const field = key as keyof FileInfo;
+    const [r1, r2] = d ? [-1, 1] : [1, -1];
     const result = files.slice(0);
-    result.sort(({[key]: a}, {[key]: b}) => {
+    result.sort(({[field]: a}, {[field]: b}) => {
       return a === b ? 0 : a > b ? r1 : r2;
     });
     result.sort(({isDir: a}, {isDir: b}) => {
@@ -45,11 +52,7 @@ const Folder: FC = () => {
     <SelectProvider files={sortedFiles}>
       <FolderView files={sortedFiles} onShowSortDialog={handleSortBtn} />
       {showSortDialog && (
-        <SortChooseDialog
-          sortKey={sortKey}
-          changeSort={changeSort}
-          onClose={handleCloseSortDialog}
-        />
+        <SortDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />
       )}
     </SelectProvider>
   );

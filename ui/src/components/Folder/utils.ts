@@ -1,4 +1,5 @@
 import Path from 'path-browserify';
+import {DirSort} from '../../types';
 
 export function getOption<T>(key: string, defaultValue: T) {
   let value: T | null = null;
@@ -47,4 +48,11 @@ export function formatUrl(str: string, {dir, name}: FormatUrlProps) {
     }
     return text;
   });
+}
+
+export function prepDirSort(value: unknown): DirSort {
+  if (typeof value !== 'object') {
+    value = null;
+  }
+  return value as DirSort;
 }

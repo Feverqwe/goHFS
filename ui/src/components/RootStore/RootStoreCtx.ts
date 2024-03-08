@@ -8,6 +8,7 @@ const defaultStore = {
   files: [],
   extHandle: {},
   extActions: {},
+  dirSort: null,
 };
 
 export const RootStoreCtx = createContext<RootStore>(defaultStore);

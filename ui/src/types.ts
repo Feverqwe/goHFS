@@ -11,6 +11,11 @@ export interface ExtAction {
   newPage?: boolean;
 }
 
+export interface DirSort {
+  key: string;
+  revers: boolean;
+}
+
 export interface RootStore {
   dir: string;
   isRoot: boolean;
@@ -18,4 +23,5 @@ export interface RootStore {
   files: FileInfo[];
   extHandle: Partial<Record<string, string>>;
   extActions: Partial<Record<string, ExtAction[]>>;
+  dirSort: DirSort | null;
 }
