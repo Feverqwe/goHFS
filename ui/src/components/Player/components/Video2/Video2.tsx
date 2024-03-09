@@ -1,6 +1,6 @@
 import React, {FC, useContext, useEffect, useRef, useState} from 'react';
 import {Player} from '@oplayer/core';
-import OUI from '@oplayer/ui';
+import OUI, {Setting} from '@oplayer/ui';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
@@ -227,6 +227,46 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
             toggleUrlDialog();
             break;
           }
+          case 'KeyS': {
+            e.preventDefault();
+            const len = hls?.subtitleTracks.length;
+            if (hls && len) {
+              if (hls.subtitleTrack === len - 1) {
+                hls.subtitleTrack = -1;
+
+                player.emit('notice', {
+                  text: 'Subtitles: Disabled',
+                });
+              } else {
+                hls.subtitleTrack++;
+
+                const track = hls.subtitleTracks[hls.subtitleTrack];
+                player.emit('notice', {
+                  text: `Stream ${hls.subtitleTrack}: ${track.name}`,
+                });
+              }
+              updateSettings();
+            }
+            break;
+          }
+          case 'KeyA': {
+            e.preventDefault();
+            const len = hls?.audioTracks.length;
+            if (hls && len) {
+              if (hls.audioTrack === len - 1) {
+                hls.audioTrack = 0;
+              } else {
+                hls.audioTrack++;
+              }
+
+              const track = hls.audioTracks[hls.audioTrack];
+              player.emit('notice', {
+                text: `Audio ${hls.audioTrack}: ${track.name}`,
+              });
+              updateSettings();
+            }
+            break;
+          }
         }
       }),
     );
@@ -374,9 +414,76 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       lastSyncAt = Date.now() + SAVE_INTERVAL;
     });
 
+    const updateSettings = () => {
+      const subsKey = 'subtitles';
+      ui.setting.unregister(subsKey);
+
+      const audioKey = 'audioTracks';
+      ui.setting.unregister(audioKey);
+
+      if (hls?.audioTracks.length) {
+        const tracksMenu = hls.audioTracks.map((audioTrack, index) => {
+          if (!hls) throw new Error('Unexpected case');
+
+          return {
+            name: `Audio ${index}: ${audioTrack.name}`,
+            type: 'switcher',
+            default: hls.audioTrack === index,
+            onChange: () => {
+              if (!hls) return;
+              hls.audioTrack = index;
+              updateSettings();
+            },
+          };
+        });
+
+        ui.setting.register([
+          {
+            key: audioKey,
+            name: 'Audio tracks',
+            type: 'selector',
+            children: tracksMenu as unknown as Setting<unknown>[],
+          },
+        ]);
+      }
+
+      if (hls?.subtitleTracks.length) {
+        const sumMenu = hls.subtitleTracks.map((subtitle, index) => {
+          if (!hls) throw new Error('Unexpected case');
+
+          return {
+            name: `Stream ${index}: ${subtitle.name}`,
+            type: 'switcher',
+            default: hls.subtitleTrack === index,
+            onChange: () => {
+              if (!hls) return;
+              if (hls.subtitleTrack === index) {
+                hls.subtitleTrack = -1;
+              } else {
+                hls.subtitleTrack = index;
+              }
+              updateSettings();
+            },
+          };
+        });
+
+        ui.setting.register([
+          {
+            key: subsKey,
+            name: 'Subtitles',
+            type: 'selector',
+            children: sumMenu as unknown as Setting<unknown>[],
+          },
+        ]);
+      }
+    };
+
     if (hls) {
       hls.loadSource(url);
       hls.attachMedia(player.$video);
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, updateSettings);
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, updateSettings);
+      Object.assign(window, {hlsInstance: hls});
     } else {
       player.load({
         src: url,
