@@ -22,8 +22,9 @@ const CtrTag = styled('div')(() => {
     height: '100%',
 
     '.subtitles-ctr': {
-      fontSize: '1.5em',
+      fontSize: '1.875em',
       lineHeight: 'initial',
+      pointerEvents: 'auto',
     },
 
     '.progress-wrapper': {
