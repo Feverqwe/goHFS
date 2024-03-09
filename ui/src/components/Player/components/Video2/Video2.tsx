@@ -21,6 +21,11 @@ const CtrTag = styled('div')(() => {
     width: '100%',
     height: '100%',
 
+    '.subtitles-ctr': {
+      fontSize: '1.5em',
+      lineHeight: 'initial',
+    },
+
     '.progress-wrapper': {
       padding: '6px 0px 6px',
       transition: 'height, margin-bottom .1s',
@@ -478,11 +483,45 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       }
     };
 
+    function handleCueChange(this: TextTrack) {
+      const {activeCues} = this;
+      if (activeCues?.length) {
+        let html = '';
+        for (let i = 0; i < activeCues.length; i++) {
+          const activeCue = activeCues[i] as VTTCue | undefined;
+          if (activeCue) {
+            html += activeCue.text
+              .replace(/\\h/g, '&nbsp;')
+              .split(/\r?\n/)
+              .map((item: string) => `<p><span>${item}</span></p>`)
+              .join('');
+          }
+        }
+        ui.subtitle.$dom.innerHTML = html;
+      } else {
+        ui.subtitle.$dom.innerHTML = '';
+      }
+    }
+
     if (hls) {
       hls.loadSource(url);
       hls.attachMedia(player.$video);
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, updateSettings);
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, updateSettings);
+
+      let dispose = () => {};
+      hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, () => {
+        ui.subtitle.$dom.innerHTML = '';
+        dispose();
+        const track = player.$video.textTracks[hls?.subtitleTrack || 0];
+        if (!track) return;
+
+        track.mode = 'hidden';
+        track.addEventListener('cuechange', handleCueChange);
+        dispose = () => {
+          track.removeEventListener('cuechange', handleCueChange);
+        };
+      });
       Object.assign(window, {hlsInstance: hls});
     } else {
       player.load({
@@ -493,6 +532,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const progressEl = (ui as unknown as {$progress: HTMLElement}).$progress;
     progressEl.classList.add('progress-wrapper');
     progressEl.children[0].classList.add('progress');
+
+    ui.subtitle.$dom.classList.add('subtitles-ctr');
 
     return () => {
       document.removeEventListener('keydown', onKeydown);
