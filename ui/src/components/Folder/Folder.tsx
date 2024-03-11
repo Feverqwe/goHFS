@@ -40,7 +40,7 @@ const Folder: FC = () => {
     const [r1, r2] = d ? [-1, 1] : [1, -1];
     const result = files.slice(0);
     if (field === 'random') {
-      shuffle(files);
+      shuffle(result);
     } else {
       result.sort(({[field as keyof FileInfo]: a}, {[field as keyof FileInfo]: b}) => {
         return a === b ? 0 : a > b ? r1 : r2;
