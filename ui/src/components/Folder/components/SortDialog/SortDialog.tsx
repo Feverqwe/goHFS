@@ -10,6 +10,7 @@ const keyName = {
   ctime: 'Create time',
   name: 'Name',
   size: 'Size',
+  random: 'Random',
 };
 
 interface SortChooseDialogProps {
