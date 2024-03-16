@@ -24,6 +24,7 @@ type RootStore struct {
 	ExtHandle  map[string]string      `json:"extHandle"`
 	ExtActions map[string][]ExtAction `json:"extActions"`
 	DirSort    interface{}            `json:"dirSort"`
+	ShowHidden bool                   `json:"showHidden"`
 }
 
 type File struct {
@@ -47,13 +48,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 
 	getIndex := func(place string, fullPath string, pathFile *os.File) string {
 		files := make([]File, 0)
-
 		showHidden := config.ShowHiddenFiles
-		if showHiddenRaw, ok := storage.GetKey("showHidden-" + place); ok {
-			if showHiddenBool, ok := showHiddenRaw.(bool); ok {
-				showHidden = showHiddenBool
-			}
-		}
 
 		if dir, err := pathFile.ReadDir(-1); err == nil {
 			for i := 0; i < len(dir); i++ {
@@ -107,6 +102,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			ExtHandle:  config.ExtHandle,
 			ExtActions: config.ExtActions,
 			DirSort:    dirSort,
+			ShowHidden: showHidden,
 		}
 
 		if debugUi {

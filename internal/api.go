@@ -331,6 +331,10 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		NewName string `json:"newName"`
 	}
 
+	type ShowHiddenPayload struct {
+		Show bool `json:"show"`
+	}
+
 	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
 			payload, err := ParseJson[RenamePayload](r.Body)
@@ -428,11 +432,24 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		})
 	})
 
-	router.Post("/api/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
 			doReload()
 
 			return "ok", nil
+		})
+	})
+
+	router.Post("/~/showHidden", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (bool, error) {
+			payload, err := ParseJson[ShowHiddenPayload](r.Body)
+			if err != nil {
+				return false, err
+			}
+			config.ShowHiddenFiles = payload.Show
+			SaveConfig(*config)
+
+			return payload.Show, nil
 		})
 	})
 }
