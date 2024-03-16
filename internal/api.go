@@ -26,14 +26,14 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool) {
+func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool, doReload func()) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
 	handleUpload(apiRouter, config)
 	handleWww(apiRouter, debugUi)
 	handleStorage(apiRouter, storage)
-	handleAction(apiRouter, config)
+	handleAction(apiRouter, config, doReload)
 	handleInterfaces(apiRouter, config)
 	handleFobidden(apiRouter)
 
@@ -311,7 +311,7 @@ func handleStorage(router *Router, storage *Storage) {
 	})
 }
 
-func handleAction(router *Router, config *Config) {
+func handleAction(router *Router, config *Config, doReload func()) {
 	public := config.Public
 
 	type RemovePayload struct {
@@ -425,6 +425,14 @@ func handleAction(router *Router, config *Config) {
 			}
 
 			return "ok", err
+		})
+	})
+
+	router.Post("/api/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			doReload()
+
+			return "ok", nil
 		})
 	})
 }

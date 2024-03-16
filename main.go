@@ -26,12 +26,14 @@ func main() {
 
 	callChan := make(chan string)
 
+	doReload := func() {
+		callChan <- "reload"
+	}
+
 	go func() {
 		var httpServer *http.Server
 
-		go func() {
-			callChan <- "reload"
-		}()
+		go doReload()
 
 		for {
 			v := <-callChan
@@ -48,7 +50,7 @@ func main() {
 				router := internal.NewRouter()
 
 				powerLock(router, powerControl)
-				internal.HandleApi(router, &config, storage, DEBUG_UI)
+				internal.HandleApi(router, &config, storage, DEBUG_UI, doReload)
 				internal.HandleDir(router, &config, storage, DEBUG_UI)
 				fsServer(router, &config)
 
