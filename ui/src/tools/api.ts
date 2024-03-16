@@ -71,4 +71,12 @@ export const api = {
     method: 'GET',
     path: '/~/addresses',
   }),
+  reloadConfig: action<void, string>({
+    method: 'POST',
+    path: '/~/reloadConfig',
+  }),
+  showHidden: action<{show: boolean}, boolean>({
+    method: 'POST',
+    path: '/~/showHidden',
+  }),
 };

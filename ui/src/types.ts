@@ -24,4 +24,5 @@ export interface RootStore {
   extHandle: Partial<Record<string, string>>;
   extActions: Partial<Record<string, ExtAction[]>>;
   dirSort: DirSort | null;
+  showHidden?: boolean;
 }

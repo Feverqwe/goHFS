@@ -2,10 +2,14 @@ import * as React from 'react';
 import {FC, useContext, useMemo} from 'react';
 import {ListItemIcon, ListItemText, Menu, MenuItem} from '@mui/material';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import CachedIcon from '@mui/icons-material/Cached';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {QrCode2 as QrCode2Icon} from '@mui/icons-material';
 import Path from 'path-browserify';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
-import {FileInfo} from '../../../../types';
+import {DirSort, FileInfo} from '../../../../types';
+import {api} from '../../../../tools/api';
 
 interface FolderMenuProps {
   anchorEl: Element;
@@ -20,7 +24,7 @@ const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClic
   const menu = useMemo(
     () => [
       {
-        type: 'playlist',
+        id: 'playlist',
         title: 'Get playlist',
         icon: <PlaylistPlayIcon />,
         onClick: () => {
@@ -49,11 +53,34 @@ const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClic
         },
       },
       {
-        type: 'addresses',
+        id: 'addresses',
         title: 'Open addresses',
         icon: <QrCode2Icon />,
         onClick: () => {
           onAddressesClick();
+
+          onClose();
+        },
+      },
+      {
+        id: 'reloadConfig',
+        title: 'Reload config',
+        icon: <CachedIcon />,
+        onClick: async () => {
+          await api.reloadConfig<Record<string, DirSort>>();
+
+          onClose();
+        },
+      },
+      {
+        id: 'showHidden',
+        title: store.showHidden ? 'Hide hidden' : 'Show hidden',
+        icon: store.showHidden ? <VisibilityOffIcon /> : <VisibilityIcon />,
+        onClick: async () => {
+          await api.showHidden({
+            show: !store.showHidden,
+          });
+          location.reload();
 
           onClose();
         },
@@ -64,9 +91,9 @@ const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClic
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
-      {menu.map(({type, title, icon, onClick}) => {
+      {menu.map(({id, title, icon, onClick}) => {
         return (
-          <MenuItem key={type} onClick={onClick}>
+          <MenuItem key={id} onClick={onClick}>
             {icon && <ListItemIcon>{icon}</ListItemIcon>}
             <ListItemText>{title}</ListItemText>
           </MenuItem>
