@@ -35,7 +35,6 @@ type File struct {
 
 func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 	public := config.Public
-	showHiddenFiles := config.ShowHiddenFiles
 
 	type contextType string
 	const contentKey contextType = "content"
@@ -49,13 +48,20 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 	getIndex := func(place string, fullPath string, pathFile *os.File) string {
 		files := make([]File, 0)
 
+		showHidden := config.ShowHiddenFiles
+		if showHiddenRaw, ok := storage.GetKey("showHidden-" + place); ok {
+			if showHiddenBool, ok := showHiddenRaw.(bool); ok {
+				showHidden = showHiddenBool
+			}
+		}
+
 		if dir, err := pathFile.ReadDir(-1); err == nil {
 			for i := 0; i < len(dir); i++ {
 				entity := dir[i]
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
-				if !showHiddenFiles {
+				if !showHidden {
 					if file.Name == "System Volume Information" {
 						continue
 					}
