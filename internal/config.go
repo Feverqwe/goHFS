@@ -96,8 +96,8 @@ func (s *Config) IsWritable(targetPath string) bool {
 			lowPath = strings.Join(pathParts[0:partCount], "/")
 		}
 		m, _ := path.Match(p.pattern, lowPath)
-		if p.isExclude {
-			m = !m
+		if p.isExclude && m {
+			return false
 		}
 		if m {
 			return true
