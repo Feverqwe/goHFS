@@ -181,6 +181,6 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			return
 		}
 
-		defer next()
+		next()
 	})
 }
