@@ -122,7 +122,7 @@ func handleUpload(router *Router, config *Config) {
 		rawPlace := key.Place
 		rawTmpFileName := key.TmpFileName
 
-		osTmpFilePath, err := config.GetPlaceOsPath(path.Join(rawPlace, rawTmpFileName))
+		osTmpFilePath, err := config.GetPlaceOsPath(NormalizePath(path.Join(rawPlace, rawTmpFileName)))
 		if err != nil {
 			return false, err
 		}
@@ -158,7 +158,7 @@ func handleUpload(router *Router, config *Config) {
 
 			rawFileName := key.FileName
 
-			osFilePath, err := config.GetPlaceOsPath(path.Join(rawPlace, rawFileName))
+			osFilePath, err := config.GetPlaceOsPath(NormalizePath(path.Join(rawPlace, rawFileName)))
 			if err != nil {
 				return false, err
 			}
@@ -183,7 +183,7 @@ func handleUpload(router *Router, config *Config) {
 			rawFileName := payload.FileName
 			size := payload.Size
 
-			osUploadPath, err := config.GetPlaceOsPath(rawPlace)
+			osUploadPath, err := config.GetPlaceOsPath(NormalizePath(rawPlace))
 			if err != nil {
 				return nil, errors.New("incorrect place")
 			}

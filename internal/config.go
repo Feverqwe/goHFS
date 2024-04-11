@@ -85,8 +85,7 @@ func (s *Config) GetPublibPath(place string) (pub string, relPlace string) {
 	return
 }
 
-func (s *Config) GetPlaceOsPath(rawPlace string) (string, error) {
-	place := NormalizePath(rawPlace)
+func (s *Config) GetPlaceOsPath(place string) (string, error) {
 	pub, relPlace := s.GetPublibPath(place)
 	return GetFullPath(pub, relPlace)
 }
