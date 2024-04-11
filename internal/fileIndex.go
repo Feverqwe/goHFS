@@ -52,10 +52,12 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 		linksSet := make(map[string]bool)
 
 		for _, l := range config.Links {
-			if place == l.Place {
-				linksSet[l.Name] = true
+			dir := path.Dir(l.Place)
+			if place == dir {
+				name := path.Base(l.Place)
+				linksSet[name] = true
 				f := File{
-					Name:   l.Name,
+					Name:   name,
 					IsLink: true,
 				}
 				if info, err := os.Stat(l.Target); err == nil {

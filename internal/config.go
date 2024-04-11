@@ -33,7 +33,6 @@ type ExtAction struct {
 
 type Link struct {
 	Place  string `json:"place"`
-	Name   string `json:"name"`
 	Target string `json:"target"`
 }
 
@@ -89,7 +88,7 @@ func (s *Config) GetPublibPath(place string) (pub string, relPlace string) {
 	pub = s.Public
 	relPlace = place
 	for _, l := range s.Links {
-		p := path.Join(l.Place, l.Name)
+		p := path.Join(l.Place)
 		if place == p || strings.HasPrefix(place, p+"/") {
 			pub = l.Target
 			relPlace = place[len(p):]

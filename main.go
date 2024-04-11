@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 )
 
 var DEBUG_UI = os.Getenv("DEBUG_UI") == "1"
@@ -105,7 +104,7 @@ func fsServer(router *internal.Router, config *internal.Config, link *internal.L
 	routePath := ""
 	if link != nil {
 		public = link.Target
-		rootPlace = path.Join(link.Place, link.Name)
+		rootPlace = link.Place
 		routePath = "^" + rootPlace + "/"
 	}
 
