@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -28,15 +27,14 @@ type RootStore struct {
 }
 
 type File struct {
-	Name  string `json:"name"`
-	IsDir bool   `json:"isDir"`
-	Ctime int64  `json:"ctime"` // ms
-	Size  int64  `json:"size"`  // bytes
+	Name   string `json:"name"`
+	IsDir  bool   `json:"isDir"`
+	IsLink bool   `json:"isLink"`
+	Ctime  int64  `json:"ctime"` // ms
+	Size   int64  `json:"size"`  // bytes
 }
 
 func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
-	public := config.Public
-
 	type contextType string
 	const contentKey contextType = "content"
 
@@ -50,23 +48,38 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 		files := make([]File, 0)
 		showHidden := config.ShowHiddenFiles
 
+		linksSet := make(map[string]bool)
+
+		for _, l := range config.Links {
+			if place == l.Place {
+				linksSet[l.Name] = true
+				f := File{
+					Name:   l.Name,
+					IsLink: true,
+				}
+				if info, err := os.Stat(l.Target); err == nil {
+					f.IsDir = info.IsDir()
+					f.Size = info.Size()
+					f.Ctime = UnixMilli(info.ModTime())
+				}
+				if !showHidden && isHiddenName(f.Name) {
+					continue
+				}
+				files = append(files, f)
+			}
+		}
+
 		if dir, err := pathFile.ReadDir(-1); err == nil {
 			for i := 0; i < len(dir); i++ {
 				entity := dir[i]
 				file := File{}
 				file.IsDir = entity.IsDir()
 				file.Name = entity.Name()
-				if !showHidden {
-					if file.Name == "System Volume Information" {
-						continue
-					}
-					if runtime.GOOS == "windows" {
-						if file.Name == "desktop.ini" || file.Name == "Thumbs.db" {
-							continue
-						}
-					} else if file.Name[0] == '.' {
-						continue
-					}
+				if _, found := linksSet[file.Name]; found {
+					continue
+				}
+				if !showHidden && isHiddenName(file.Name) {
+					continue
 				}
 				if info, err := entity.Info(); err == nil {
 					file.Size = info.Size()
@@ -84,7 +97,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			}
 		}
 
-		isRoot := public == fullPath
+		isRoot := place == "/"
 		isWritable := config.IsWritable(path.Join(place, "tmp"))
 
 		placeName := config.Name
@@ -138,7 +151,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		place := NormalizePath(r.URL.Path)
 
-		osFullPath, err := GetFullPath(public, place)
+		osFullPath, err := config.GetPlaceOsPath(place)
 		if err != nil {
 			w.WriteHeader(403)
 			return

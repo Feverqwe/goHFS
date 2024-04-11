@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 )
 
 var DEBUG_UI = os.Getenv("DEBUG_UI") == "1"
@@ -52,7 +53,12 @@ func main() {
 				powerLock(router, powerControl)
 				internal.HandleApi(router, &config, storage, DEBUG_UI, doReload)
 				internal.HandleDir(router, &config, storage, DEBUG_UI)
-				fsServer(router, &config)
+
+				for _, l := range config.Links {
+					link := l
+					fsServer(router, &config, &link)
+				}
+				fsServer(router, &config, nil)
 
 				address := config.GetAddress()
 
@@ -93,29 +99,46 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 	})
 }
 
-func fsServer(router *internal.Router, config *internal.Config) {
+func fsServer(router *internal.Router, config *internal.Config, link *internal.Link) {
 	public := config.Public
+	rootPlace := ""
+	routePath := ""
+	if link != nil {
+		public = link.Target
+		rootPlace = path.Join(link.Place, link.Name)
+		routePath = "^" + rootPlace + "/"
+	}
 
-	fileServer := http.FileServer(http.Dir(public))
+	isDir := false
+	if info, err := os.Stat(public); err == nil {
+		isDir = info.IsDir()
+	}
 
-	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		osFullPath, err := internal.GetFullPath(public, r.URL.Path)
-		if err != nil {
-			w.WriteHeader(403)
-			return
-		}
+	if isDir {
+		fileServer := http.FileServer(http.Dir(public))
 
-		file, stat, err := internal.OpenFile(osFullPath)
-		if err != nil {
-			internal.HandleOpenFileError(err, w)
-			return
-		}
-		defer file.Close()
+		subRouter := internal.NewRouter()
+		subRouter.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			place := internal.NormalizePath(r.URL.Path)
+			osFullPath, err := internal.GetFullPath(public, place)
+			if err != nil {
+				w.WriteHeader(403)
+				return
+			}
 
-		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
-	})
+			http.ServeFile(w, r, osFullPath)
+		})
+		subRouter.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			fileServer.ServeHTTP(w, r)
+		})
 
-	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		fileServer.ServeHTTP(w, r)
-	})
+		router.All(routePath, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			r.URL.Path = r.URL.Path[len(rootPlace):]
+			subRouter.ServeHTTP(w, r)
+		})
+	} else {
+		router.All(rootPlace, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			http.ServeFile(w, r, public)
+		})
+	}
 }

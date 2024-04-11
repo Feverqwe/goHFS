@@ -31,6 +31,12 @@ type ExtAction struct {
 	NewPage bool   `json:"newPage"`
 }
 
+type Link struct {
+	Place  string `json:"place"`
+	Name   string `json:"name"`
+	Target string `json:"target"`
+}
+
 type Config struct {
 	Port                 int
 	Address              string
@@ -41,6 +47,7 @@ type Config struct {
 	ExtActions           map[string][]ExtAction
 	WritablePatterns     []string
 	Salt                 string
+	Links                []Link
 	prepWritablePatterns []PrepPattern
 }
 
@@ -78,6 +85,25 @@ func (s *Config) IsWritable(targetPath string) bool {
 	return false
 }
 
+func (s *Config) GetPublibPath(place string) (pub string, relPlace string) {
+	pub = s.Public
+	relPlace = place
+	for _, l := range s.Links {
+		p := path.Join(l.Place, l.Name)
+		if place == p || strings.HasPrefix(place, p+"/") {
+			pub = l.Target
+			relPlace = place[len(p):]
+		}
+	}
+	return
+}
+
+func (s *Config) GetPlaceOsPath(rawPlace string) (string, error) {
+	place := NormalizePath(rawPlace)
+	pub, relPlace := s.GetPublibPath(place)
+	return GetFullPath(pub, relPlace)
+}
+
 func PrepPatterns(patterns []string) []PrepPattern {
 	result := []PrepPattern{}
 
@@ -105,6 +131,7 @@ func getNewConfig() Config {
 		ExtHandle:        make(map[string]string),
 		ExtActions:       make(map[string][]ExtAction),
 		WritablePatterns: make([]string, 0),
+		Links:            make([]Link, 0),
 	}
 	pwd := getProfilePath()
 	config.Port = 80

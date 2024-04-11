@@ -49,8 +49,6 @@ func handleFobidden(router *Router) {
 }
 
 func handleUpload(router *Router, config *Config) {
-	public := config.Public
-
 	salt := config.Salt
 	if len(salt) == 0 {
 		salt = strconv.FormatInt(time.Now().Unix(), 10)
@@ -124,7 +122,7 @@ func handleUpload(router *Router, config *Config) {
 		rawPlace := key.Place
 		rawTmpFileName := key.TmpFileName
 
-		osTmpFilePath, err := GetFullPath(public, path.Join(rawPlace, rawTmpFileName))
+		osTmpFilePath, err := config.GetPlaceOsPath(path.Join(rawPlace, rawTmpFileName))
 		if err != nil {
 			return false, err
 		}
@@ -160,7 +158,7 @@ func handleUpload(router *Router, config *Config) {
 
 			rawFileName := key.FileName
 
-			osFilePath, err := GetFullPath(public, path.Join(rawPlace, rawFileName))
+			osFilePath, err := config.GetPlaceOsPath(path.Join(rawPlace, rawFileName))
 			if err != nil {
 				return false, err
 			}
@@ -185,7 +183,7 @@ func handleUpload(router *Router, config *Config) {
 			rawFileName := payload.FileName
 			size := payload.Size
 
-			osUploadPath, err := GetFullPath(public, rawPlace)
+			osUploadPath, err := config.GetPlaceOsPath(rawPlace)
 			if err != nil {
 				return nil, errors.New("incorrect place")
 			}
@@ -197,7 +195,7 @@ func handleUpload(router *Router, config *Config) {
 				return nil, errors.New("unable wite in this place")
 			}
 
-			osFilePath, err := GetFullPath(public, filePath)
+			osFilePath, err := config.GetPlaceOsPath(filePath)
 			if err != nil {
 				return nil, err
 			}
@@ -312,8 +310,6 @@ func handleStorage(router *Router, storage *Storage) {
 }
 
 func handleAction(router *Router, config *Config, doReload func()) {
-	public := config.Public
-
 	type RemovePayload struct {
 		Place string `json:"place"`
 		Name  string `json:"name"`
@@ -348,12 +344,12 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
 			rNewPath := NormalizePath(path.Join(rawPlace, rawNewName))
 
-			osTargetPath, err := GetFullPath(public, rTargetPath)
+			osTargetPath, err := config.GetPlaceOsPath(rTargetPath)
 			if err != nil {
 				return "", err
 			}
 
-			osNewPath, err := GetFullPath(public, rNewPath)
+			osNewPath, err := config.GetPlaceOsPath(rNewPath)
 			if err != nil {
 				return "", err
 			}
@@ -380,7 +376,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			rawPlace := payload.Place
 			rawName := payload.Name
 			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-			osTargetPath, err := GetFullPath(public, rTargetPath)
+			osTargetPath, err := config.GetPlaceOsPath(rTargetPath)
 			if err != nil {
 				return "", err
 			}
@@ -412,7 +408,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			rawNames := payload.Names
 			for _, rawName := range rawNames {
 				rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-				osTargetPath, err := GetFullPath(public, rTargetPath)
+				osTargetPath, err := config.GetPlaceOsPath(rTargetPath)
 				if err != nil {
 					return "", err
 				}
