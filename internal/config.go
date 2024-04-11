@@ -23,6 +23,7 @@ type PrepPattern struct {
 	patternType int
 	pattern     string
 	partCount   int
+	isExclude   bool
 }
 
 type ExtAction struct {
@@ -64,26 +65,6 @@ func (s *Config) GetBrowserAddress() string {
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
 }
 
-func (s *Config) IsWritable(targetPath string) bool {
-	lowPath := strings.ToLower(targetPath)
-
-	for _, p := range s.prepWritablePatterns {
-		if p.patternType == IsExtraPtrn {
-			partCount := p.partCount
-			pathParts := strings.SplitN(lowPath, "/", partCount+1)
-			if len(pathParts) < partCount {
-				continue
-			}
-			lowPath = strings.Join(pathParts[0:partCount], "/")
-		}
-		m, _ := path.Match(p.pattern, lowPath)
-		if m {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *Config) GetPublibPath(place string) (pub string, relPlace string) {
 	pub = s.Public
 	relPlace = place
@@ -102,6 +83,29 @@ func (s *Config) GetPlaceOsPath(place string) (string, error) {
 	return GetFullPath(pub, relPlace)
 }
 
+func (s *Config) IsWritable(targetPath string) bool {
+	lowPath := strings.ToLower(targetPath)
+
+	for _, p := range s.prepWritablePatterns {
+		if p.patternType == IsExtraPtrn {
+			partCount := p.partCount
+			pathParts := strings.SplitN(lowPath, "/", partCount+1)
+			if len(pathParts) < partCount {
+				continue
+			}
+			lowPath = strings.Join(pathParts[0:partCount], "/")
+		}
+		m, _ := path.Match(p.pattern, lowPath)
+		if p.isExclude {
+			m = !m
+		}
+		if m {
+			return true
+		}
+	}
+	return false
+}
+
 func PrepPatterns(patterns []string) []PrepPattern {
 	result := []PrepPattern{}
 
@@ -109,14 +113,20 @@ func PrepPatterns(patterns []string) []PrepPattern {
 		pattern := strings.ToLower(rawPattern)
 		partCount := strings.Count(pattern, "/") + 1
 		patternType := IsSimplePtrn
+		isExclude := false
 		if strings.HasSuffix(pattern, "**") {
 			pattern = pattern[0 : len(pattern)-1]
 			patternType = IsExtraPtrn
+		}
+		if strings.HasPrefix(pattern, "!!") {
+			pattern = pattern[2:]
+			isExclude = true
 		}
 		np := PrepPattern{
 			patternType: patternType,
 			pattern:     pattern,
 			partCount:   partCount,
+			isExclude:   isExclude,
 		}
 		result = append(result, np)
 	}
