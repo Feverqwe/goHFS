@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"goHfs/assets"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -44,7 +45,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 	}
 	template := string(data)
 
-	getIndex := func(place string, fullPath string, pathFile *os.File) string {
+	getIndex := func(place string, fullPath string) string {
 		files := make([]File, 0)
 		showHidden := config.ShowHiddenFiles
 
@@ -69,32 +70,38 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			}
 		}
 
-		if dir, err := pathFile.ReadDir(-1); err == nil {
-			for i := 0; i < len(dir); i++ {
-				entity := dir[i]
-				file := File{}
-				file.IsDir = entity.IsDir()
-				file.Name = entity.Name()
-				if _, found := linksSet[file.Name]; found {
-					continue
-				}
-				if !showHidden && isHiddenName(file.Name) {
-					continue
-				}
-				if info, err := entity.Info(); err == nil {
-					file.Size = info.Size()
-					file.Ctime = UnixMilli(info.ModTime())
-					if info.Mode()&os.ModeSymlink != 0 {
-						if stat, err := os.Stat(filepath.Join(fullPath, file.Name)); err == nil {
-							file.IsDir = stat.IsDir()
-							file.Size = stat.Size()
-							file.Ctime = UnixMilli(stat.ModTime())
-						}
+		var dir []fs.DirEntry
+		if dirFile, err := os.Open(fullPath); err == nil {
+			defer dirFile.Close()
+			if dirEntry, err := dirFile.ReadDir(-1); err == nil {
+				dir = dirEntry
+			}
+		}
+
+		for i := 0; i < len(dir); i++ {
+			entity := dir[i]
+			file := File{}
+			file.IsDir = entity.IsDir()
+			file.Name = entity.Name()
+			if _, found := linksSet[file.Name]; found {
+				continue
+			}
+			if !showHidden && isHiddenName(file.Name) {
+				continue
+			}
+			if info, err := entity.Info(); err == nil {
+				file.Size = info.Size()
+				file.Ctime = UnixMilli(info.ModTime())
+				if info.Mode()&os.ModeSymlink != 0 {
+					if stat, err := os.Stat(filepath.Join(fullPath, file.Name)); err == nil {
+						file.IsDir = stat.IsDir()
+						file.Size = stat.Size()
+						file.Ctime = UnixMilli(stat.ModTime())
 					}
 				}
-
-				files = append(files, file)
 			}
+
+			files = append(files, file)
 		}
 
 		isRoot := place == "/"
@@ -157,15 +164,14 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			return
 		}
 
-		file, stat, err := OpenFile(osFullPath)
+		stat, err := os.Stat(osFullPath)
 		if err != nil {
 			HandleOpenFileError(err, w)
 			return
 		}
-		defer file.Close()
 
 		if stat.IsDir() {
-			content := getIndex(place, osFullPath, file)
+			content := getIndex(place, osFullPath)
 			ctx := context.WithValue(r.Context(), contentKey, content)
 			r := r.WithContext(ctx)
 
