@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/natefinch/atomic"
 )
 
@@ -20,9 +21,7 @@ const (
 )
 
 type PrepPattern struct {
-	patternType int
-	pattern     string
-	partCount   int
+	g glob.Glob
 }
 
 type ExtAction struct {
@@ -65,19 +64,8 @@ func (s *Config) GetBrowserAddress() string {
 }
 
 func (s *Config) IsWritable(targetPath string) bool {
-	lowPath := strings.ToLower(targetPath)
-
 	for _, p := range s.prepWritablePatterns {
-		if p.patternType == IsExtraPtrn {
-			partCount := p.partCount
-			pathParts := strings.SplitN(lowPath, "/", partCount+1)
-			if len(pathParts) < partCount {
-				continue
-			}
-			lowPath = strings.Join(pathParts[0:partCount], "/")
-		}
-		m, _ := path.Match(p.pattern, lowPath)
-		if m {
+		if p.g.Match(targetPath) {
 			return true
 		}
 	}
@@ -107,19 +95,9 @@ func PrepPatterns(patterns []string) []PrepPattern {
 	result := []PrepPattern{}
 
 	for _, rawPattern := range patterns {
-		pattern := strings.ToLower(rawPattern)
-		partCount := strings.Count(pattern, "/") + 1
-		patternType := IsSimplePtrn
-		if strings.HasSuffix(pattern, "**") {
-			pattern = pattern[0 : len(pattern)-1]
-			patternType = IsExtraPtrn
-		}
-		np := PrepPattern{
-			patternType: patternType,
-			pattern:     pattern,
-			partCount:   partCount,
-		}
-		result = append(result, np)
+		g := glob.MustCompile(rawPattern, '/')
+		p := PrepPattern{g: g}
+		result = append(result, p)
 	}
 
 	return result

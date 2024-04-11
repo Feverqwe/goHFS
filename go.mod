@@ -31,6 +31,7 @@ require (
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-yaml v1.11.2 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
