@@ -108,38 +108,38 @@ func fsServer(router *internal.Router, config *internal.Config, link *internal.L
 		routePath = "^" + rootPlace + "/"
 	}
 
-	info, err := os.Stat(public)
-	if err != nil {
-		log.Printf("Skip path (%s), cause: %s", public, err)
-		return
-	}
-	isDir := info.IsDir()
-
-	if isDir {
-		fileServer := http.FileServer(http.Dir(public))
-
-		subRouter := internal.NewRouter()
-		subRouter.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-			place := internal.NormalizePath(r.URL.Path)
-			osFullPath, err := internal.GetFullPath(public, place)
-			if err != nil {
+	if rootPlace != "" {
+		router.All(rootPlace, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			if info, err := os.Stat(public); err != nil {
+				internal.HandleOpenFileError(err, w)
+				return
+			} else if info.IsDir() {
 				w.WriteHeader(403)
 				return
 			}
-
-			http.ServeFile(w, r, osFullPath)
-		})
-		subRouter.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-			fileServer.ServeHTTP(w, r)
-		})
-
-		router.All(routePath, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-			r.URL.Path = r.URL.Path[len(rootPlace):]
-			subRouter.ServeHTTP(w, r)
-		})
-	} else {
-		router.All(rootPlace, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
 			http.ServeFile(w, r, public)
 		})
 	}
+
+	fileServer := http.FileServer(http.Dir(public))
+
+	subRouter := internal.NewRouter()
+	subRouter.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+		place := internal.NormalizePath(r.URL.Path)
+		osFullPath, err := internal.GetFullPath(public, place)
+		if err != nil {
+			w.WriteHeader(403)
+			return
+		}
+
+		http.ServeFile(w, r, osFullPath)
+	})
+	subRouter.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+		fileServer.ServeHTTP(w, r)
+	})
+
+	router.All(routePath, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+		r.URL.Path = r.URL.Path[len(rootPlace):]
+		subRouter.ServeHTTP(w, r)
+	})
 }
