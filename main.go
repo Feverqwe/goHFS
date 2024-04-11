@@ -108,10 +108,12 @@ func fsServer(router *internal.Router, config *internal.Config, link *internal.L
 		routePath = "^" + rootPlace + "/"
 	}
 
-	isDir := false
-	if info, err := os.Stat(public); err == nil {
-		isDir = info.IsDir()
+	info, err := os.Stat(public)
+	if err != nil {
+		log.Printf("Skip path (%s), cause: %s", public, err)
+		return
 	}
+	isDir := info.IsDir()
 
 	if isDir {
 		fileServer := http.FileServer(http.Dir(public))
