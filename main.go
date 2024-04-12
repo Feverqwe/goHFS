@@ -53,9 +53,8 @@ func main() {
 				internal.HandleApi(router, &config, storage, DEBUG_UI, doReload)
 				internal.HandleDir(router, &config, storage, DEBUG_UI)
 
-				for _, l := range config.Links {
-					link := l
-					fsServer(router, &config, &link)
+				for idx := range config.Links {
+					fsServer(router, &config, &config.Links[idx])
 				}
 				fsServer(router, &config, nil)
 
@@ -110,13 +109,6 @@ func fsServer(router *internal.Router, config *internal.Config, link *internal.L
 
 	if rootPlace != "" {
 		router.All(rootPlace, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-			if info, err := os.Stat(public); err != nil {
-				internal.HandleOpenFileError(err, w)
-				return
-			} else if info.IsDir() {
-				w.WriteHeader(403)
-				return
-			}
 			http.ServeFile(w, r, public)
 		})
 	}

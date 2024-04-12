@@ -80,8 +80,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			}
 		}
 
-		for i := 0; i < len(dir); i++ {
-			entity := dir[i]
+		for _, entity := range dir {
 			file := File{}
 			file.IsDir = entity.IsDir()
 			file.Name = entity.Name()
