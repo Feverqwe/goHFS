@@ -73,6 +73,7 @@ func (s *Config) GetPublibPath(place string) (pub string, relPlace string) {
 		if place == p || strings.HasPrefix(place, p+"/") {
 			pub = l.Target
 			relPlace = place[len(p):]
+			break
 		}
 	}
 	return

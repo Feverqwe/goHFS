@@ -2,9 +2,12 @@ package internal
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 )
+
+const DEBUG = false
 
 type RouteNextFn func()
 
@@ -134,6 +137,9 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			route := s.routes[index]
 			index++
 			isMatch := matchMethod(r, &route) && matchPath(r, &route)
+			if DEBUG {
+				log.Printf("Route %s %s %v\n", route.method, route.path, isMatch)
+			}
 
 			if isMatch {
 				route.handler(w, rc, n)
