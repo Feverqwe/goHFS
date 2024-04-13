@@ -180,6 +180,9 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 			return
 		}
 
+		SetParam(r, "place", place)
+		SetParam(r, "osPath", osFullPath)
+
 		defer next()
 	})
 }

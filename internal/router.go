@@ -15,7 +15,10 @@ type RouteHandler func(w http.ResponseWriter, r *http.Request, next RouteNextFn)
 
 type contextType string
 
+type paramsType map[string]interface{}
+
 const nextFnKey contextType = "nextFn"
+const paramsKey contextType = "params"
 
 const (
 	IsPath       = 1
@@ -127,9 +130,8 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	n = func() {
 		for {
 			if index >= len(s.routes) {
-				next := r.Context().Value(nextFnKey)
-				if next != nil {
-					next.(func())()
+				if next, ok := r.Context().Value(nextFnKey).(func()); ok {
+					next()
 				}
 				break
 			}
@@ -147,9 +149,35 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	var ok bool
+	var params paramsType
+	if params, ok = r.Context().Value(paramsKey).(paramsType); !ok {
+		params = make(paramsType)
+	}
 	ctx := context.WithValue(r.Context(), nextFnKey, n)
+	ctx = context.WithValue(ctx, paramsKey, params)
 	rc = r.WithContext(ctx)
 	n()
+}
+
+func SetParam[T any](r *http.Request, key string, value T) {
+	m, ok := r.Context().Value(paramsKey).(paramsType)
+	if ok {
+		m[key] = value
+	}
+}
+
+func GetParam[T any](r *http.Request, key string) (T, bool) {
+	m, ok := r.Context().Value(paramsKey).(paramsType)
+	var v T
+	if ok {
+		var u interface{}
+		u, ok = m[key]
+		if ok {
+			v, ok = u.(T)
+		}
+	}
+	return v, ok
 }
 
 func matchMethod(r *http.Request, route *Route) bool {
