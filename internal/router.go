@@ -149,13 +149,10 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var ok bool
-	var params paramsType
-	if params, ok = r.Context().Value(paramsKey).(paramsType); !ok {
-		params = make(paramsType)
-	}
 	ctx := context.WithValue(r.Context(), nextFnKey, n)
-	ctx = context.WithValue(ctx, paramsKey, params)
+	if _, ok := r.Context().Value(paramsKey).(paramsType); !ok {
+		ctx = context.WithValue(ctx, paramsKey, make(paramsType))
+	}
 	rc = r.WithContext(ctx)
 	n()
 }
