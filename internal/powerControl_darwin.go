@@ -14,17 +14,17 @@ type PowerControl struct {
 	ch    chan int
 }
 
-func (self *PowerControl) Inc() {
-	if atomic.LoadInt32(&self.count) == 0 {
-		self.ch <- 1
+func (s *PowerControl) Inc() {
+	if atomic.LoadInt32(&s.count) == 0 {
+		s.ch <- 1
 	}
-	atomic.AddInt32(&self.count, 1)
+	atomic.AddInt32(&s.count, 1)
 }
 
-func (self *PowerControl) Dec() {
-	count := atomic.AddInt32(&self.count, -1)
+func (s *PowerControl) Dec() {
+	count := atomic.AddInt32(&s.count, -1)
 	if count == 0 {
-		self.ch <- 0
+		s.ch <- 0
 	}
 }
 

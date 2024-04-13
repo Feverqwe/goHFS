@@ -84,11 +84,12 @@ func main() {
 }
 
 func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
+	if powerControl == nil {
+		return
+	}
 	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		if powerControl != nil {
-			powerControl.Inc()
-			defer powerControl.Dec()
-		}
+		powerControl.Inc()
+		defer powerControl.Dec()
 		next()
 	})
 }
