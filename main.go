@@ -96,13 +96,13 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 
 func fsServer(router *internal.Router) {
 	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		osPath, ok := internal.GetParam[string](r, "osPath")
+		p, ok := internal.GetParam[string](r, "path")
 		if !ok {
 			w.WriteHeader(403)
 			return
 		}
 
-		file, err := os.Open(osPath)
+		file, err := os.Open(p)
 		if err != nil {
 			internal.HandleOpenFileError(err, w)
 			return
@@ -119,12 +119,12 @@ func fsServer(router *internal.Router) {
 	})
 
 	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		osPath, ok := internal.GetParam[string](r, "osPath")
+		p, ok := internal.GetParam[string](r, "path")
 		if !ok {
 			w.WriteHeader(403)
 			return
 		}
 
-		http.ServeFile(w, r, osPath)
+		http.ServeFile(w, r, p)
 	})
 }

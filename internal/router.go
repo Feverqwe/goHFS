@@ -164,17 +164,13 @@ func SetParam[T any](r *http.Request, key string, value T) {
 	}
 }
 
-func GetParam[T any](r *http.Request, key string) (T, bool) {
-	m, ok := r.Context().Value(paramsKey).(paramsType)
-	var v T
-	if ok {
-		var u interface{}
-		u, ok = m[key]
-		if ok {
+func GetParam[T any](r *http.Request, key string) (v T, ok bool) {
+	if m, okP := r.Context().Value(paramsKey).(paramsType); okP {
+		if u, okU := m[key]; okU {
 			v, ok = u.(T)
 		}
 	}
-	return v, ok
+	return
 }
 
 func matchMethod(r *http.Request, route *Route) bool {
