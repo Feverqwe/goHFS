@@ -32,11 +32,6 @@ type ExtAction struct {
 	NewPage bool   `json:"newPage"`
 }
 
-type Link struct {
-	Place  string `json:"place"`
-	Target string `json:"target"`
-}
-
 type Config struct {
 	Port                 int
 	Address              string

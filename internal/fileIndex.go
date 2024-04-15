@@ -60,10 +60,15 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 					Name:   name,
 					IsLink: true,
 				}
-				if info, err := os.Stat(l.Target); err == nil {
+				if l.Cache && l.cache != nil {
+					f.IsDir = l.cache.isDir
+					f.Size = l.cache.size
+					f.Ctime = l.cache.ctime
+				} else if info, err := os.Stat(l.Target); err == nil {
 					f.IsDir = info.IsDir()
 					f.Size = info.Size()
 					f.Ctime = UnixMilli(info.ModTime())
+					l.SetCache(f.IsDir, f.Size, f.Ctime)
 				}
 				if !showHidden && isHiddenName(f.Name) {
 					continue
