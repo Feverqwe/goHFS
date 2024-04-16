@@ -42,7 +42,7 @@ type Config struct {
 	ExtActions           map[string][]ExtAction
 	WritablePatterns     []string
 	Salt                 string
-	Links                []Link
+	Links                []*Link
 	prepWritablePatterns []PrepPattern
 }
 
@@ -135,7 +135,7 @@ func getNewConfig() Config {
 		ExtHandle:        make(map[string]string),
 		ExtActions:       make(map[string][]ExtAction),
 		WritablePatterns: make([]string, 0),
-		Links:            make([]Link, 0),
+		Links:            make([]*Link, 0),
 	}
 	pwd := getProfilePath()
 	config.Port = 80

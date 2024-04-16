@@ -60,7 +60,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 					Name:   name,
 					IsLink: true,
 				}
-				if l.Cache && l.cache != nil {
+				if l.HasCache() {
 					f.IsDir = l.cache.isDir
 					f.Size = l.cache.size
 					f.Ctime = l.cache.ctime
