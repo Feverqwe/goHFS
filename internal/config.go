@@ -114,8 +114,8 @@ func PrepPatterns(patterns []string) []PrepPattern {
 			pattern = pattern[0 : len(pattern)-1]
 			patternType = IsExtraPtrn
 		}
-		if strings.HasPrefix(pattern, "!!") {
-			pattern = pattern[2:]
+		if strings.HasPrefix(pattern, "!") {
+			pattern = pattern[1:]
 			isExclude = true
 		}
 		np := PrepPattern{
