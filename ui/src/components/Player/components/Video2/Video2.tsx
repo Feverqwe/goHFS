@@ -523,6 +523,94 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           track.removeEventListener('cuechange', handleCueChange);
         };
       });
+
+      hls.on(Hls.Events.ERROR, (eventName, data: any) => {
+        console.warn('Error event:', data);
+        const logError = (m: string) => console.warn(m);
+        switch (data.details) {
+          case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+            logError(
+              'Cannot load ' +
+                JSON.stringify(data.context.url) +
+                ' ' +
+                url +
+                ' HTTP response code:' +
+                data.response.code +
+                ' ' +
+                data.response.text,
+            );
+            break;
+          case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+            logError('Timeout while loading manifest');
+            break;
+          case Hls.ErrorDetails.MANIFEST_PARSING_ERROR:
+            logError('Error while parsing manifest:' + data.reason);
+            break;
+          case Hls.ErrorDetails.LEVEL_EMPTY_ERROR:
+            logError('Loaded level contains no fragments ' + data.level + ' ' + data.url);
+            // handleLevelError demonstrates how to remove a level that errors followed by a downswitch
+            // handleLevelError(data);
+            break;
+          case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+            logError('Error while loading level playlist ' + data.context.level + ' ' + data.url);
+            // handleLevelError demonstrates how to remove a level that errors followed by a downswitch
+            // handleLevelError(data);
+            break;
+          case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
+            logError('Timeout while loading level playlist ' + data.context.level + ' ' + data.url);
+            // handleLevelError demonstrates how to remove a level that errors followed by a downswitch
+            // handleLevelError(data);
+            break;
+          case Hls.ErrorDetails.LEVEL_SWITCH_ERROR:
+            logError('Error while trying to switch to level ' + data.level);
+            break;
+          case Hls.ErrorDetails.FRAG_LOAD_ERROR:
+            logError('Error while loading fragment ' + data.frag.url);
+            break;
+          case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT:
+            logError('Timeout while loading fragment ' + data.frag.url);
+            break;
+          case Hls.ErrorDetails.FRAG_DECRYPT_ERROR:
+            logError('Decrypting error:' + data.reason);
+            break;
+          case Hls.ErrorDetails.FRAG_PARSING_ERROR:
+            logError('Parsing error:' + data.reason);
+            break;
+          case Hls.ErrorDetails.KEY_LOAD_ERROR:
+            logError('Error while loading key ' + data.frag.decryptdata.uri);
+            break;
+          case Hls.ErrorDetails.KEY_LOAD_TIMEOUT:
+            logError('Timeout while loading key ' + data.frag.decryptdata.uri);
+            break;
+          case Hls.ErrorDetails.BUFFER_APPEND_ERROR:
+            logError('Buffer append error');
+            break;
+          case Hls.ErrorDetails.BUFFER_ADD_CODEC_ERROR:
+            logError('Buffer add codec error for ' + data.mimeType + ':' + data.error.message);
+            break;
+          case Hls.ErrorDetails.BUFFER_APPENDING_ERROR:
+            logError('Buffer appending error');
+            break;
+          case Hls.ErrorDetails.BUFFER_STALLED_ERROR:
+            logError('Buffer stalled error');
+            break;
+        }
+        if (data.fatal) {
+          console.error('Fatal error : ' + data.details);
+          switch (data.type) {
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              logError('A media error occurred: ' + data.details);
+              break;
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              logError('A network error occurred: ' + data.details);
+              break;
+            default:
+              logError('An unrecoverable error occurred: ' + data.details);
+              break;
+          }
+        }
+      });
+
       Object.assign(window, {hlsInstance: hls});
     } else {
       player.load({
