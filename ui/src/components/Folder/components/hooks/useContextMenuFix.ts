@@ -1,20 +1,20 @@
 import {isIOS} from "../../utils";
 import React, {useCallback, useRef} from "react";
 
-const useContextMenuFix = (callback: (e: React.MouseEvent) => void) => {
-  if (!isIOS()) return undefined;
+const useContextMenuFix = <T>(callback: (e: T) => unknown) => {
+  const refTimeoutId = useRef<number>();
 
-  const refTimeoutId = useRef<NodeJS.Timeout>();
-
-  const touchStart = useCallback((e: any) => {
-    refTimeoutId.current = setTimeout(() => {
-      callback(e);
+  const touchStart = useCallback((e: unknown) => {
+    refTimeoutId.current = window.setTimeout(() => {
+      callback(e as T);
     }, 610);
   }, [callback]);
 
   const touchClear = useCallback(() => {
     clearTimeout(refTimeoutId.current);
   }, []);
+
+  if (!isIOS()) return undefined;
 
   return {
     onTouchStart: touchStart,
