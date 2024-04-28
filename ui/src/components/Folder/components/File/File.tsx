@@ -19,6 +19,7 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
 import {formatUrl} from '../../utils';
+import useContextMenuFix from "../hooks/useContextMenuFix";
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -153,6 +154,8 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
     );
   }, [dateStr, name, sizeStr]);
 
+  const iosContextMenuEvents = useContextMenuFix(handleCtxMenu);
+
   if (removed) {
     return null;
   }
@@ -163,7 +166,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
         <Box display="flex" alignItems="stretch">
           {selectMode && <SelectBox name={name} />}
           <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-            <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu}>
+            <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu} {...iosContextMenuEvents}>
               <Icon />
             </IconButton>
           </Box>
@@ -178,7 +181,7 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
           {selectMode && <SelectBox name={name} />}
           <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
             <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-              <Box p={1} display="flex" alignItems="center" onContextMenu={handleCtxMenu}>
+              <Box p={1} display="flex" alignItems="center" onContextMenu={handleCtxMenu} {...iosContextMenuEvents}>
                 <Icon />
               </Box>
             </Box>

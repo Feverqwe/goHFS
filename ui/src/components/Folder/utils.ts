@@ -1,5 +1,6 @@
 import Path from 'path-browserify';
 import {DirSort} from '../../types';
+import React from "react";
 
 export function getOption<T>(key: string, defaultValue: T) {
   let value: T | null = null;
@@ -69,4 +70,17 @@ export function shuffle<T>(array: T[]) {
     [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
   }
   return array;
+}
+
+export function isIOS() {
+  return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    // iPad on iOS 13 detection
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
