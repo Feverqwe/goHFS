@@ -37,13 +37,11 @@ func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool, d
 	handleInterfaces(apiRouter, config)
 	handleFobidden(apiRouter)
 
-	router.All("^/~/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		gzipHandler.ServeHTTP(w, r)
-	})
+	router.All("^/~/", gzipHandler.ServeHTTP)
 }
 
 func handleFobidden(router *Router) {
-	router.Use(func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
 	})
 }
@@ -172,7 +170,7 @@ func handleUpload(router *Router, config *Config) {
 		return isFinish, nil
 	}
 
-	router.Post("/~/upload/init", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/upload/init", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*UploadInit, error) {
 			payload, err := ParseJson[UploadInitPayload](r.Body)
 			if err != nil {
@@ -221,7 +219,7 @@ func handleUpload(router *Router, config *Config) {
 		})
 	})
 
-	router.Post("/~/upload/chunk", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/upload/chunk", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (bool, error) {
 			reader, err := r.MultipartReader()
 
@@ -268,7 +266,7 @@ func handleUpload(router *Router, config *Config) {
 }
 
 func handleInterfaces(router *Router, config *Config) {
-	router.Get("/~/addresses", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/~/addresses", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() ([]string, error) {
 			addresses := GetAddresses(config.Port)
 			return addresses, nil
@@ -277,7 +275,7 @@ func handleInterfaces(router *Router, config *Config) {
 }
 
 func handleStorage(router *Router, storage *Storage) {
-	router.Post("/~/storage/get", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/storage/get", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (map[string]interface{}, error) {
 			keys, err := ParseJson[[]string](r.Body)
 			if err != nil {
@@ -288,7 +286,7 @@ func handleStorage(router *Router, storage *Storage) {
 		})
 	})
 
-	router.Post("/~/storage/set", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/storage/set", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			keyValue, err := ParseJson[map[string]interface{}](r.Body)
 			if err == nil {
@@ -298,7 +296,7 @@ func handleStorage(router *Router, storage *Storage) {
 		})
 	})
 
-	router.Post("/~/storage/del", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/storage/del", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			keys, err := ParseJson[[]string](r.Body)
 			if err == nil {
@@ -331,7 +329,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		Show bool `json:"show"`
 	}
 
-	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := ParseJson[RenamePayload](r.Body)
 			if err != nil {
@@ -366,7 +364,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		})
 	})
 
-	router.Post("/~/remove", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/remove", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := ParseJson[RemovePayload](r.Body)
 			if err != nil {
@@ -397,7 +395,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		})
 	})
 
-	router.Post("/~/removeAll", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/removeAll", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := ParseJson[RemoveAllPayload](r.Body)
 			if err != nil {
@@ -428,7 +426,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		})
 	})
 
-	router.Post("/~/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/reloadConfig", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			doReload()
 
@@ -436,7 +434,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		})
 	})
 
-	router.Post("/~/showHidden", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/~/showHidden", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (bool, error) {
 			payload, err := ParseJson[ShowHiddenPayload](r.Body)
 			if err != nil {
@@ -458,7 +456,7 @@ func handleWww(router *Router, debugUi bool) {
 		}
 	}
 
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(w http.ResponseWriter, r *http.Request) {
 		mTime := binTime
 		assetPath := r.URL.Path[3:]
 

@@ -87,15 +87,18 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 	if powerControl == nil {
 		return
 	}
-	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request) {
 		powerControl.Inc()
 		defer powerControl.Dec()
-		next()
+
+		if next, ok := internal.GetNext(r); ok {
+			next()
+		}
 	})
 }
 
 func fsServer(router *internal.Router) {
-	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request) {
 		p, ok := internal.GetParam[string](r, "path")
 		if !ok {
 			w.WriteHeader(403)
@@ -118,7 +121,7 @@ func fsServer(router *internal.Router) {
 		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
 	})
 
-	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request) {
 		p, ok := internal.GetParam[string](r, "path")
 		if !ok {
 			w.WriteHeader(403)

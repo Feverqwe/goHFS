@@ -11,7 +11,7 @@ const DEBUG = false
 
 type RouteNextFn func()
 
-type RouteHandler func(w http.ResponseWriter, r *http.Request, next RouteNextFn)
+type RouteHandler func(w http.ResponseWriter, r *http.Request)
 
 type contextType string
 
@@ -66,9 +66,7 @@ func (s *Router) Use(handlers ...RouteHandler) {
 
 func (s *Router) Route(path string) *Router {
 	router := NewRouter()
-	s.All(path, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		router.ServeHTTP(w, r)
-	})
+	s.All(path, router.ServeHTTP)
 	return router
 }
 
@@ -144,7 +142,7 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if isMatch {
-				route.handler(w, rc, n)
+				route.handler(w, rc)
 				break
 			}
 		}
@@ -170,6 +168,11 @@ func GetParam[T any](r *http.Request, key string) (v T, ok bool) {
 			v, ok = u.(T)
 		}
 	}
+	return
+}
+
+func GetNext(r *http.Request) (next func(), ok bool) {
+	next, ok = r.Context().Value(nextFnKey).(func())
 	return
 }
 

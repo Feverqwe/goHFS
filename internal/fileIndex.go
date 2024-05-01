@@ -161,7 +161,7 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 		http.ServeContent(writer, r, "index.html", time.Now(), reader)
 	}))
 
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{}, func(w http.ResponseWriter, r *http.Request) {
 		place := NormalizePath(r.URL.Path)
 
 		osFullPath, err := config.GetPlaceOsPath(place)
@@ -188,6 +188,8 @@ func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
 		SetParam(r, "place", place)
 		SetParam(r, "path", osFullPath)
 
-		defer next()
+		if next, ok := GetNext(r); ok {
+			defer next()
+		}
 	})
 }
