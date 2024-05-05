@@ -33,6 +33,7 @@ func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool, d
 	handleUpload(apiRouter, config)
 	handleWww(apiRouter, debugUi)
 	handleStorage(apiRouter, storage)
+	handleStore(apiRouter, config, storage)
 	handleAction(apiRouter, config, doReload)
 	handleInterfaces(apiRouter, config)
 	handleFobidden(apiRouter)
@@ -43,6 +44,35 @@ func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool, d
 func handleFobidden(router *Router) {
 	router.Use(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
+	})
+}
+
+func handleStore(router *Router, config *Config, storage *Storage) {
+	router.Get("/~/getStore", func(w http.ResponseWriter, r *http.Request) {
+		place := NormalizePath(r.URL.Query().Get("place"))
+
+		osFullPath, err := config.GetPlaceOsPath(place)
+		if err != nil {
+			w.WriteHeader(403)
+			return
+		}
+
+		stat, err := os.Stat(osFullPath)
+		if err != nil {
+			HandleOpenFileError(err, w)
+			return
+		}
+
+		if !stat.IsDir() {
+			w.WriteHeader(403)
+			return
+		}
+
+		apiCall(w, func() (*RootStore, error) {
+			store := GetIndexStore(config, storage, place, osFullPath)
+
+			return store, nil
+		})
 	})
 }
 
