@@ -16,12 +16,14 @@ import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {api} from '../../../tools/api';
 import {DialogSetDataCtx} from './DialogProvider/DialogSetDataCtx';
 import {DialogType} from './DialogProvider/types';
+import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 
 const SelectHeader: FC = () => {
   const {dir, files} = useContext(RootStoreCtx);
   const selected = useContext(SelectSelectedCtx);
   const changeSelected = useContext(SelectChangeSelectedCtx);
   const setDialog = useContext(DialogSetDataCtx);
+  const updateStore = useContext(RootStoreUpdateCtx);
 
   const handleSelectAll = useCallback(
     (e: ChangeEvent, checked: boolean) => {
@@ -63,13 +65,15 @@ const SelectHeader: FC = () => {
           names: selected,
         });
 
-        location.reload();
+        await updateStore();
+
+        handleClose();
       },
       onCancel: () => {
         handleClose();
       },
     });
-  }, [dir, selected, setDialog, handleClose]);
+  }, [dir, selected, setDialog, handleClose, updateStore]);
 
   return (
     <Paper square={true} sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1}}>

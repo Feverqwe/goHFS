@@ -43,7 +43,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir} = file;
   const selectMode = useContext(SelectModeCtx);
-  const [removed, setRemoved] = React.useState(false);
   const [renameDialog, setRenameDialog] = React.useState(false);
 
   const ext = useMemo(() => Path.extname(name).toLowerCase(), [name]);
@@ -125,10 +124,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     setMenuAnchorEl(null);
   }, []);
 
-  const handleRemoved = React.useCallback(() => {
-    setRemoved(true);
-  }, []);
-
   const handleRename = React.useCallback(() => {
     setRenameDialog(true);
   }, []);
@@ -156,10 +151,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   }, [dateStr, name, sizeStr]);
 
   const iosContextMenuEvents = useContextMenuFix(handleCtxMenu);
-
-  if (removed) {
-    return null;
-  }
 
   return (
     <>
@@ -207,7 +198,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
         <FileMenu
           anchorEl={menuAnchorEl}
           onRename={handleRename}
-          onRemoved={handleRemoved}
           onClose={handleMenuClose}
           file={file}
           dir={dir}

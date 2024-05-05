@@ -10,11 +10,11 @@ import {api} from '../../tools/api';
 
 const Folder: FC = () => {
   const store = useContext(RootStoreCtx);
-  const [files] = useState(store.files);
   const [showSortDialog, setShowSortDialog] = useState(false);
   const [sortKey, setSortKey] = useState(() => {
     return prepDirSort(store.dirSort) ?? {key: 'ctime', revers: true};
   });
+  const files = useMemo(() => store.files, [store.files]);
 
   const handleSortBtn = useCallback(() => {
     setShowSortDialog(true);

@@ -1,6 +1,8 @@
-import React, {FC, ReactNode} from 'react';
+import React, {FC, ReactNode, useCallback, useMemo, useState} from 'react';
 import {RootStoreCtx} from './RootStoreCtx';
 import {RootStore} from '../../types';
+import {RootStoreUpdateCtx} from './RootStoreUpdateCtx';
+import {api} from '../../tools/api';
 
 declare const ROOT_STORE: RootStore | undefined;
 
@@ -11,7 +13,21 @@ interface RootStoreProviderProps {
 }
 
 const RootStoreProvider: FC<RootStoreProviderProps> = ({children}) => {
-  return <RootStoreCtx.Provider value={rootStore}>{children}</RootStoreCtx.Provider>;
+  const [currentStore, setCurrentStore] = useState<RootStore>(rootStore);
+  const place = useMemo(() => currentStore.dir, [currentStore.dir]);
+
+  const handleUpdate = useCallback(async () => {
+    const store = await api.getStore({
+      place,
+    });
+    setCurrentStore(store);
+  }, [place]);
+
+  return (
+    <RootStoreUpdateCtx.Provider value={handleUpdate}>
+      <RootStoreCtx.Provider value={currentStore}>{children}</RootStoreCtx.Provider>
+    </RootStoreUpdateCtx.Provider>
+  );
 };
 
 export default RootStoreProvider;

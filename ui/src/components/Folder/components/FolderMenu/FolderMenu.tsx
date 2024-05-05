@@ -10,6 +10,7 @@ import Path from 'path-browserify';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {DirSort, FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
+import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
 
 interface FolderMenuProps {
   anchorEl: Element;
@@ -20,6 +21,7 @@ interface FolderMenuProps {
 
 const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClick, onClose}) => {
   const store = useContext(RootStoreCtx);
+  const updateStore = useContext(RootStoreUpdateCtx);
 
   const menu = useMemo(
     () => [
@@ -80,13 +82,14 @@ const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClic
           await api.showHidden({
             show: !store.showHidden,
           });
-          location.reload();
+
+          await updateStore();
 
           onClose();
         },
       },
     ],
-    [onClose, store, sortedFiles, onAddressesClick],
+    [onClose, store, sortedFiles, onAddressesClick, updateStore],
   );
 
   return (

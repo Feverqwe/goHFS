@@ -1,4 +1,5 @@
 import {handleApiResponse} from './apiRequest';
+import {RootStore} from '../types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -78,5 +79,9 @@ export const api = {
   showHidden: action<{show: boolean}, boolean>({
     method: 'POST',
     path: '/~/showHidden',
+  }),
+  getStore: action<{place: string}, RootStore>({
+    method: 'GET',
+    path: '/~/getStore',
   }),
 };

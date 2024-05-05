@@ -95,7 +95,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       autoplay: false,
     });
     // fix for safari
-    (player as any).play = () => {
+    (player as {play: () => void}).play = () => {
       player.$video.play();
     };
 

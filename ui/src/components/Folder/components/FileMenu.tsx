@@ -20,6 +20,7 @@ import {ExtAction, FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
 import {SelectChangeSelectedCtx} from './SelectProvider/SelectCtx';
 import {formatUrl, unicLast} from '../utils';
+import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 
 const MyListItemIcon = styled(ListItemIcon)(() => {
   return {
@@ -45,7 +46,6 @@ interface FileDialogProps {
   file: FileInfo;
   dir: string;
   onClose: () => void;
-  onRemoved: () => void;
   onRename: () => void;
   anchorEl: Element;
   customActions: ExtAction[];
@@ -56,12 +56,12 @@ const FileMenu: FC<FileDialogProps> = ({
   writable,
   file,
   dir,
-  onRemoved,
   onRename,
   onClose,
   customActions,
 }) => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
+  const updateStore = useContext(RootStoreUpdateCtx);
 
   const menu = useMemo<(Item | DividerItem)[]>(() => {
     return [
@@ -114,12 +114,12 @@ const FileMenu: FC<FileDialogProps> = ({
                   name: file.name,
                   isDir: file.isDir,
                 });
-                onRemoved();
+                await updateStore();
               },
             },
           ]),
     ];
-  }, [dir, file, onRemoved, onRename, changeSelected, customActions, writable]);
+  }, [dir, file, updateStore, onRename, changeSelected, customActions, writable]);
 
   if (!menu.length) return null;
 

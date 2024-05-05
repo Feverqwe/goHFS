@@ -25,6 +25,7 @@ import DropZone from './DropZone';
 import AddressesDialog from './AddressesDialog';
 import SelectHeader from './SelectHeader';
 import FolderMenu from './FolderMenu/FolderMenu';
+import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 
 const RootSx = {
   width: '100%',
@@ -52,6 +53,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
   const [showAddressesDialog, setShowAddressesDialog] = useState(false);
   const {dialog, handleUpload} = useUpload(store.dir);
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
+  const updateStore = useContext(RootStoreUpdateCtx);
 
   const handleAddressesBtn = useCallback(() => {
     setShowAddressesDialog(true);
@@ -87,9 +89,9 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     return parts.map((p) => encodeURIComponent(p)).join('/') || '/';
   }, [store]);
 
-  const handleReload = useCallback(() => {
-    location.reload();
-  }, []);
+  const handleReload = useCallback(async () => {
+    await updateStore();
+  }, [updateStore]);
 
   return (
     <>
