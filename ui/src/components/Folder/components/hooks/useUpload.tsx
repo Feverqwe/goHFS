@@ -1,19 +1,14 @@
 import * as React from 'react';
-import {SyntheticEvent, useCallback, useState} from 'react';
-import {
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  LinearProgress,
-} from '@mui/material';
+import {SyntheticEvent, useCallback, useContext, useState} from 'react';
+import {Box, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import {ApiError} from '../../../../tools/apiRequest';
 import MyDialog from '../MyDialog';
 import Report from '../Report';
 import {api} from '../../../../tools/api';
+import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
+import ActionButton from '../ActionButton/ActionButton';
 
 export interface UploadFileResult {
   ok: boolean;
@@ -34,6 +29,7 @@ const useUpload = (dir: string) => {
   const [isRetry, setRetry] = useState(false);
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
+  const updateStore = useContext(RootStoreUpdateCtx);
 
   const resetState = useCallback(() => {
     setReport(null);
@@ -65,13 +61,14 @@ const useUpload = (dir: string) => {
   );
 
   const handleClose = useCallback(
-    (e: SyntheticEvent, reason?: string) => {
+    async (e: SyntheticEvent, reason?: string) => {
       e.preventDefault();
       if (!ok && reason === 'backdropClick') return;
+      await updateStore();
       setVisible(false);
       resetState();
     },
-    [ok, resetState],
+    [ok, resetState, updateStore],
   );
 
   let dialog = null;
@@ -101,7 +98,7 @@ const useUpload = (dir: string) => {
         </DialogContent>
         {isDone ? (
           <DialogActions>
-            <Button onClick={handleClose}>Close</Button>
+            <ActionButton onSubmit={handleClose}>Close</ActionButton>
           </DialogActions>
         ) : null}
       </MyDialog>
