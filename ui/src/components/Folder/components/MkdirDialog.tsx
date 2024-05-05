@@ -1,22 +1,10 @@
 import * as React from 'react';
-import {FormEvent, SyntheticEvent, useContext} from 'react';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Tooltip,
-} from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
+import {SyntheticEvent, useContext} from 'react';
+import {Button, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
 import MyDialog from './MyDialog';
-import {FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
-import ActionButton from './ActionButton/ActionButton';
 import useActionButton from '../hooks/useActionButton';
-import {RootStoreUpdateCtx} from "../../RootStore/RootStoreUpdateCtx";
+import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 
 interface MkdirDialogProps {
   dir: string;
@@ -63,11 +51,13 @@ const MkdirDialog: React.FC<MkdirDialogProps> = ({dir, onClose}) => {
             InputProps={{readOnly: isLoading}}
             label="Name"
             variant="standard"
+            required={true}
+            autoFocus={true}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
-          <Button type={'submit'} disabled={isLoading}>
+          <Button type="submit" disabled={isLoading}>
             Create {stateNode}
           </Button>
         </DialogActions>

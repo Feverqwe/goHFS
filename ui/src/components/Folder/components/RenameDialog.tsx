@@ -71,6 +71,8 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
             InputProps={{readOnly: isLoading}}
             label="New name"
             variant="standard"
+            required={true}
+            autoFocus={true}
           />
         </DialogContent>
         <DialogActions>

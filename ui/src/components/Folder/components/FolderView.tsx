@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {FC, memo, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
 import {
-  Box, CircularProgress,
+  Box,
   IconButton,
   List,
   ListItemButton,
@@ -26,10 +26,7 @@ import AddressesDialog from './AddressesDialog';
 import SelectHeader from './SelectHeader';
 import FolderMenu from './FolderMenu/FolderMenu';
 import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
-import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
-import MkdirDialog from "./MkdirDialog";
-import RefreshIcon from '@mui/icons-material/Refresh';
-import {RootStoreStateCtx} from "../../RootStore/RootStoreStateCtx";
+import MkdirDialog from './MkdirDialog';
 
 const RootSx = {
   width: '100%',
@@ -58,7 +55,6 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
   const {dialog, handleUpload} = useUpload(store.dir);
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
   const updateStore = useContext(RootStoreUpdateCtx);
-  const isUpdateState = useContext(RootStoreStateCtx);
   const [showMkdirDialog, setShowMkdirDialog] = useState(false);
 
   const handleAddressesBtn = useCallback(() => {
@@ -115,18 +111,10 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
                 {store.dir}
               </Typography>
               {store.isWritable ? (
-                <>
-                  <IconButton title="Upload" onClick={handleUploadBtn} size="small">
-                    <UploadIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton title="Create directory" onClick={handleMkdirDialogBtn} size="small">
-                    <CreateNewFolderIcon fontSize="small" />
-                  </IconButton>
-                </>
+                <IconButton title="Upload" onClick={handleUploadBtn} size="small">
+                  <UploadIcon fontSize="small" />
+                </IconButton>
               ) : null}
-              <IconButton title="Refresh" onClick={handleReload} size="small">
-                {isUpdateState ? <CircularProgress size={20}/> : <RefreshIcon fontSize="small" />}
-              </IconButton>
               <IconButton title="Sort" onClick={onShowSortDialog} size="small">
                 <SortIcon fontSize="small" />
               </IconButton>
@@ -166,9 +154,10 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
           onClose={handleCloseMenu}
           sortedFiles={files}
           onAddressesClick={handleAddressesBtn}
+          onMkdirClick={handleMkdirDialogBtn}
         />
       ) : null}
-      {showMkdirDialog && <MkdirDialog onClose={handleCloseDialog} dir={store.dir}/>}
+      {showMkdirDialog && <MkdirDialog onClose={handleCloseDialog} dir={store.dir} />}
     </>
   );
 };

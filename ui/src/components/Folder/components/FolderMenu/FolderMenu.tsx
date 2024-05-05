@@ -7,6 +7,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {QrCode2 as QrCode2Icon} from '@mui/icons-material';
 import Path from 'path-browserify';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {DirSort, FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
@@ -17,14 +19,41 @@ interface FolderMenuProps {
   onClose: () => void;
   sortedFiles: FileInfo[];
   onAddressesClick: () => void;
+  onMkdirClick: () => void;
 }
 
-const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClick, onClose}) => {
+const FolderMenu: FC<FolderMenuProps> = ({
+  anchorEl,
+  sortedFiles,
+  onMkdirClick,
+  onAddressesClick,
+  onClose,
+}) => {
   const store = useContext(RootStoreCtx);
   const updateStore = useContext(RootStoreUpdateCtx);
 
   const menu = useMemo(
     () => [
+      {
+        id: 'mkdir',
+        title: 'Create directory',
+        icon: <CreateNewFolderIcon />,
+        onClick: () => {
+          onMkdirClick();
+
+          onClose();
+        },
+      },
+      {
+        id: 'refresh',
+        title: 'Refresh',
+        icon: <RefreshIcon />,
+        onClick: async () => {
+          await updateStore();
+
+          onClose();
+        },
+      },
       {
         id: 'playlist',
         title: 'Get playlist',
@@ -89,7 +118,7 @@ const FolderMenu: FC<FolderMenuProps> = ({anchorEl, sortedFiles, onAddressesClic
         },
       },
     ],
-    [onClose, store, sortedFiles, onAddressesClick, updateStore],
+    [onClose, store, sortedFiles, onAddressesClick, updateStore, onMkdirClick],
   );
 
   return (

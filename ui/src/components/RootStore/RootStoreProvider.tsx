@@ -3,7 +3,6 @@ import {RootStoreCtx} from './RootStoreCtx';
 import {RootStore} from '../../types';
 import {RootStoreUpdateCtx} from './RootStoreUpdateCtx';
 import {api} from '../../tools/api';
-import {RootStoreStateCtx} from "./RootStoreStateCtx";
 
 declare const ROOT_STORE: RootStore | undefined;
 
@@ -15,26 +14,18 @@ interface RootStoreProviderProps {
 
 const RootStoreProvider: FC<RootStoreProviderProps> = ({children}) => {
   const [currentStore, setCurrentStore] = useState<RootStore>(rootStore);
-  const [isUpdate, setUpdate] = useState(false);
   const place = useMemo(() => currentStore.dir, [currentStore.dir]);
 
   const handleUpdate = useCallback(async () => {
-    try {
-      setUpdate(true);
-      const store = await api.getStore({
-        place,
-      });
-      setCurrentStore(store);
-    } finally {
-      setUpdate(false);
-    }
+    const store = await api.getStore({
+      place,
+    });
+    setCurrentStore(store);
   }, [place]);
 
   return (
     <RootStoreUpdateCtx.Provider value={handleUpdate}>
-      <RootStoreStateCtx.Provider value={isUpdate}>
-        <RootStoreCtx.Provider value={currentStore}>{children}</RootStoreCtx.Provider>
-      </RootStoreStateCtx.Provider>
+      <RootStoreCtx.Provider value={currentStore}>{children}</RootStoreCtx.Provider>
     </RootStoreUpdateCtx.Provider>
   );
 };
