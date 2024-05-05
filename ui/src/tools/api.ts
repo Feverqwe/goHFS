@@ -57,6 +57,10 @@ export const api = {
     method: 'POST',
     path: '/~/rename',
   }),
+  mkdir: action<{place: string; name: string}, string>({
+    method: 'POST',
+    path: '/~/mkdir',
+  }),
   uploadInit: action<
     {fileName: string; size: number; place: string},
     {key: string; chunkSize: number}
