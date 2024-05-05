@@ -355,9 +355,42 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		NewName string `json:"newName"`
 	}
 
+	type MkdirPayload struct {
+		Place   string `json:"place"`
+		Name    string `json:"name"`
+		NewName string `json:"newName"`
+	}
+
 	type ShowHiddenPayload struct {
 		Show bool `json:"show"`
 	}
+
+	router.Post("/~/mkdir", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[MkdirPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			rawPlace := payload.Place
+			rawName := payload.Name
+			rPath := NormalizePath(path.Join(rawPlace, rawName))
+
+			osPath, err := config.GetPlaceOsPath(rPath)
+			if err != nil {
+				return "", err
+			}
+
+			isWritable := config.IsWritable(rPath)
+			if !isWritable {
+				return "", errors.New("place is not writable")
+			}
+
+			err = os.Mkdir(osPath, 0600)
+
+			return "ok", err
+		})
+	})
 
 	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
