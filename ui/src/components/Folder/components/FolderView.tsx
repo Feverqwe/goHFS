@@ -87,6 +87,10 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     return parts.map((p) => encodeURIComponent(p)).join('/') || '/';
   }, [store]);
 
+  const handleReload = useCallback(() => {
+    location.reload();
+  }, []);
+
   return (
     <>
       <List
@@ -127,6 +131,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
             dir={store.dir}
             file={file}
             writable={store.isWritable}
+            onReload={handleReload}
           />
         ))}
       </List>

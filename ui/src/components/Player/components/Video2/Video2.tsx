@@ -96,7 +96,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     });
     // fix for safari
     (player as any).play = () => {
-      player.$video.play()
+      player.$video.play();
     };
 
     const ui = OUI({

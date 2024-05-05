@@ -18,10 +18,11 @@ import {api} from '../../../tools/api';
 interface RenameDialogProps {
   dir: string;
   file: FileInfo;
+  onSuccess: () => Promise<void> | void;
   onClose: () => void;
 }
 
-const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
+const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClose}) => {
   const [isLoading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<null | Error>(null);
 
@@ -37,7 +38,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const {elements} = e.currentTarget;
-      const newName = (elements as HTMLFormControlsCollection & Record<string, HTMLInputElement>)
+      const newName = (elements as HTMLFormControlsCollection & {new_name: HTMLInputElement})
         .new_name.value;
       setLoading(true);
       try {
@@ -46,6 +47,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
           name: file.name,
           newName,
         });
+        await onSuccess();
         onClose();
       } catch (err) {
         setError(err as Error);
@@ -53,7 +55,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
         setLoading(false);
       }
     },
-    [dir, file.name, onClose],
+    [dir, file.name, onSuccess, onClose],
   );
 
   return (
@@ -61,15 +63,6 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onClose}) => {
       <form onSubmit={handleRename}>
         <DialogTitle>Rename</DialogTitle>
         <DialogContent>
-          <TextField
-            margin="dense"
-            name="name"
-            fullWidth={true}
-            defaultValue={file.name}
-            InputProps={{readOnly: true}}
-            label="Original name"
-            variant="standard"
-          />
           <TextField
             margin="dense"
             name="new_name"

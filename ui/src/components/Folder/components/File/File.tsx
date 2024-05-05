@@ -19,7 +19,7 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
 import {formatUrl} from '../../utils';
-import useContextMenuFix from "../hooks/useContextMenuFix";
+import useContextMenuFix from '../hooks/useContextMenuFix';
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -29,6 +29,7 @@ interface FileProps {
   file: FileInfo;
   dir: string;
   writable: boolean;
+  onReload: () => Promise<void> | void;
 }
 
 const SubLine = styled('div')(() => {
@@ -38,7 +39,7 @@ const SubLine = styled('div')(() => {
   };
 });
 
-const File: FC<FileProps> = ({file, dir, writable}) => {
+const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir} = file;
   const selectMode = useContext(SelectModeCtx);
@@ -166,7 +167,12 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
         <Box display="flex" alignItems="stretch">
           {selectMode && <SelectBox name={name} />}
           <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-            <IconButton color="primary" onClick={handleHandleClick} onContextMenu={handleCtxMenu} {...iosContextMenuEvents}>
+            <IconButton
+              color="primary"
+              onClick={handleHandleClick}
+              onContextMenu={handleCtxMenu}
+              {...iosContextMenuEvents}
+            >
               <Icon />
             </IconButton>
           </Box>
@@ -181,7 +187,13 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
           {selectMode && <SelectBox name={name} />}
           <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
             <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-              <Box p={1} display="flex" alignItems="center" onContextMenu={handleCtxMenu} {...iosContextMenuEvents}>
+              <Box
+                p={1}
+                display="flex"
+                alignItems="center"
+                onContextMenu={handleCtxMenu}
+                {...iosContextMenuEvents}
+              >
                 <Icon />
               </Box>
             </Box>
@@ -203,7 +215,9 @@ const File: FC<FileProps> = ({file, dir, writable}) => {
           writable={writable}
         />
       ) : null}
-      {renameDialog ? <RenameDialog onClose={handleCloseDialog} dir={dir} file={file} /> : null}
+      {renameDialog ? (
+        <RenameDialog onClose={handleCloseDialog} dir={dir} file={file} onSuccess={onReload} />
+      ) : null}
     </>
   );
 };
