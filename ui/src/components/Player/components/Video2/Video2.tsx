@@ -15,6 +15,7 @@ import {SHORT_SKIP, SKIP} from './constants';
 
 const PLAYER_MPB = 'player.mpb';
 const DEBUG_EVENTS = false;
+const SAVE_INTERVAL = 3 * 1000;
 
 const CtrTag = styled('div')(() => {
   return {
@@ -382,7 +383,6 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
 
-    const SAVE_INTERVAL = 5 * 1000;
     let isSeeking = false;
     let isPlaying = false;
     const sid = getSidV2(url);
