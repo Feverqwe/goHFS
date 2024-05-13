@@ -414,14 +414,14 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     });
     player.on('seeked', () => {
       isSeeking = false;
-      lastSyncAt = Date.now() + SAVE_INTERVAL;
+      lastSyncAt = Date.now();
     });
     player.on('pause', () => {
       isPlaying = false;
     });
     player.on('play', () => {
       isPlaying = true;
-      lastSyncAt = Date.now() + SAVE_INTERVAL;
+      lastSyncAt = Date.now();
     });
 
     const updateSettings = () => {
