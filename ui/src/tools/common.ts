@@ -13,5 +13,5 @@ export function getSidV2(url: string) {
 }
 
 export function getProgressKey(path: string) {
-  return `object-${path}`;
+  return `progress-${path}`;
 }
