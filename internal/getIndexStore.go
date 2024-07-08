@@ -13,6 +13,14 @@ func GetIndexStore(config *Config, storage *Storage, place string, fullPath stri
 
 	linksSet := make(map[string]bool)
 
+	setProgress := func(f *File) {
+		if rawProgress, ok := storage.GetKey(getProgressKey(path.Join(place, f.Name))); ok {
+			if progress, ok := rawProgress.(int64); ok {
+				f.Progress = progress
+			}
+		}
+	}
+
 	for _, l := range config.Links {
 		dir := path.Dir(l.Place)
 		if place == dir {
@@ -35,6 +43,9 @@ func GetIndexStore(config *Config, storage *Storage, place string, fullPath stri
 			if !showHidden && isHiddenName(f.Name) {
 				continue
 			}
+
+			setProgress(&f)
+
 			files = append(files, f)
 		}
 	}
@@ -68,6 +79,8 @@ func GetIndexStore(config *Config, storage *Storage, place string, fullPath stri
 				}
 			}
 		}
+
+		setProgress(&file)
 
 		files = append(files, file)
 	}

@@ -27,3 +27,7 @@ func isHiddenName(name string) bool {
 	}
 	return false
 }
+
+func getProgressKey(path string) string {
+	return "progress-" + path
+}
