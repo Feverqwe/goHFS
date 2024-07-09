@@ -3,7 +3,9 @@ package internal
 import (
 	"net/http"
 	"os"
+	"path"
 	"runtime"
+	"strings"
 )
 
 func HandleOpenFileError(err error, writer http.ResponseWriter) {
@@ -28,6 +30,7 @@ func isHiddenName(name string) bool {
 	return false
 }
 
-func getProgressKey(path string) string {
-	return "progress-" + path
+func getProgressKey(p string) string {
+	ext := path.Ext(p)
+	return "progress-" + strings.TrimSuffix(p, ext)
 }

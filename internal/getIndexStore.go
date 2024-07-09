@@ -14,9 +14,10 @@ func GetIndexStore(config *Config, storage *Storage, place string, fullPath stri
 	linksSet := make(map[string]bool)
 
 	setProgress := func(f *File) {
-		if rawProgress, ok := storage.GetKey(getProgressKey(path.Join(place, f.Name))); ok {
-			if progress, ok := rawProgress.(int64); ok {
-				f.Progress = progress
+		key := getProgressKey(path.Join(place, f.Name))
+		if rawProgress, ok := storage.GetKey(key); ok {
+			if progress, ok := rawProgress.(float64); ok {
+				f.Progress = int64(progress)
 			}
 		}
 	}
