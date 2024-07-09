@@ -3,6 +3,7 @@ export interface FileInfo {
   ctime: number;
   name: string;
   isDir: boolean;
+  progress: number;
 }
 
 export interface ExtAction {

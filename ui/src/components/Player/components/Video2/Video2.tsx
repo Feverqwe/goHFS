@@ -387,7 +387,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     let isSeeking = false;
     let isPlaying = false;
     const sid = getSidV2(url);
-    const progressKey = getProgressKey(sid);
+    const progressKey = getProgressKey(decodeURIComponent(sid));
     let lastSyncAt = 0;
     player.on('timeupdate', async () => {
       const now = Date.now();

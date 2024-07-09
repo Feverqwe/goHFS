@@ -8,7 +8,7 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
   Movie as MovieIcon,
 } from '@mui/icons-material';
-import {Box, CardActionArea, IconButton, ListItemText, styled} from '@mui/material';
+import {Box, CardActionArea, IconButton, LinearProgress, ListItemText, styled} from '@mui/material';
 import Path from 'path-browserify';
 import {filesize} from 'filesize';
 import mime from 'mime';
@@ -39,9 +39,15 @@ const SubLine = styled('div')(() => {
   };
 });
 
+const ProgressCtr = styled('div')(() => {
+  return {
+    marginBottom: '-4px',
+  };
+});
+
 const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const store = useContext(RootStoreCtx);
-  const {size, ctime, name, isDir} = file;
+  const {size, ctime, name, isDir, progress} = file;
   const selectMode = useContext(SelectModeCtx);
   const [renameDialog, setRenameDialog] = React.useState(false);
 
@@ -139,10 +145,17 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
       <ListItemText
         primary={name}
         secondary={
-          <SubLine>
-            <div>{dateStr}</div>
-            <div>{sizeStr}</div>
-          </SubLine>
+          <>
+            <SubLine>
+              <div>{dateStr}</div>
+              <div>{sizeStr}</div>
+            </SubLine>
+            {progress > 0 && (
+              <ProgressCtr>
+                <LinearProgress variant="determinate" value={progress} />
+              </ProgressCtr>
+            )}
+          </>
         }
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
