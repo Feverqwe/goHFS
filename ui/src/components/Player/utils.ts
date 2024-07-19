@@ -1,5 +1,6 @@
 import {getUrlParams} from '../../tools/urlParams';
-export {getSidV2} from "../../tools/common";
+
+export {getSidV2} from '../../tools/common';
 
 export function getParamsFromUrl() {
   const {url: rawUrl} = getUrlParams();

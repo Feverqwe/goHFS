@@ -161,7 +161,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
         sx={NameSx}
       />
     );
-  }, [dateStr, name, sizeStr]);
+  }, [progress, dateStr, name, sizeStr]);
 
   const iosContextMenuEvents = useContextMenuFix(handleCtxMenu);
 

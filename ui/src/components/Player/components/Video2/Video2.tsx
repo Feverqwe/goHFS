@@ -12,7 +12,7 @@ import {TITLE} from '../../constants';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {getOption, setOption} from '../../../Folder/utils';
 import {SHORT_SKIP, SKIP} from './constants';
-import {getProgressKey} from "../../../../tools/common";
+import {getProgressKey} from '../../../../tools/common';
 
 const PLAYER_MPB = 'player.mpb';
 const DEBUG_EVENTS = false;
@@ -405,7 +405,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           // console.log('save', player.currentTime);
           await api.storageSet({
             [sid]: player.currentTime,
-            [progressKey]: Math.trunc(100 / player.duration * player.currentTime) || undefined,
+            [progressKey]: Math.trunc((100 / player.duration) * player.currentTime) || undefined,
           });
         } catch (err) {
           console.error('Storage.set error: %O', err);

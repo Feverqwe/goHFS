@@ -4,6 +4,7 @@ import {Button} from '@mui/material';
 import useActionButton from '../../hooks/useActionButton';
 
 export type ActionButtonProps = Omit<ButtonProps, 'onSubmit' | 'onClick'> & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (event: SyntheticEvent<any, any>) => Promise<void>;
 };
 
