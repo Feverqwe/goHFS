@@ -28,6 +28,7 @@
     "@oplayer/ui": "1.2.34",
     "filesize": "^10.0.5",
     "hls.js": "^1.5.2",
+    "lodash": "^4.17.21",
     "mime": "^4.0.1",
     "path-browserify": "^1.0.1",
     "qrcode": "^1.5.0",
@@ -35,6 +36,7 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.7",
     "@types/path-browserify": "^1.0.0",
     "@types/react-dom": "^18.0.1",
     "@typescript-eslint/eslint-plugin": "^7.16.1",

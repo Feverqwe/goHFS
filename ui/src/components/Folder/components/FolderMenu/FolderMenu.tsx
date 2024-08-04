@@ -13,6 +13,7 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {DirSort, FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
 import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
+import DataUsageIcon from '@mui/icons-material/DataUsage';
 
 interface FolderMenuProps {
   anchorEl: Element;
@@ -20,6 +21,7 @@ interface FolderMenuProps {
   sortedFiles: FileInfo[];
   onAddressesClick: () => void;
   onMkdirClick: () => void;
+  onDiskUsageClick: () => void;
 }
 
 const FolderMenu: FC<FolderMenuProps> = ({
@@ -27,6 +29,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
   sortedFiles,
   onMkdirClick,
   onAddressesClick,
+                                           onDiskUsageClick,
   onClose,
 }) => {
   const store = useContext(RootStoreCtx);
@@ -79,6 +82,16 @@ const FolderMenu: FC<FolderMenuProps> = ({
           a.download = `${dirname}.m3u8`;
           a.click();
           URL.revokeObjectURL(url);
+
+          onClose();
+        },
+      },
+      {
+        id: 'diskUsage',
+        title: 'Disk usage',
+        icon: <DataUsageIcon />,
+        onClick: () => {
+          onDiskUsageClick();
 
           onClose();
         },

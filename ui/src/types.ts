@@ -27,3 +27,16 @@ export interface RootStore {
   dirSort: DirSort | null;
   showHidden?: boolean;
 }
+
+export interface DiskUsage {
+  path: string;
+  fstype: string;
+  total: number;
+  free: number;
+  used: number;
+  usedPercent: number;
+  inodesTotal: number;
+  inodesUsed: number;
+  inodesFree: number;
+  inodesUsedPercent: number;
+}

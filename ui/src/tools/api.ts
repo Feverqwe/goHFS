@@ -1,5 +1,5 @@
 import {handleApiResponse} from './apiRequest';
-import {RootStore} from '../types';
+import {DiskUsage, RootStore} from '../types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -75,6 +75,10 @@ export const api = {
   addresses: action<void, string[]>({
     method: 'GET',
     path: '/~/addresses',
+  }),
+  diskUsage: action<{place: string}, DiskUsage>({
+    method: 'GET',
+    path: '/~/diskUsage',
   }),
   reloadConfig: action<void, string>({
     method: 'POST',

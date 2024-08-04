@@ -27,6 +27,7 @@ import SelectHeader from './SelectHeader';
 import FolderMenu from './FolderMenu/FolderMenu';
 import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 import MkdirDialog from './MkdirDialog';
+import DiskUsageDialog from "./DiskUsageDialog/DiskUsageDialog";
 
 const RootSx = {
   width: '100%',
@@ -56,6 +57,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
   const updateStore = useContext(RootStoreUpdateCtx);
   const [showMkdirDialog, setShowMkdirDialog] = useState(false);
+  const [showDiskUsageDialog, setShowDiskUsageDialog] = useState(false);
 
   const handleAddressesBtn = useCallback(() => {
     setShowAddressesDialog(true);
@@ -77,9 +79,14 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     setShowMkdirDialog(true);
   }, []);
 
+  const handleDiskUsageDialogBtn = useCallback(() => {
+    setShowDiskUsageDialog(true);
+  }, []);
+
   const handleCloseDialog = useCallback(() => {
     setShowAddressesDialog(false);
     setShowMkdirDialog(false);
+    setShowDiskUsageDialog(false);
   }, []);
 
   const handleCloseMenu = useCallback(() => {
@@ -146,6 +153,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
       </List>
       {store.isWritable && <DropZone onUpload={handleUpload} />}
       {showAddressesDialog && <AddressesDialog onClose={handleCloseDialog} />}
+      {showDiskUsageDialog && <DiskUsageDialog onClose={handleCloseDialog} />}
       {dialog}
       {selectMode && <SelectHeader />}
       {menuAnchorEl ? (
@@ -155,6 +163,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
           sortedFiles={files}
           onAddressesClick={handleAddressesBtn}
           onMkdirClick={handleMkdirDialogBtn}
+          onDiskUsageClick={handleDiskUsageDialogBtn}
         />
       ) : null}
       {showMkdirDialog && <MkdirDialog onClose={handleCloseDialog} dir={store.dir} />}
