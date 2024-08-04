@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/shirou/gopsutil/v4/disk"
 )
 
 type JsonFailResponse struct {
@@ -36,6 +37,7 @@ func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool, d
 	handleStore(apiRouter, config, storage)
 	handleAction(apiRouter, config, doReload)
 	handleInterfaces(apiRouter, config)
+	handleDiskUsage(apiRouter, config)
 	handleFobidden(apiRouter)
 
 	router.All("^/~/", gzipHandler.ServeHTTP)
@@ -300,6 +302,36 @@ func handleInterfaces(router *Router, config *Config) {
 		apiCall(w, func() ([]string, error) {
 			addresses := GetAddresses(config.Port)
 			return addresses, nil
+		})
+	})
+}
+
+func handleDiskUsage(router *Router, config *Config) {
+	type DiskUsage struct {
+		disk.UsageStat
+		Path string `json:"path"`
+	}
+
+	router.Get("/~/diskUsage", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (*DiskUsage, error) {
+			place := NormalizePath(r.URL.Query().Get("place"))
+
+			osFullPath, err := config.GetPlaceOsPath(place)
+			if err != nil {
+				return nil, err
+			}
+
+			usage, err := disk.Usage(osFullPath)
+			if err != nil {
+				return nil, err
+			}
+
+			resule := &DiskUsage{
+				UsageStat: *usage,
+				Path:      place,
+			}
+
+			return resule, nil
 		})
 	})
 }
