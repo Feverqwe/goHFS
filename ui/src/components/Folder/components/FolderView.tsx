@@ -27,7 +27,7 @@ import SelectHeader from './SelectHeader';
 import FolderMenu from './FolderMenu/FolderMenu';
 import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 import MkdirDialog from './MkdirDialog';
-import DiskUsageDialog from "./DiskUsageDialog/DiskUsageDialog";
+import DiskUsageDialog from './DiskUsageDialog/DiskUsageDialog';
 
 const RootSx = {
   width: '100%',

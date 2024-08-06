@@ -7,7 +7,8 @@ import {
   DialogContent,
   Input,
   LinearProgress,
-  Table, TableBody,
+  Table,
+  TableBody,
   TableCell,
   TableRow,
 } from '@mui/material';
@@ -53,7 +54,7 @@ const DiskUsageDialog = React.memo(({onClose}: DiskUsageDialogProps) => {
   const rows = useMemo(() => {
     if (!diskUsage) return null;
 
-    type Item = {key: keyof DiskUsage; field?: string, format?: (v:string | number) => ReactNode};
+    type Item = {key: keyof DiskUsage; field?: string; format?: (v: string | number) => ReactNode};
 
     const numberFormat = new Intl.NumberFormat();
     const percentFormat = new Intl.NumberFormat(undefined, {style: 'percent'});
@@ -65,24 +66,28 @@ const DiskUsageDialog = React.memo(({onClose}: DiskUsageDialogProps) => {
         {key: 'total', format: (v) => filesize(v)},
         {key: 'free', format: (v) => filesize(v)},
         {key: 'used', format: (v) => filesize(v)},
-        {key: 'usedPercent',
+        {
+          key: 'usedPercent',
           field: 'Used percent',
           format: (v) => (
             <>
-              {percentFormat.format(v as number / 100)}
+              {percentFormat.format((v as number) / 100)}
               <LinearProgress variant="determinate" value={v as number} />
             </>
-          )},
+          ),
+        },
         {key: 'inodesTotal', format: (v) => numberFormat.format(v as number)},
         {key: 'inodesUsed', format: (v) => numberFormat.format(v as number)},
         {key: 'inodesFree', format: (v) => numberFormat.format(v as number)},
-        {key: 'inodesUsedPercent',
+        {
+          key: 'inodesUsedPercent',
           format: (v) => (
             <>
-              {percentFormat.format(v as number / 100)}
+              {percentFormat.format((v as number) / 100)}
               <LinearProgress variant="determinate" value={v as number} />
             </>
-          )},
+          ),
+        },
       ] satisfies Item[]
     ).map(({key, field, format}: Item) => {
       const value = diskUsage[key];
@@ -111,9 +116,7 @@ const DiskUsageDialog = React.memo(({onClose}: DiskUsageDialogProps) => {
           diskUsage && (
             <Box justifyContent="space-around" display="flex" flexWrap="wrap">
               <Table>
-                <TableBody>
-                  {rows}
-                </TableBody>
+                <TableBody>{rows}</TableBody>
               </Table>
             </Box>
           )

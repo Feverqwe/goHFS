@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {FC, memo, SyntheticEvent, useContext, useMemo} from 'react';
+import {FC, memo, useContext, useMemo} from 'react';
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
@@ -19,7 +19,6 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
 import {formatUrl} from '../../utils';
-import useContextMenuFix from '../hooks/useContextMenuFix';
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -103,22 +102,13 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     }
   }, [name, isDir]);
 
-  const href = useMemo(() => {
+  const fileUrl = useMemo(() => {
     return Path.join(dir.split('/').map(encodeURIComponent).join('/'), encodeURIComponent(name));
   }, [dir, name]);
 
-  const handleHandleClick = React.useCallback(
-    (e: SyntheticEvent) => {
-      if (!handleUrl) return;
-      e.preventDefault();
-      const url = formatUrl(handleUrl, {dir, name: file.name});
-      const win = window.open(url, '_blank');
-      if (win) {
-        win.focus();
-      }
-    },
-    [handleUrl, dir, file.name],
-  );
+  const handledFileUrl = useMemo(() => {
+    return handleUrl ? formatUrl(handleUrl, {dir, name: file.name}) : undefined;
+  }, [file.name, dir, handleUrl]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -137,8 +127,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const handleCloseDialog = React.useCallback(() => {
     setRenameDialog(false);
   }, []);
-
-  const handleCtxMenu = handleMenuClick;
 
   const body = useMemo(() => {
     return (
@@ -163,50 +151,25 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     );
   }, [progress, dateStr, name, sizeStr]);
 
-  const iosContextMenuEvents = useContextMenuFix(handleCtxMenu);
+  const linkProps = useMemo(() => {
+    return handledFileUrl ? {href: handledFileUrl, target: '_blank'} : {href: fileUrl};
+  }, [handledFileUrl, fileUrl]);
 
   return (
     <>
-      {handleUrl ? (
-        <Box display="flex" alignItems="stretch">
-          {selectMode && <SelectBox name={name} />}
+      <Box display="flex" alignItems="stretch">
+        {selectMode && <SelectBox name={name} />}
+        <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} {...linkProps}>
           <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-            <IconButton
-              color="primary"
-              onClick={handleHandleClick}
-              onContextMenu={handleCtxMenu}
-              {...iosContextMenuEvents}
-            >
+            <IconButton color={handleUrl ? 'primary' : undefined} onClick={handleMenuClick}>
               <Icon />
             </IconButton>
           </Box>
-          <Box flexGrow={1}>
-            <CardActionArea sx={{p: 1}} href={href}>
-              {body}
-            </CardActionArea>
+          <Box flexGrow={1} sx={{p: 1}}>
+            {body}
           </Box>
-        </Box>
-      ) : (
-        <Box display="flex" alignItems="stretch">
-          {selectMode && <SelectBox name={name} />}
-          <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={href}>
-            <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-              <Box
-                p={1}
-                display="flex"
-                alignItems="center"
-                onContextMenu={handleCtxMenu}
-                {...iosContextMenuEvents}
-              >
-                <Icon />
-              </Box>
-            </Box>
-            <Box flexGrow={1} sx={{p: 1}}>
-              {body}
-            </Box>
-          </CardActionArea>
-        </Box>
-      )}
+        </CardActionArea>
+      </Box>
       {menuAnchorEl ? (
         <FileMenu
           anchorEl={menuAnchorEl}
@@ -216,6 +179,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
           dir={dir}
           customActions={customActions}
           writable={writable}
+          fileUrl={fileUrl}
         />
       ) : null}
       {renameDialog ? (
