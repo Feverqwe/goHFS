@@ -47,15 +47,13 @@ const FileMenu: FC<FileDialogProps> = ({
     const actions: (Item | DividerItem)[] = [];
 
     if (launchUrl) {
-      actions.push(
-        {
-          id: 'open',
-          label: 'Launch',
-          icon: <RocketLaunchIcon />,
-          href: launchUrl,
-          newPage: true,
-        },
-      );
+      actions.push({
+        id: 'open',
+        label: 'Launch',
+        icon: <RocketLaunchIcon />,
+        href: launchUrl,
+        newPage: true,
+      });
     }
 
     actions.push(

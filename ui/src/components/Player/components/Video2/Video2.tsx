@@ -1,10 +1,12 @@
 import React, {FC, useContext, useEffect, useRef, useState} from 'react';
-import {Player} from '@oplayer/core';
-import OUI, {Setting} from '@oplayer/ui';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
-import {isMobile as isMobilePlayer} from '@oplayer/core/src/utils/platform';
+// eslint-disable-next-line import/no-relative-packages
+import {isMobile as isMobilePlayer} from '../../../../../fork/@oplayer/core/dist/index.es';
+import type {Player as PlayerType} from '../../../../../fork/@oplayer/core/dist/src';
+import type OUIType from '../../../../../fork/@oplayer/ui/dist/src';
+import type {Setting} from '../../../../../fork/@oplayer/ui/dist/src';
 import {api} from '../../../../tools/api';
 import {getSidV2} from '../../utils';
 import {VideoMetadata} from '../../types';
@@ -13,6 +15,15 @@ import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {getOption, setOption} from '../../../Folder/utils';
 import {SHORT_SKIP, SKIP} from './constants';
 import {getProgressKey} from '../../../../tools/common';
+
+// eslint-disable-next-line global-require
+const {Player} = require('../../../../../fork/@oplayer/core/dist/index.es') as {
+  Player: typeof PlayerType;
+};
+// eslint-disable-next-line global-require
+const {default: OUI} = require('../../../../../fork/@oplayer/ui/dist/index.es') as {
+  default: typeof OUIType;
+};
 
 const PLAYER_MPB = 'player.mpb';
 const DEBUG_EVENTS = false;
@@ -224,11 +235,11 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           }
           case 'KeyF': {
             if (player.isFullScreen) {
-              player.exitFullscreen().catch((err) => {
+              player.exitFullscreen().catch((err: unknown) => {
                 console.error('exitFullscreen error: %O', err);
               });
             } else {
-              player.enterFullscreen().catch((err) => {
+              player.enterFullscreen().catch((err: unknown) => {
                 console.error('requestFullscreen error: %O', err);
               });
             }
@@ -361,7 +372,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       if (startTime > 0) {
         player.seek(startTime);
       }
-      player.play()?.catch((err) => {
+      player.play()?.catch((err: unknown) => {
         console.error('auto play error: %O', err);
       });
     };

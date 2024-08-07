@@ -1,0 +1,5 @@
+export declare const VIDEO_EVENTS: readonly ["abort", "canplay", "canplaythrough", "durationchange", "emptied", "ended", "error", "loadeddata", "loadedmetadata", "loadstart", "pause", "play", "playing", "progress", "ratechange", "seeked", "seeking", "stalled", "suspend", "timeupdate", "volumechange", "waiting", "encrypted", "waitingforkey", "enterpictureinpicture", "leavepictureinpicture"];
+export declare const PLAYER_EVENTS: readonly ["contextmenu"];
+export declare const OH_EVENTS: readonly ["loadedplugin", "videoqualitychange", "videosourcechange", "destroy"];
+export declare const EVENTS: readonly ["abort", "canplay", "canplaythrough", "durationchange", "emptied", "ended", "error", "loadeddata", "loadedmetadata", "loadstart", "pause", "play", "playing", "progress", "ratechange", "seeked", "seeking", "stalled", "suspend", "timeupdate", "volumechange", "waiting", "encrypted", "waitingforkey", "enterpictureinpicture", "leavepictureinpicture", "contextmenu", "loadedplugin", "videoqualitychange", "videosourcechange", "destroy"];
+//# sourceMappingURL=constants.d.ts.map

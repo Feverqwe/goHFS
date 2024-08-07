@@ -24,8 +24,6 @@
     "@emotion/styled": "^11.6.0",
     "@mui/icons-material": "^5.1.1",
     "@mui/material": "^5.1.1",
-    "@oplayer/core": "1.2.31",
-    "@oplayer/ui": "1.2.34",
     "filesize": "^10.0.5",
     "hls.js": "^1.5.2",
     "lodash": "^4.17.21",
