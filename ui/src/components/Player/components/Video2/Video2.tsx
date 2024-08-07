@@ -2,7 +2,6 @@ import React, {FC, useContext, useEffect, useRef, useState} from 'react';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
-// eslint-disable-next-line import/no-relative-packages
 import {isMobile as isMobilePlayer} from '../../../../../fork/@oplayer/core/dist/index.es';
 import type {Player as PlayerType} from '../../../../../fork/@oplayer/core/dist/src';
 import type OUIType from '../../../../../fork/@oplayer/ui/dist/src';

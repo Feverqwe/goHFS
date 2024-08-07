@@ -46,6 +46,8 @@ const FileMenu: FC<FileDialogProps> = ({
   const menu = useMemo<(Item | DividerItem)[]>(() => {
     const actions: (Item | DividerItem)[] = [];
 
+    const dividerItem: DividerItem = {isDivider: true};
+
     if (launchUrl) {
       actions.push({
         id: 'open',
@@ -56,31 +58,29 @@ const FileMenu: FC<FileDialogProps> = ({
       });
     }
 
-    actions.push(
-      {
-        id: 'open',
-        label: 'Open',
-        icon: <OpenInNewIcon />,
-        href: fileUrl,
-        newPage: true,
-      },
-      {isDivider: true},
-    );
-
-    customActions.forEach(({name, url, newPage}, index) => {
-      actions.push({
-        id: String(index),
-        label: name,
-        icon: <OpenInNewIcon />,
-        href: formatUrl(url, {dir, name: file.name}),
-        newPage,
-      });
+    actions.push({
+      id: 'open',
+      label: 'Open',
+      icon: <OpenInNewIcon />,
+      href: fileUrl,
+      newPage: true,
     });
+
     if (customActions.length) {
-      actions.push({isDivider: true});
+      actions.push(dividerItem);
+      customActions.forEach(({name, url, newPage}, index) => {
+        actions.push({
+          id: String(index),
+          label: name,
+          icon: <OpenInNewIcon />,
+          href: formatUrl(url, {dir, name: file.name}),
+          newPage,
+        });
+      });
     }
 
     if (writable) {
+      actions.push(dividerItem);
       actions.push(
         {
           id: 'select',
