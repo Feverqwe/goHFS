@@ -63,6 +63,7 @@ const FileMenu: FC<FileDialogProps> = ({
         label: 'Open',
         icon: <OpenInNewIcon />,
         href: fileUrl,
+        newPage: true,
       },
       {isDivider: true},
       ...customActionMenu,

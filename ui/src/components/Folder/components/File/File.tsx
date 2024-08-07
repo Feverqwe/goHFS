@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {FC, memo, useContext, useMemo} from 'react';
+import {FC, memo, MouseEvent, useCallback, useContext, useMemo} from 'react';
 import {
   Audiotrack as AudiotrackIcon,
   Description as DescriptionIcon,
@@ -12,6 +12,7 @@ import {Box, CardActionArea, IconButton, LinearProgress, ListItemText, styled} f
 import Path from 'path-browserify';
 import {filesize} from 'filesize';
 import mime from 'mime';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import FileMenu from '../FileMenu';
 import RenameDialog from '../RenameDialog';
 import {FileInfo} from '../../../../types';
@@ -19,6 +20,7 @@ import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
 import {formatUrl} from '../../utils';
+import {dateToStr} from './utils';
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -43,6 +45,29 @@ const ProgressCtr = styled('div')(() => {
     marginBottom: '-4px',
   };
 });
+
+const MyIconButton = styled(IconButton)(() => ({
+  '.file-icon': {
+    display: 'block',
+  },
+  '.menu-icon': {
+    display: 'none',
+  },
+  '&:hover, &.menu-opened': {
+    '.file-icon': {
+      display: 'none',
+    },
+    '.menu-icon': {
+      display: 'block',
+    },
+  },
+}));
+
+const IconBox = styled(Box)(() => ({
+  cursor: 'default',
+  display: 'flex',
+  alignItems: 'center',
+}));
 
 const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const store = useContext(RootStoreCtx);
@@ -70,10 +95,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     }
     return hSize;
   }, [size, isDir]);
-
-  const dateStr = React.useMemo(() => {
-    return dateToStr(new Date(ctime));
-  }, [ctime]);
 
   const Icon = React.useMemo(() => {
     if (isDir) {
@@ -111,8 +132,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   }, [file.name, dir, handleUrl]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     setMenuAnchorEl(e.currentTarget);
   }, []);
 
@@ -132,10 +151,10 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return (
       <ListItemText
         primary={name}
-        secondary={
+        secondary={(
           <>
             <SubLine>
-              <div>{dateStr}</div>
+              <div>{dateToStr(new Date(ctime))}</div>
               <div>{sizeStr}</div>
             </SubLine>
             {progress > 0 && (
@@ -144,27 +163,39 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
               </ProgressCtr>
             )}
           </>
-        }
+        )}
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
       />
     );
-  }, [progress, dateStr, name, sizeStr]);
+  }, [name, ctime, sizeStr, progress]);
 
-  const linkProps = useMemo(() => {
-    return handledFileUrl ? {href: handledFileUrl, target: '_blank'} : {href: fileUrl};
-  }, [handledFileUrl, fileUrl]);
+  const handleIconBoxClick = useCallback((e: MouseEvent<unknown>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   return (
     <>
       <Box display="flex" alignItems="stretch">
         {selectMode && <SelectBox name={name} />}
-        <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} {...linkProps}>
-          <Box pl={selectMode ? 0 : 1} display="flex" alignItems="center">
-            <IconButton color={handleUrl ? 'primary' : undefined} onClick={handleMenuClick}>
-              <Icon />
-            </IconButton>
-          </Box>
+        <CardActionArea
+          sx={{display: 'flex', alignItems: 'stretch'}}
+          href={handledFileUrl ?? fileUrl}
+        >
+          <IconBox
+            pl={selectMode ? 0 : 1}
+            onClick={handleIconBoxClick}
+          >
+            <MyIconButton
+              className={menuAnchorEl ? 'menu-opened' : undefined}
+              color={handleUrl ? 'primary' : undefined}
+              onClick={handleMenuClick}
+            >
+              <Icon className="file-icon" />
+              <MoreHorizIcon className="menu-icon" />
+            </MyIconButton>
+          </IconBox>
           <Box flexGrow={1} sx={{p: 1}}>
             {body}
           </Box>
@@ -188,15 +219,5 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     </>
   );
 };
-
-function dateToStr(date: Date) {
-  const dateStr = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
-    .map((v) => (v < 10 ? '0' : '') + v)
-    .join('-');
-  const timeStr = [date.getHours(), date.getMinutes(), date.getSeconds()]
-    .map((v) => (v < 10 ? '0' : '') + v)
-    .join(':');
-  return `${dateStr} ${timeStr}`;
-}
 
 export default memo(File);
