@@ -1,5 +1,14 @@
 import * as React from 'react';
-import {ReactNode, SyntheticEvent, useContext, useMemo} from 'react';
+import {
+  memo,
+  ReactNode,
+  SyntheticEvent,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Box,
   Button,
@@ -18,22 +27,27 @@ import MyDialog from '../MyDialog';
 import {api} from '../../../../tools/api';
 import {DiskUsage} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
+import ActionButton from '../ActionButton/ActionButton';
 
 interface DiskUsageDialogProps {
   onClose: () => void;
 }
 
-const DiskUsageDialog = React.memo(({onClose}: DiskUsageDialogProps) => {
+const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
   const store = useContext(RootStoreCtx);
 
-  const [isLoading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<null | Error>(null);
-  const [diskUsage, setDiskUsage] = React.useState<null | DiskUsage>(null);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState<null | Error>(null);
+  const [diskUsage, setDiskUsage] = useState<null | DiskUsage>(null);
 
-  React.useEffect(() => {
+  const fetchData = useCallback(async () => {
+    return api.diskUsage({place: store.dir});
+  }, [store.dir]);
+
+  useEffect(() => {
     (async () => {
       try {
-        const diskUsage = await api.diskUsage({place: store.dir});
+        const diskUsage = await fetchData();
         setDiskUsage(diskUsage);
       } catch (err) {
         setError(err as Error);
@@ -41,9 +55,14 @@ const DiskUsageDialog = React.memo(({onClose}: DiskUsageDialogProps) => {
         setLoading(false);
       }
     })();
-  }, [store.dir]);
+  }, [fetchData, store.dir]);
 
-  const handleClose = React.useCallback(
+  const handleUpdate = useCallback(async () => {
+    const diskUsage = await fetchData();
+    setDiskUsage(diskUsage);
+  }, [fetchData]);
+
+  const handleClose = useCallback(
     (e: SyntheticEvent, reason?: string) => {
       e.preventDefault();
       onClose();
@@ -123,6 +142,7 @@ const DiskUsageDialog = React.memo(({onClose}: DiskUsageDialogProps) => {
         )}
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
+          <ActionButton onSubmit={handleUpdate}>Update</ActionButton>
         </DialogActions>
       </DialogContent>
     </MyDialog>

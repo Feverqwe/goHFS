@@ -151,7 +151,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return (
       <ListItemText
         primary={name}
-        secondary={(
+        secondary={
           <>
             <SubLine>
               <div>{dateToStr(new Date(ctime))}</div>
@@ -163,7 +163,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
               </ProgressCtr>
             )}
           </>
-        )}
+        }
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
       />
@@ -183,10 +183,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
           sx={{display: 'flex', alignItems: 'stretch'}}
           href={handledFileUrl ?? fileUrl}
         >
-          <IconBox
-            pl={selectMode ? 0 : 1}
-            onClick={handleIconBoxClick}
-          >
+          <IconBox pl={selectMode ? 0 : 1} onClick={handleIconBoxClick}>
             <MyIconButton
               className={menuAnchorEl ? 'menu-opened' : undefined}
               color={handleUrl ? 'primary' : undefined}
