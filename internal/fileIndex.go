@@ -25,12 +25,12 @@ type RootStore struct {
 }
 
 type File struct {
-	Name     string `json:"name"`
-	IsDir    bool   `json:"isDir"`
-	IsLink   bool   `json:"isLink"`
-	Ctime    int64  `json:"ctime"` // ms
-	Size     int64  `json:"size"`  // bytes
-	Progress int64  `json:"progress"`
+	Name     string  `json:"name"`
+	IsDir    bool    `json:"isDir"`
+	IsLink   bool    `json:"isLink"`
+	Ctime    int64   `json:"ctime"` // ms
+	Size     int64   `json:"size"`  // bytes
+	Progress float64 `json:"progress"`
 }
 
 func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {

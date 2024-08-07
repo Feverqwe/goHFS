@@ -17,7 +17,7 @@ func GetIndexStore(config *Config, storage *Storage, place string, fullPath stri
 		key := getProgressKey(path.Join(place, f.Name))
 		if rawProgress, ok := storage.GetKey(key); ok {
 			if progress, ok := rawProgress.(float64); ok {
-				f.Progress = int64(progress)
+				f.Progress = progress
 			}
 		}
 	}
