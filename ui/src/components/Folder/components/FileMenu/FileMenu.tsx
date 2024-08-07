@@ -5,6 +5,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import {ExtAction, FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
 import {SelectChangeSelectedCtx} from '../SelectProvider/SelectCtx';
@@ -19,6 +20,7 @@ interface DividerItem {
 interface FileDialogProps {
   writable: boolean;
   fileUrl: string;
+  launchUrl?: string;
   file: FileInfo;
   dir: string;
   onClose: () => void;
@@ -28,36 +30,35 @@ interface FileDialogProps {
 }
 
 const FileMenu: FC<FileDialogProps> = ({
+  customActions,
+  launchUrl,
   anchorEl,
   writable,
+  onRename,
+  onClose,
   fileUrl,
   file,
   dir,
-  onRename,
-  onClose,
-  customActions,
 }) => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
   const updateStore = useContext(RootStoreUpdateCtx);
 
   const menu = useMemo<(Item | DividerItem)[]>(() => {
-    const customActionMenu: (Item | DividerItem)[] = customActions.map(
-      ({name, url, newPage}, index) => {
-        return {
-          id: String(index),
-          label: name,
-          icon: <OpenInNewIcon />,
-          href: formatUrl(url, {dir, name: file.name}),
-          newPage,
-        };
-      },
-    );
+    const actions: (Item | DividerItem)[] = [];
 
-    if (customActionMenu.length) {
-      customActionMenu.push({isDivider: true});
+    if (launchUrl) {
+      actions.push(
+        {
+          id: 'open',
+          label: 'Launch',
+          icon: <RocketLaunchIcon />,
+          href: launchUrl,
+          newPage: true,
+        },
+      );
     }
 
-    return [
+    actions.push(
       {
         id: 'open',
         label: 'Open',
@@ -66,52 +67,77 @@ const FileMenu: FC<FileDialogProps> = ({
         newPage: true,
       },
       {isDivider: true},
-      ...customActionMenu,
-      ...(!writable
-        ? []
-        : [
-            {
-              id: 'select',
-              label: 'Select',
-              icon: <HighlightAltIcon />,
-              onSubmit: () => {
-                changeSelected((selected_) => {
-                  const selected = selected_.slice(0);
-                  const {name} = file;
-                  const pos = selected.indexOf(name);
-                  if (pos === -1) {
-                    selected.push(name);
-                  } else {
-                    selected.splice(pos, 1);
-                  }
-                  return unicLast(selected);
-                });
-              },
-            },
-            {
-              id: 'rename',
-              label: 'Rename',
-              icon: <DriveFileRenameOutlineIcon />,
-              onSubmit: () => {
-                onRename();
-              },
-            },
-            {
-              id: 'remove',
-              label: 'Delete',
-              icon: <DeleteForeverIcon />,
-              onSubmit: async () => {
-                await api.remove({
-                  place: dir,
-                  name: file.name,
-                  isDir: file.isDir,
-                });
-                await updateStore();
-              },
-            },
-          ]),
-    ];
-  }, [customActions, fileUrl, writable, dir, file, changeSelected, onRename, updateStore]);
+    );
+
+    customActions.forEach(({name, url, newPage}, index) => {
+      actions.push({
+        id: String(index),
+        label: name,
+        icon: <OpenInNewIcon />,
+        href: formatUrl(url, {dir, name: file.name}),
+        newPage,
+      });
+    });
+    if (customActions.length) {
+      actions.push({isDivider: true});
+    }
+
+    if (writable) {
+      actions.push(
+        {
+          id: 'select',
+          label: 'Select',
+          icon: <HighlightAltIcon />,
+          onSubmit: () => {
+            changeSelected((selected_) => {
+              const selected = selected_.slice(0);
+              const {name} = file;
+              const pos = selected.indexOf(name);
+              if (pos === -1) {
+                selected.push(name);
+              } else {
+                selected.splice(pos, 1);
+              }
+              return unicLast(selected);
+            });
+          },
+        },
+        {
+          id: 'rename',
+          label: 'Rename',
+          icon: <DriveFileRenameOutlineIcon />,
+          onSubmit: () => {
+            onRename();
+          },
+        },
+        {
+          id: 'remove',
+          label: 'Delete',
+          icon: <DeleteForeverIcon />,
+          onSubmit: async () => {
+            await api.remove({
+              place: dir,
+              name: file.name,
+              isDir: file.isDir,
+            });
+            await updateStore();
+          },
+        },
+      );
+    }
+
+    return actions;
+  }, [
+    launchUrl,
+    fileUrl,
+    customActions,
+    writable,
+    dir,
+    file,
+    changeSelected,
+    onRename,
+    updateStore,
+  ]);
 
   if (!menu.length) return null;
 

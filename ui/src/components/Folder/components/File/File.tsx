@@ -127,7 +127,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return Path.join(dir.split('/').map(encodeURIComponent).join('/'), encodeURIComponent(name));
   }, [dir, name]);
 
-  const handledFileUrl = useMemo(() => {
+  const launchUrl = useMemo(() => {
     return handleUrl ? formatUrl(handleUrl, {dir, name: file.name}) : undefined;
   }, [file.name, dir, handleUrl]);
 
@@ -179,10 +179,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     <>
       <Box display="flex" alignItems="stretch">
         {selectMode && <SelectBox name={name} />}
-        <CardActionArea
-          sx={{display: 'flex', alignItems: 'stretch'}}
-          href={handledFileUrl ?? fileUrl}
-        >
+        <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={launchUrl ?? fileUrl}>
           <IconBox pl={selectMode ? 0 : 1} onClick={handleIconBoxClick}>
             <MyIconButton
               className={menuAnchorEl ? 'menu-opened' : undefined}
@@ -208,6 +205,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
           customActions={customActions}
           writable={writable}
           fileUrl={fileUrl}
+          launchUrl={launchUrl}
         />
       ) : null}
       {renameDialog ? (
