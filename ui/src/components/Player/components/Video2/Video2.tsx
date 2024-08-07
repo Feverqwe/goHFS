@@ -405,7 +405,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           // console.log('save', player.currentTime);
           await api.storageSet({
             [sid]: player.currentTime,
-            [progressKey]: Math.trunc((100 / player.duration) * player.currentTime) || undefined,
+            [progressKey]:
+              Math.trunc((100 / player.duration) * player.currentTime * 1000) / 1000 || undefined,
           });
         } catch (err) {
           console.error('Storage.set error: %O', err);
