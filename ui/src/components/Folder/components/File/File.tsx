@@ -75,7 +75,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const selectMode = useContext(SelectModeCtx);
   const [renameDialog, setRenameDialog] = React.useState(false);
 
-  const ext = useMemo(() => Path.extname(name).toLowerCase(), [name]);
+  const ext = useMemo(() => (isDir ? 'dir' : Path.extname(name).toLowerCase()), [isDir, name]);
   const handleUrl = useMemo(() => store.extHandle[ext], [store, ext]);
   const customActions = useMemo(() => store.extActions[ext] ?? [], [store, ext]);
 
