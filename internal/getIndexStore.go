@@ -31,16 +31,10 @@ func GetIndexStore(config *Config, storage *Storage, place string, fullPath stri
 				Name:   name,
 				IsLink: true,
 			}
-			if l.HasCache() {
-				f.IsDir = l.cache.isDir
-				f.Size = l.cache.size
-				f.Ctime = l.cache.ctime
-			} else if info, err := os.Stat(l.Target); err == nil {
-				f.IsDir = info.IsDir()
-				f.Size = info.Size()
-				f.Ctime = UnixMilli(info.ModTime())
-				l.SetCache(f.IsDir, f.Size, f.Ctime)
-			}
+			cache := l.GetCache(l.Target)
+			f.IsDir = cache.isDir
+			f.Size = cache.size
+			f.Ctime = cache.ctime
 			if !showHidden && isHiddenName(f.Name) {
 				continue
 			}

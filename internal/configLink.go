@@ -1,6 +1,9 @@
 package internal
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 type LinkCache struct {
 	expiresAt int64
@@ -20,14 +23,21 @@ func (s *Link) HasCache() bool {
 	return s.CacheTTL > 0 && s.cache.expiresAt > time.Now().Unix()
 }
 
-func (s *Link) SetCache(isDir bool, size int64, ctime int64) {
-	if s.CacheTTL == 0 {
-		return
+func (s *Link) GetCache(f string) LinkCache {
+	cache := s.cache
+	if s.HasCache() {
+		return cache
 	}
-	s.cache = LinkCache{
-		expiresAt: time.Now().Add(time.Duration(s.CacheTTL) * time.Second).Unix(),
-		size:      size,
-		ctime:     ctime,
-		isDir:     isDir,
+
+	if info, err := os.Stat(f); err == nil {
+		cache.isDir = info.IsDir()
+		cache.size = info.Size()
+		cache.ctime = UnixMilli(info.ModTime())
+
+		if s.CacheTTL > 0 {
+			cache.expiresAt = time.Now().Add(time.Duration(s.CacheTTL) * time.Second).Unix()
+			s.cache = cache
+		}
 	}
+	return cache
 }
