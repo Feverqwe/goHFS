@@ -10,22 +10,22 @@ type LinkCache struct {
 }
 
 type Link struct {
-	Place  string `json:"place"`
-	Target string `json:"target"`
-	Cache  bool   `json:"cache"`
-	cache  LinkCache
+	Place    string `json:"place"`
+	Target   string `json:"target"`
+	CacheTTL int64  `json:"cacheTTL"`
+	cache    LinkCache
 }
 
 func (s *Link) HasCache() bool {
-	return s.Cache && s.cache.expiresAt > time.Now().Unix()
+	return s.CacheTTL > 0 && s.cache.expiresAt > time.Now().Unix()
 }
 
 func (s *Link) SetCache(isDir bool, size int64, ctime int64) {
-	if !s.Cache {
+	if s.CacheTTL == 0 {
 		return
 	}
 	s.cache = LinkCache{
-		expiresAt: time.Now().Add(12 * time.Hour).Unix(),
+		expiresAt: time.Now().Add(time.Duration(s.CacheTTL) * time.Second).Unix(),
 		size:      size,
 		ctime:     ctime,
 		isDir:     isDir,
