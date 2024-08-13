@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -540,6 +541,116 @@ func handleAction(router *Router, config *Config, doReload func()) {
 
 			return payload.Show, nil
 		})
+	})
+
+	variables := []string{"url", "path", "dir", "name", "hostname"}
+	prepareHandlerUrl := func(query url.Values, handlerUrl string) (finalUrl string, err error) {
+		rawPlace := query.Get("place")
+		rawName := query.Get("name")
+		hostname := query.Get("hostname")
+
+		rPath := NormalizePath(path.Join(rawPlace, rawName))
+
+		var osPath string
+		osPath, err = config.GetPlaceOsPath(rPath)
+		if err != nil {
+			return
+		}
+
+		finalUrl = handlerUrl
+		for _, variable := range variables {
+			switch variable {
+			case "url":
+				var fileUrl string
+				rPathParts := strings.Split(rPath, "/")
+				for _, part := range rPathParts {
+					if len(fileUrl) > 0 {
+						fileUrl += "/"
+					}
+					fileUrl += url.PathEscape(part)
+				}
+
+				finalUrl = strings.ReplaceAll(finalUrl, "{url}", url.QueryEscape(fileUrl))
+			case "path":
+				finalUrl = strings.ReplaceAll(finalUrl, "{path}", url.QueryEscape(osPath))
+			case "dir":
+				finalUrl = strings.ReplaceAll(finalUrl, "{dir}", url.QueryEscape(path.Dir(osPath)))
+			case "name":
+				finalUrl = strings.ReplaceAll(finalUrl, "{name}", url.QueryEscape(path.Base(osPath)))
+			case "hostname":
+				finalUrl = strings.ReplaceAll(finalUrl, "{hostname}", url.QueryEscape(hostname))
+			}
+		}
+		return
+	}
+
+	emitData := func(w http.ResponseWriter, payload string) {
+		if _, err := w.Write([]byte(payload)); err != nil {
+			panic(err)
+		}
+	}
+	emitError := func(w http.ResponseWriter, statusCode int, err error) {
+		w.WriteHeader(statusCode)
+		emitData(w, err.Error())
+	}
+	emitRedirect := func(w http.ResponseWriter, redirectUrl string) {
+		w.Header().Set("Location", redirectUrl)
+		w.WriteHeader(302)
+		emitData(w, "")
+	}
+
+	router.Get("/~/extHandle", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		rawName := query.Get("name")
+
+		handlerUrl, found := config.ExtHandle[path.Ext(rawName)]
+		if !found {
+			err := errors.New("handler not found")
+			emitError(w, 404, err)
+			return
+		}
+
+		finalUrl, err := prepareHandlerUrl(query, handlerUrl)
+		if err != nil {
+			emitError(w, 500, err)
+			return
+		}
+
+		emitRedirect(w, finalUrl)
+	})
+
+	router.Get("/~/extAction", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+
+		rawName := query.Get("name")
+		actionName := query.Get("action")
+
+		actions, found := config.ExtActions[path.Ext(rawName)]
+		if !found {
+			err := errors.New("action handler not found")
+			emitError(w, 404, err)
+			return
+		}
+		var currectAction *ExtAction
+		for _, action := range actions {
+			if action.Name == actionName {
+				currectAction = &action
+				break
+			}
+		}
+		if currectAction == nil {
+			err := errors.New("action not found")
+			emitError(w, 404, err)
+			return
+		}
+
+		finalUrl, err := prepareHandlerUrl(query, currectAction.Url)
+		if err != nil {
+			emitError(w, 500, err)
+			return
+		}
+
+		emitRedirect(w, finalUrl)
 	})
 }
 
