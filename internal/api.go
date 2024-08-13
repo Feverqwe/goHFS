@@ -563,8 +563,11 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			case "url":
 				var fileUrl string
 				rPathParts := strings.Split(rPath, "/")
-				for _, part := range rPathParts {
-					fileUrl += "/" + url.PathEscape(part)
+				for i, part := range rPathParts {
+					if i > 0 {
+						fileUrl += "/"
+					}
+					fileUrl += url.PathEscape(part)
 				}
 
 				finalUrl = strings.ReplaceAll(finalUrl, "{url}", url.QueryEscape(fileUrl))
