@@ -7,9 +7,9 @@ import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import {ExtAction, FileInfo} from '../../../../types';
-import {api} from '../../../../tools/api';
+import {api, apiUrl} from '../../../../tools/api';
 import {SelectChangeSelectedCtx} from '../SelectProvider/SelectCtx';
-import {formatUrl, unicLast} from '../../utils';
+import {unicLast} from '../../utils';
 import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
 import ActionBtn, {Item} from './ActionBtn';
 
@@ -68,12 +68,16 @@ const FileMenu: FC<FileDialogProps> = ({
 
     if (customActions.length) {
       actions.push(dividerItem);
-      customActions.forEach(({name, url, newPage}, index) => {
+      customActions.forEach(({name, newPage}, index) => {
         actions.push({
           id: String(index),
           label: name,
           icon: <OpenInNewIcon />,
-          href: formatUrl(url, {dir, name: file.name}),
+          href: apiUrl.extAction({
+            place: dir,
+            name: file.name,
+            action: name,
+          }),
           newPage,
         });
       });

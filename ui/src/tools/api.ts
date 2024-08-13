@@ -93,3 +93,18 @@ export const api = {
     path: '/~/getStore',
   }),
 };
+
+export const apiUrl = {
+  extHandle: (params: {place: string; name: string}) => {
+    return `/~/extHandle?${new URLSearchParams({
+      ...params,
+      hostname: location.hostname,
+    }).toString()}`;
+  },
+  extAction: (params: {place: string; name: string; action: string}) => {
+    return `/~/extAction?${new URLSearchParams({
+      ...params,
+      hostname: location.hostname,
+    }).toString()}`;
+  },
+};

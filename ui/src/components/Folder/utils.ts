@@ -1,4 +1,3 @@
-import Path from 'path-browserify';
 import {DirSort} from '../../types';
 
 export function getOption<T>(key: string, defaultValue: T) {
@@ -24,30 +23,6 @@ export function setOption<T>(key: string, value: T) {
 
 export function unicLast<T>(list: T[]): T[] {
   return list.filter((n, i, arr) => arr.lastIndexOf(n) === i);
-}
-
-interface FormatUrlProps {
-  dir: string;
-  name: string;
-}
-
-export function formatUrl(str: string, {dir, name}: FormatUrlProps) {
-  const {hostname} = location;
-  const url = Path.join(dir.split('/').map(encodeURIComponent).join('/'), encodeURIComponent(name));
-  const path = Path.join(dir, name);
-  const props = {
-    url,
-    path,
-    dir,
-    name,
-    hostname,
-  };
-  return str.replace(/\{(.+?)}/g, (text, key) => {
-    if (key in props) {
-      return encodeURIComponent(props[key as keyof typeof props]);
-    }
-    return text;
-  });
 }
 
 export function prepDirSort(value: unknown): DirSort {

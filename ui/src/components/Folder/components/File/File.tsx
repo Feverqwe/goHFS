@@ -19,8 +19,8 @@ import {FileInfo} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
-import {formatUrl} from '../../utils';
 import {dateToStr} from './utils';
+import {apiUrl} from '../../../../tools/api';
 
 const NameSx = {
   wordBreak: 'break-word',
@@ -128,7 +128,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   }, [dir, name]);
 
   const launchUrl = useMemo(() => {
-    return handleUrl ? formatUrl(handleUrl, {dir, name: file.name}) : undefined;
+    return handleUrl ? apiUrl.extHandle({place: dir, name: file.name}) : undefined;
   }, [file.name, dir, handleUrl]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
