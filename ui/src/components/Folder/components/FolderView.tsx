@@ -28,6 +28,7 @@ import FolderMenu from './FolderMenu/FolderMenu';
 import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 import MkdirDialog from './MkdirDialog';
 import DiskUsageDialog from './DiskUsageDialog/DiskUsageDialog';
+import DirSizeDialog from './DirSizeDialog/DirSizeDialog';
 
 const RootSx = {
   width: '100%',
@@ -58,6 +59,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
   const updateStore = useContext(RootStoreUpdateCtx);
   const [showMkdirDialog, setShowMkdirDialog] = useState(false);
   const [showDiskUsageDialog, setShowDiskUsageDialog] = useState(false);
+  const [showDirSizeDialog, setShowDirSizeDialog] = useState(false);
 
   const handleAddressesBtn = useCallback(() => {
     setShowAddressesDialog(true);
@@ -83,10 +85,15 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     setShowDiskUsageDialog(true);
   }, []);
 
+  const handleDirSizeDialogBtn = useCallback(() => {
+    setShowDirSizeDialog(true);
+  }, []);
+
   const handleCloseDialog = useCallback(() => {
     setShowAddressesDialog(false);
     setShowMkdirDialog(false);
     setShowDiskUsageDialog(false);
+    setShowDirSizeDialog(false);
   }, []);
 
   const handleCloseMenu = useCallback(() => {
@@ -154,6 +161,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
       {store.isWritable && <DropZone onUpload={handleUpload} />}
       {showAddressesDialog && <AddressesDialog onClose={handleCloseDialog} />}
       {showDiskUsageDialog && <DiskUsageDialog onClose={handleCloseDialog} />}
+      {showDirSizeDialog && <DirSizeDialog onClose={handleCloseDialog} />}
       {dialog}
       {selectMode && <SelectHeader />}
       {menuAnchorEl ? (
@@ -164,6 +172,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
           onAddressesClick={handleAddressesBtn}
           onMkdirClick={handleMkdirDialogBtn}
           onDiskUsageClick={handleDiskUsageDialogBtn}
+          onDirSizeClick={handleDirSizeDialogBtn}
         />
       ) : null}
       {showMkdirDialog && <MkdirDialog onClose={handleCloseDialog} dir={store.dir} />}

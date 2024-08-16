@@ -40,3 +40,9 @@ export interface DiskUsage {
   inodesFree: number;
   inodesUsedPercent: number;
 }
+
+export interface DirSize {
+  dirCount: number;
+  fileCount: number;
+  totalSize: number;
+}

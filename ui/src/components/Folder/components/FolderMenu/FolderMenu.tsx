@@ -10,6 +10,7 @@ import Path from 'path-browserify';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import DataUsageIcon from '@mui/icons-material/DataUsage';
+import TimelapseIcon from '@mui/icons-material/Timelapse';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {DirSort, FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
@@ -21,6 +22,7 @@ interface FolderMenuProps {
   sortedFiles: FileInfo[];
   onAddressesClick: () => void;
   onMkdirClick: () => void;
+  onDirSizeClick: () => void;
   onDiskUsageClick: () => void;
 }
 
@@ -29,6 +31,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
   sortedFiles,
   onMkdirClick,
   onAddressesClick,
+  onDirSizeClick,
   onDiskUsageClick,
   onClose,
 }) => {
@@ -87,6 +90,16 @@ const FolderMenu: FC<FolderMenuProps> = ({
         },
       },
       {
+        id: 'dirSize',
+        title: 'Directory info',
+        icon: <TimelapseIcon />,
+        onClick: () => {
+          onDirSizeClick();
+
+          onClose();
+        },
+      },
+      {
         id: 'diskUsage',
         title: 'Disk usage',
         icon: <DataUsageIcon />,
@@ -139,6 +152,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
       onClose,
       updateStore,
       sortedFiles,
+      onDirSizeClick,
       onDiskUsageClick,
       onAddressesClick,
     ],

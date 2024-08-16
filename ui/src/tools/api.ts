@@ -1,5 +1,5 @@
 import {handleApiResponse} from './apiRequest';
-import {DiskUsage, RootStore} from '../types';
+import {DirSize, DiskUsage, RootStore} from '../types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -80,7 +80,7 @@ export const api = {
     method: 'GET',
     path: '/~/diskUsage',
   }),
-  dirSize: action<{place: string}, DiskUsage>({
+  dirSize: action<{place: string}, DirSize>({
     method: 'GET',
     path: '/~/dirSize',
   }),

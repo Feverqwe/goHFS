@@ -83,8 +83,14 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return [extname];
   }, [isDir, name]);
 
-  const handleUrl = useMemo(() => getExtHandler(extNames, store.extHandle), [extNames, store.extHandle]);
-  const customActions = useMemo(() => getExtHandler(extNames, store.extActions) ?? [], [extNames, store.extActions]);
+  const handleUrl = useMemo(
+    () => getExtHandler(extNames, store.extHandle),
+    [extNames, store.extHandle],
+  );
+  const customActions = useMemo(
+    () => getExtHandler(extNames, store.extActions) ?? [],
+    [extNames, store.extActions],
+  );
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
@@ -158,7 +164,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return (
       <ListItemText
         primary={name}
-        secondary={(
+        secondary={
           <>
             <SubLine>
               <div>{dateToStr(new Date(ctime))}</div>
@@ -170,7 +176,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
               </ProgressCtr>
             )}
           </>
-        )}
+        }
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
       />
