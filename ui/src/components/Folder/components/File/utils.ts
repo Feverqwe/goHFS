@@ -7,3 +7,13 @@ export function dateToStr(date: Date) {
     .join(':');
   return `${dateStr} ${timeStr}`;
 }
+
+export function getExtHandler<T>(extNames: string[], handlers: Record<string, T>) {
+  for (let i = 0, len = extNames.length; i < len; i++) {
+    const ext = extNames[i];
+    const handler = handlers[ext];
+    if (handler) {
+      return handler;
+    }
+  }
+}

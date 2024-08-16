@@ -19,7 +19,7 @@ import {FileInfo} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from '../SelectProvider/SelectCtx';
 import SelectBox from './components/SelectBox';
-import {dateToStr} from './utils';
+import {dateToStr, getExtHandler} from './utils';
 import {apiUrl} from '../../../../tools/api';
 
 const NameSx = {
@@ -75,9 +75,16 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   const selectMode = useContext(SelectModeCtx);
   const [renameDialog, setRenameDialog] = React.useState(false);
 
-  const ext = useMemo(() => (isDir ? 'dir' : Path.extname(name).toLowerCase()), [isDir, name]);
-  const handleUrl = useMemo(() => store.extHandle[ext], [store, ext]);
-  const customActions = useMemo(() => store.extActions[ext] ?? [], [store, ext]);
+  const extNames = useMemo(() => {
+    const extname = Path.extname(name).toLowerCase();
+    if (isDir) {
+      return [`dir${extname}`, 'dir'];
+    }
+    return [extname];
+  }, [isDir, name]);
+
+  const handleUrl = useMemo(() => getExtHandler(extNames, store.extHandle), [extNames, store.extHandle]);
+  const customActions = useMemo(() => getExtHandler(extNames, store.extActions) ?? [], [extNames, store.extActions]);
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | Element>(null);
 
@@ -151,7 +158,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return (
       <ListItemText
         primary={name}
-        secondary={
+        secondary={(
           <>
             <SubLine>
               <div>{dateToStr(new Date(ctime))}</div>
@@ -163,7 +170,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
               </ProgressCtr>
             )}
           </>
-        }
+        )}
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
       />
