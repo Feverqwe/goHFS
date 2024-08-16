@@ -1,9 +1,12 @@
 module goHfs
 
-go 1.21
+go 1.22.0
+
+toolchain go1.22.6
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/bahelit/ctrl_plus_revise v0.0.7
 	github.com/caseymrm/go-caffeinate v0.0.0-20180507205639-f1d20cbcba98
 	github.com/gabyx/githooks/githooks v1.1.1
 	github.com/getlantern/systray v1.2.2
@@ -15,8 +18,8 @@ require (
 )
 
 require (
-	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 )
 
@@ -34,7 +37,7 @@ require (
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770 // indirect
 	github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/goccy/go-yaml v1.11.3 // indirect
@@ -61,14 +64,14 @@ require (
 	github.com/schollz/progressbar/v3 v3.14.2 // indirect
 	github.com/shirou/gopsutil/v4 v4.24.7
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	go.opentelemetry.io/otel v1.26.0 // indirect
-	go.opentelemetry.io/otel/metric v1.26.0 // indirect
-	go.opentelemetry.io/otel/trace v1.26.0 // indirect
+	go.opentelemetry.io/otel v1.28.0 // indirect
+	go.opentelemetry.io/otel/metric v1.28.0 // indirect
+	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/image v0.15.0 // indirect
+	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect

@@ -80,6 +80,10 @@ export const api = {
     method: 'GET',
     path: '/~/diskUsage',
   }),
+  dirSize: action<{place: string}, DiskUsage>({
+    method: 'GET',
+    path: '/~/dirSize',
+  }),
   reloadConfig: action<void, string>({
     method: 'POST',
     path: '/~/reloadConfig',

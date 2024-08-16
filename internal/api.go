@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/NYTimes/gziphandler"
+	dirsize "github.com/bahelit/ctrl_plus_revise/pkg/dir_size"
 	"github.com/shirou/gopsutil/v4/disk"
 )
 
@@ -313,6 +314,12 @@ func handleDiskUsage(router *Router, config *Config) {
 		Path string `json:"path"`
 	}
 
+	type DirSize struct {
+		DirCount  int64 `json:"dirCount"`
+		FileCount int64 `json:"fileCount"`
+		TotalSize int64 `json:"totalSize"`
+	}
+
 	router.Get("/~/diskUsage", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*DiskUsage, error) {
 			place := NormalizePath(r.URL.Query().Get("place"))
@@ -330,6 +337,29 @@ func handleDiskUsage(router *Router, config *Config) {
 			resule := &DiskUsage{
 				UsageStat: *usage,
 				Path:      place,
+			}
+
+			return resule, nil
+		})
+	})
+
+	router.Get("/~/dirSize", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (*DirSize, error) {
+			place := NormalizePath(r.URL.Query().Get("place"))
+
+			osFullPath, err := config.GetPlaceOsPath(place)
+			if err != nil {
+				return nil, err
+			}
+
+			fs := os.DirFS(osFullPath)
+
+			dirInfo, _ := dirsize.GetDirInfo(fs)
+
+			resule := &DirSize{
+				DirCount:  dirInfo.DirCount,
+				FileCount: dirInfo.FileCount,
+				TotalSize: dirInfo.TotalSize,
 			}
 
 			return resule, nil
