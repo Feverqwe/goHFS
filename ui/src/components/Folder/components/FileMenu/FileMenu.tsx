@@ -77,6 +77,7 @@ const FileMenu: FC<FileDialogProps> = ({
             place: dir,
             name: file.name,
             action: name,
+            isDir: file.isDir,
           }),
           newPage,
         });
