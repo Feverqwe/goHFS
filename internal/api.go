@@ -632,8 +632,17 @@ func handleAction(router *Router, config *Config, doReload func()) {
 	router.Get("/~/extHandle", func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		rawName := query.Get("name")
+		isDir := query.Get("isDir") == "true"
 
-		handlerUrl, found := config.ExtHandle[path.Ext(rawName)]
+		prefix := ""
+		if isDir {
+			prefix = "dir"
+		}
+
+		handlerUrl, found := config.ExtHandle[prefix+path.Ext(rawName)]
+		if !found && isDir {
+			handlerUrl, found = config.ExtHandle[prefix]
+		}
 		if !found {
 			err := errors.New("handler not found")
 			emitError(w, 404, err)
@@ -654,8 +663,17 @@ func handleAction(router *Router, config *Config, doReload func()) {
 
 		rawName := query.Get("name")
 		actionName := query.Get("action")
+		isDir := query.Get("isDir") == "true"
 
-		actions, found := config.ExtActions[path.Ext(rawName)]
+		prefix := ""
+		if isDir {
+			prefix = "dir"
+		}
+
+		actions, found := config.ExtActions[prefix+path.Ext(rawName)]
+		if !found && isDir {
+			actions, found = config.ExtActions[prefix]
+		}
 		if !found {
 			err := errors.New("action handler not found")
 			emitError(w, 404, err)
