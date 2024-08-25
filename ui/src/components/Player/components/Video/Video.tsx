@@ -68,157 +68,152 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
     let isFullscreen = false;
     addEvent(
       video,
-      (on) =>
-        on('fullscreenchange', () => {
-          isFullscreen = document.fullscreenElement === video;
-        }),
+      (on) => on('fullscreenchange', () => {
+        isFullscreen = document.fullscreenElement === video;
+      }),
       disposers,
     );
 
     let lastKey = '';
     addEvent(
       window,
-      (on) =>
-        on(
-          'keyup',
-          (e: KeyboardEvent) => {
-            // console.log('keyup: %s', e.code);
-            lastKey = '';
-          },
-          true,
-        ),
+      (on) => on(
+        'keyup',
+        (e: KeyboardEvent) => {
+          // console.log('keyup: %s', e.code);
+          lastKey = '';
+        },
+        true,
+      ),
       disposers,
     );
 
     addEvent(
       window,
-      (on) =>
-        on(
-          'keydown',
-          (e: KeyboardEvent) => {
-            // console.log('keydown: %s', e.code);
-            const target = e.target as HTMLElement;
-            if (target && target.tagName === 'INPUT') return;
+      (on) => on(
+        'keydown',
+        (e: KeyboardEvent) => {
+          // console.log('keydown: %s', e.code);
+          const target = e.target as HTMLElement;
+          if (target && target.tagName === 'INPUT') return;
 
-            const {code} = e;
-            const isRepeat = e.code === lastKey;
+          const {code} = e;
+          const isRepeat = e.code === lastKey;
 
-            const isMeta = e.ctrlKey || e.metaKey || e.shiftKey;
+          const isMeta = e.ctrlKey || e.metaKey || e.shiftKey;
 
-            if (isMeta) {
-              switch (code) {
-                case 'Period': {
-                  e.preventDefault();
-                  if (video.playbackRate < 2) {
-                    video.playbackRate += 0.25;
-                  }
-                  break;
-                }
-                case 'Comma': {
-                  e.preventDefault();
-                  if (video.playbackRate > 0.25) {
-                    video.playbackRate -= 0.25;
-                  }
-                  break;
-                }
-                case 'Digit0': {
-                  e.preventDefault();
-                  video.playbackRate = 1;
-                  break;
-                }
-              }
-            }
-
-            // Bail if a modifier key is set
-            if (isMeta) {
-              return;
-            }
-
-            // showUrlForm(true);
-
+          if (isMeta) {
             switch (code) {
-              case 'Space': {
-                if (isRepeat) return;
-                if (
-                  isSafari &&
-                  (document as unknown as {webkitIsFullScreen: boolean}).webkitIsFullScreen
-                )
-                  return;
+              case 'Period': {
                 e.preventDefault();
-                if (video.paused) {
-                  video.play().catch((err) => {
-                    console.log('play error: %O', err);
-                  });
-                } else {
-                  video.pause();
+                if (video.playbackRate < 2) {
+                  video.playbackRate += 0.25;
                 }
                 break;
               }
-              /* case 'ArrowUp': {
+              case 'Comma': {
+                e.preventDefault();
+                if (video.playbackRate > 0.25) {
+                  video.playbackRate -= 0.25;
+                }
+                break;
+              }
+              case 'Digit0': {
+                e.preventDefault();
+                video.playbackRate = 1;
+                break;
+              }
+            }
+          }
+
+          // Bail if a modifier key is set
+          if (isMeta) {
+            return;
+          }
+
+          // showUrlForm(true);
+
+          switch (code) {
+            case 'Space': {
+              if (isRepeat) return;
+              if (
+                isSafari
+                  && (document as unknown as {webkitIsFullScreen: boolean}).webkitIsFullScreen
+              ) return;
+              e.preventDefault();
+              if (video.paused) {
+                video.play().catch((err) => {
+                  console.log('play error: %O', err);
+                });
+              } else {
+                video.pause();
+              }
+              break;
+            }
+            /* case 'ArrowUp': {
           break;
         }
         case 'ArrowDown': {
           break;
         } */
-              case 'ArrowLeft': {
-                e.preventDefault();
-                const offset = e.altKey ? 3 : 10;
-                video.currentTime -= offset;
-                break;
-              }
-              case 'ArrowRight': {
-                e.preventDefault();
-                const offset = e.altKey ? 3 : 10;
-                video.currentTime += offset;
-                break;
-              }
-              case 'KeyF': {
-                if (isSafari) return;
-                if (isRepeat) return;
-                if (isFullscreen) {
-                  document.exitFullscreen().catch((err) => {
-                    console.error('exitFullscreen error: %O', err);
-                  });
-                } else {
-                  video
-                    .requestFullscreen({
-                      navigationUI: 'auto',
-                    })
-                    .catch((err) => {
-                      console.error('requestFullscreen error: %O', err);
-                    });
-                }
-                break;
-              }
-              case 'KeyN': {
-                if (isRepeat) return;
-                e.preventDefault();
-                toggleUrlDialog();
-                break;
-              }
+            case 'ArrowLeft': {
+              e.preventDefault();
+              const offset = e.altKey ? 3 : 10;
+              video.currentTime -= offset;
+              break;
             }
+            case 'ArrowRight': {
+              e.preventDefault();
+              const offset = e.altKey ? 3 : 10;
+              video.currentTime += offset;
+              break;
+            }
+            case 'KeyF': {
+              if (isSafari) return;
+              if (isRepeat) return;
+              if (isFullscreen) {
+                document.exitFullscreen().catch((err) => {
+                  console.error('exitFullscreen error: %O', err);
+                });
+              } else {
+                video
+                  .requestFullscreen({
+                    navigationUI: 'auto',
+                  })
+                  .catch((err) => {
+                    console.error('requestFullscreen error: %O', err);
+                  });
+              }
+              break;
+            }
+            case 'KeyN': {
+              if (isRepeat) return;
+              e.preventDefault();
+              toggleUrlDialog();
+              break;
+            }
+          }
 
-            lastKey = code;
-          },
-          true,
-        ),
+          lastKey = code;
+        },
+        true,
+      ),
       disposers,
     );
 
     if (!isSafari) {
       addEvent(
         video,
-        (on) =>
-          on('click', (e: MouseEvent) => {
-            e.preventDefault();
-            if (video.paused) {
-              video.play().catch((err) => {
-                console.log('play error: %O', err);
-              });
-            } else {
-              video.pause();
-            }
-          }),
+        (on) => on('click', (e: MouseEvent) => {
+          e.preventDefault();
+          if (video.paused) {
+            video.play().catch((err) => {
+              console.log('play error: %O', err);
+            });
+          } else {
+            video.pause();
+          }
+        }),
         disposers,
       );
     }
@@ -227,25 +222,24 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
     let lastSyncAt = 0;
     addEvent(
       video,
-      (on) =>
-        on('timeupdate', async (e: Event) => {
-          const now = Date.now();
+      (on) => on('timeupdate', async (e: Event) => {
+        const now = Date.now();
 
-          if (!lastSyncAt) {
-            lastSyncAt = now;
-          }
+        if (!lastSyncAt) {
+          lastSyncAt = now;
+        }
 
-          if (lastSyncAt < now - 5 * 1000) {
-            lastSyncAt = now;
-            try {
-              await api.storageSet({
-                [sid]: video.currentTime,
-              });
-            } catch (err) {
-              console.error('Storage.set error: %O', err);
-            }
+        if (lastSyncAt < now - 5 * 1000) {
+          lastSyncAt = now;
+          try {
+            await api.storageSet({
+              [sid]: video.currentTime,
+            });
+          } catch (err) {
+            console.error('Storage.set error: %O', err);
           }
-        }),
+        }
+      }),
       disposers,
     );
 
@@ -271,16 +265,15 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
 
     const disposeLoadedMetadata = addEvent(
       video,
-      (on) =>
-        on('loadedmetadata', () => {
-          disposeLoadedMetadata();
-          if (refStartTime.current > 0) {
-            video.currentTime = refStartTime.current;
-          }
-          video.play().catch((err) => {
-            console.error('auto play error: %O', err);
-          });
-        }),
+      (on) => on('loadedmetadata', () => {
+        disposeLoadedMetadata();
+        if (refStartTime.current > 0) {
+          video.currentTime = refStartTime.current;
+        }
+        video.play().catch((err) => {
+          console.error('auto play error: %O', err);
+        });
+      }),
       disposers,
     );
 

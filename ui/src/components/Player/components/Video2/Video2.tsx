@@ -340,8 +340,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     });
 
     // eslint-disable-next-line no-unused-expressions
-    DEBUG_EVENTS &&
-      [
+    DEBUG_EVENTS
+      && [
         'abort',
         'canplay',
         'canplaythrough',
@@ -376,8 +376,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     };
 
-    const isBrokenAndroidEdgePlayer =
-      /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
+    const isBrokenAndroidEdgePlayer = /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
     if (isBrokenAndroidEdgePlayer) {
       player.once('loadedmetadata', () => {
         if (player.duration > 0) {
