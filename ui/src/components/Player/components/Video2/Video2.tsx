@@ -98,6 +98,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     if (/\.m3u8$/.test(url)) {
       hls = new Hls({
         preferManagedMediaSource: false,
+        maxBufferLength: 3 * 60,
       });
     }
 
