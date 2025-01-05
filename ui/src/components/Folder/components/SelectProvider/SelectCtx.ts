@@ -5,6 +5,7 @@ export type ChangeSelectedCallback = (selected: string[], files: FileInfo[]) => 
 
 export const SelectSelectedCtx = createContext<string[]>([]);
 export const SelectChangeSelectedCtx = createContext<(callback: ChangeSelectedCallback) => void>(
-  () => {});
+  () => {},
+);
 
 export const SelectModeCtx = createContext<boolean>(false);

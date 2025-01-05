@@ -99,14 +99,14 @@ export const api = {
 };
 
 export const apiUrl = {
-  extHandle: (params: {place: string; name: string, isDir: boolean}) => {
+  extHandle: (params: {place: string; name: string; isDir: boolean}) => {
     return `/~/extHandle?${new URLSearchParams({
       ...params,
       isDir: String(params.isDir || ''),
       hostname: location.hostname,
     }).toString()}`;
   },
-  extAction: (params: {place: string; name: string; action: string, isDir: boolean}) => {
+  extAction: (params: {place: string; name: string; action: string; isDir: boolean}) => {
     return `/~/extAction?${new URLSearchParams({
       ...params,
       isDir: String(params.isDir || ''),

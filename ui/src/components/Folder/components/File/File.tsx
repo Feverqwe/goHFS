@@ -141,8 +141,10 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
   }, [dir, name]);
 
   const launchUrl = useMemo(() => {
-    return handleUrl ? apiUrl.extHandle({place: dir, name: file.name, isDir: file.isDir}) : undefined;
-  }, [file.name, dir, handleUrl]);
+    return handleUrl
+      ? apiUrl.extHandle({place: dir, name: file.name, isDir: file.isDir})
+      : undefined;
+  }, [handleUrl, dir, file.name, file.isDir]);
 
   const handleMenuClick = React.useCallback((e: React.MouseEvent) => {
     setMenuAnchorEl(e.currentTarget);
@@ -164,7 +166,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
     return (
       <ListItemText
         primary={name}
-        secondary={(
+        secondary={
           <>
             <SubLine>
               <div>{dateToStr(new Date(ctime))}</div>
@@ -176,7 +178,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload}) => {
               </ProgressCtr>
             )}
           </>
-        )}
+        }
         secondaryTypographyProps={{component: 'div'}}
         sx={NameSx}
       />

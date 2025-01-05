@@ -118,7 +118,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
     <>
       <List
         component="nav"
-        subheader={(
+        subheader={
           <Paper elevation={0} square={true}>
             <Box p={1} py={0.5} display="flex" alignItems="center">
               <Typography component={Box} sx={PathLinePathSx} variant="body2">
@@ -137,7 +137,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
               </IconButton>
             </Box>
           </Paper>
-        )}
+        }
         sx={RootSx}
       >
         {!store.isRoot && (

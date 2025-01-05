@@ -9,10 +9,9 @@ import {
   LinearProgress,
   Typography,
 } from '@mui/material';
+import QRCode from 'qrcode';
 import MyDialog from './MyDialog';
 import {api} from '../../../tools/api';
-
-const QRCode = require('qrcode');
 
 interface AddressesDialogProps {
   onClose: () => void;
@@ -88,7 +87,7 @@ const AddressItem = React.memo(({address}: AddressItemProps) => {
         version: 2,
         width: QR_CODE_SIZE,
       },
-      (err: Error) => {
+      (err) => {
         if (err) {
           console.error('Create QRCode error: %O', err);
         }

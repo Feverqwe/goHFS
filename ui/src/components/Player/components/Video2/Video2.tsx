@@ -15,11 +15,11 @@ import {getOption, setOption} from '../../../Folder/utils';
 import {SHORT_SKIP, SKIP} from './constants';
 import {getProgressKey} from '../../../../tools/common';
 
-// eslint-disable-next-line global-require
+// eslint-disable-next-line global-require,@typescript-eslint/no-require-imports
 const {Player} = require('../../../../../fork/@oplayer/core/dist/index.es') as {
   Player: typeof PlayerType;
 };
-// eslint-disable-next-line global-require
+// eslint-disable-next-line global-require,@typescript-eslint/no-require-imports
 const {default: OUI} = require('../../../../../fork/@oplayer/ui/dist/index.es') as {
   default: typeof OUIType;
 };
@@ -340,9 +340,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       setPlaying(player.isPlaying);
     });
 
-    // eslint-disable-next-line no-unused-expressions
-    DEBUG_EVENTS
-      && [
+    // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
+    DEBUG_EVENTS &&
+      [
         'abort',
         'canplay',
         'canplaythrough',
@@ -377,7 +377,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     };
 
-    const isBrokenAndroidEdgePlayer = /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
+    const isBrokenAndroidEdgePlayer =
+      /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
     if (isBrokenAndroidEdgePlayer) {
       player.once('loadedmetadata', () => {
         if (player.duration > 0) {
