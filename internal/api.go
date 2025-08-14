@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/NYTimes/gziphandler"
-	dirsize "github.com/bahelit/ctrl_plus_revise/pkg/dir_size"
 	"github.com/shirou/gopsutil/v4/disk"
 )
 
@@ -354,7 +353,7 @@ func handleDiskUsage(router *Router, config *Config) {
 
 			fs := os.DirFS(osFullPath)
 
-			dirInfo, _ := dirsize.GetDirInfo(fs)
+			dirInfo, _ := GetDirInfo(fs)
 
 			resule := &DirSize{
 				DirCount:  dirInfo.DirCount,
