@@ -118,7 +118,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       miniProgressBar: getOption(PLAYER_MPB, false),
       coverButton: isMobilePlayer,
       ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
-      speeds: ['2.0', '1.75', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
+      speeds: ['3.0', '2.75', '2.5', '2.25', '2.0', '1.75', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
       settings: [
         {
           name: 'Picture in Picture',
@@ -188,7 +188,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           switch (code) {
             case 'Period': {
               e.preventDefault();
-              if (player.playbackRate < 2) {
+              if (player.playbackRate < 3) {
                 player.setPlaybackRate(player.playbackRate + 0.25);
               }
               emitPlaybackRate();
