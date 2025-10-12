@@ -25,7 +25,7 @@
     "@mui/icons-material": "^7",
     "@mui/material": "^7",
     "@types/qrcode": "^1.5.5",
-    "filesize": "^10.0.5",
+    "filesize": "^11.0.13",
     "hls.js": "^1.5.2",
     "lodash": "^4.17.21",
     "mime": "^4.0.1",
