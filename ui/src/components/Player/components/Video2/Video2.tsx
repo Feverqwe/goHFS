@@ -316,11 +316,11 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         title,
       });
 
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      navigator.mediaSession.setActionHandler('previoustrack', (details) => {
         player.seek(player.currentTime - SHORT_SKIP);
       });
 
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      navigator.mediaSession.setActionHandler('nexttrack', (details) => {
         player.seek(player.currentTime + SHORT_SKIP);
       });
     }
@@ -592,8 +592,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       document.removeEventListener('touchstart', onTouchstart);
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = null;
-        navigator.mediaSession.setActionHandler('seekbackward', null);
-        navigator.mediaSession.setActionHandler('seekforward', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
       }
 
       if (hls) {
