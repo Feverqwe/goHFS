@@ -1,4 +1,4 @@
-import React, {FC, useContext, useEffect, useRef, useState} from 'react';
+import React, {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
@@ -74,7 +74,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
   const refCtr = useRef<HTMLDivElement>(null);
   const refStartTime = useRef(metadata ?? 0);
 
-  useEffect(() => {
+  const title = useMemo(() => {
     let uri;
     try {
       uri = url && new URL(url, location.href);
@@ -83,12 +83,17 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     }
     if (uri) {
       const name = Path.basename(uri.pathname);
-      document.title = `[${isPlaying ? '>' : '||'}] ${decodeURIComponent(name)}`;
+      return decodeURIComponent(name);
     }
+    return '';
+  }, [url]);
+
+  useEffect(() => {
+    document.title = `[${isPlaying ? '>' : '||'}] ${title}`;
     return () => {
       document.title = TITLE;
     };
-  }, [url, isPlaying]);
+  }, [url, isPlaying, title]);
 
   useEffect(() => {
     const ctrEl = refCtr.current;
@@ -118,7 +123,19 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       miniProgressBar: getOption(PLAYER_MPB, false),
       coverButton: isMobilePlayer,
       ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
-      speeds: ['3.0', '2.75', '2.5', '2.25', '2.0', '1.75', '1.5', '1.25', '1.0', '0.75', '0.5'].reverse(),
+      speeds: [
+        '3.0',
+        '2.75',
+        '2.5',
+        '2.25',
+        '2.0',
+        '1.75',
+        '1.5',
+        '1.25',
+        '1.0',
+        '0.75',
+        '0.5',
+      ].reverse(),
       settings: [
         {
           name: 'Picture in Picture',
@@ -293,6 +310,20 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         }
       }),
     );
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title,
+      });
+
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        player.seek(player.currentTime - SHORT_SKIP);
+      });
+
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        player.seek(player.currentTime + SHORT_SKIP);
+      });
+    }
 
     let onTouchstart: (e: TouchEvent) => void;
     if (isMobilePlayer) {
@@ -559,6 +590,11 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     return () => {
       document.removeEventListener('keydown', onKeydown);
       document.removeEventListener('touchstart', onTouchstart);
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+      }
 
       if (hls) {
         hls.detachMedia();
@@ -567,7 +603,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
 
       player.destroy();
     };
-  }, [url, toggleUrlDialog]);
+  }, [url, toggleUrlDialog, title]);
 
   return <CtrTag ref={refCtr} />;
 };
