@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"goHfs/assets"
+	boltstorage "goHfs/internal/boltStorage"
 	"log"
 	"net/http"
 	"os"
@@ -33,7 +34,7 @@ type File struct {
 	Progress float64 `json:"progress"`
 }
 
-func HandleDir(router *Router, config *Config, storage *Storage, debugUi bool) {
+func HandleDir(router *Router, config *Config, storage *boltstorage.BoltStorage, debugUi bool) {
 	type contextType string
 	const contentKey contextType = "content"
 

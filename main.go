@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"goHfs/internal"
+	boltstorage "goHfs/internal/boltStorage"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -20,9 +22,16 @@ func main() {
 
 	var powerControl = internal.GetPowerControl()
 
-	internal.MigrateStorage(internal.GetLegacyStoragePath(), internal.GetStoragePath())
+	_, dbErr := os.Stat(internal.GetBoltStoragePath())
+	storage := boltstorage.GetStorage(internal.GetBoltStoragePath())
 
-	storage := internal.GetStorage(internal.GetStoragePath())
+	if dbErr == fs.ErrNotExist {
+		oldStorage := internal.GetStorage(internal.GetStoragePath())
+		kv := oldStorage.GetKeys(nil)
+		storage.SetObject(kv)
+		storage.Save()
+		oldStorage = nil
+	}
 
 	callChan := make(chan string)
 

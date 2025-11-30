@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"goHfs/assets"
+	boltstorage "goHfs/internal/boltStorage"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -28,7 +29,7 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, config *Config, storage *Storage, debugUi bool, doReload func()) {
+func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage, debugUi bool, doReload func()) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
@@ -50,7 +51,7 @@ func handleFobidden(router *Router) {
 	})
 }
 
-func handleStore(router *Router, config *Config, storage *Storage) {
+func handleStore(router *Router, config *Config, storage *boltstorage.BoltStorage) {
 	router.Get("/~/getStore", func(w http.ResponseWriter, r *http.Request) {
 		place := NormalizePath(r.URL.Query().Get("place"))
 
@@ -366,7 +367,7 @@ func handleDiskUsage(router *Router, config *Config) {
 	})
 }
 
-func handleStorage(router *Router, storage *Storage) {
+func handleStorage(router *Router, storage *boltstorage.BoltStorage) {
 	router.Post("/~/storage/get", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (map[string]interface{}, error) {
 			keys, err := ParseJson[[]string](r.Body)

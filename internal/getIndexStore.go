@@ -1,13 +1,14 @@
 package internal
 
 import (
+	boltstorage "goHfs/internal/boltStorage"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
 )
 
-func GetIndexStore(config *Config, storage *Storage, place string, fullPath string) *RootStore {
+func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place string, fullPath string) *RootStore {
 	files := make([]File, 0)
 	showHidden := config.ShowHiddenFiles
 

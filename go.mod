@@ -30,6 +30,7 @@ require (
 require (
 	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/bmatcuk/doublestar/v3 v3.0.0 // indirect
+	github.com/boltdb/bolt v1.3.1
 	github.com/caseymrm/go-assertions v0.0.0-20180523040700-6ea0307b5bc5 // indirect
 	github.com/dchest/jsmin v1.0.0 // indirect
 	github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 // indirect

@@ -241,3 +241,8 @@ func GetStoragePath() string {
 	place := getProfilePath()
 	return filepath.Join(place, "storage-v2.json")
 }
+
+func GetBoltStoragePath() string {
+	place := getProfilePath()
+	return filepath.Join(place, "storage.db")
+}
