@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"goHfs/internal"
 	boltstorage "goHfs/internal/boltStorage"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -25,12 +24,15 @@ func main() {
 	_, dbErr := os.Stat(internal.GetBoltStoragePath())
 	storage := boltstorage.GetStorage(internal.GetBoltStoragePath())
 
-	if dbErr == fs.ErrNotExist {
+	if os.IsNotExist(dbErr) {
+		log.Println("Migrate to bolt")
 		oldStorage := internal.GetStorage(internal.GetStoragePath())
 		kv := oldStorage.GetKeys(nil)
 		storage.SetObject(kv)
 		storage.Save()
 		oldStorage = nil
+	} else {
+		log.Println("Migrate to bolt skip", dbErr)
 	}
 
 	callChan := make(chan string)
