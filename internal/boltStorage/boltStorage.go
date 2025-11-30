@@ -9,7 +9,6 @@ import (
 
 type BoltStorage struct {
 	path   string
-	ch     chan int
 	db     *bolt.DB
 	bucket []byte
 }
@@ -91,7 +90,6 @@ func (s *BoltStorage) SetKey(key string, value interface{}) {
 	if err != nil {
 		log.Println("SetKey key error", key, err)
 	}
-	s.SaveQueue()
 }
 
 func (s *BoltStorage) SetObject(keyValue map[string]interface{}) error {
@@ -113,7 +111,6 @@ func (s *BoltStorage) SetObject(keyValue map[string]interface{}) error {
 	if err != nil {
 		log.Println("SetObject error", err)
 	}
-	s.SaveQueue()
 	return nil
 }
 
@@ -125,7 +122,6 @@ func (s *BoltStorage) DelKey(key string) {
 	if err != nil {
 		log.Println("Del key error", err)
 	}
-	s.SaveQueue()
 }
 
 func (s *BoltStorage) DelKeys(keys []string) error {
@@ -142,12 +138,7 @@ func (s *BoltStorage) DelKeys(keys []string) error {
 	if err != nil {
 		log.Println("DelKeys error", err)
 	}
-	s.SaveQueue()
 	return nil
-}
-
-func (s *BoltStorage) SaveQueue() {
-	s.ch <- 1
 }
 
 func (s *BoltStorage) Load() error {
@@ -166,7 +157,7 @@ func (s *BoltStorage) Load() error {
 	return nil
 }
 
-func (s *BoltStorage) Save() error {
+func (s *BoltStorage) Sync() error {
 	err := s.db.Sync()
 	return err
 }
@@ -174,21 +165,11 @@ func (s *BoltStorage) Save() error {
 func GetStorage(path string) *BoltStorage {
 	storage := &BoltStorage{
 		path:   path,
-		ch:     make(chan int),
 		bucket: []byte("store"),
 	}
 	err := storage.Load()
 	if err != nil {
 		log.Fatalln("Load db error:", err)
 	}
-	go func() {
-		for {
-			<-storage.ch
-			err := storage.Save()
-			if err != nil {
-				log.Println("Save db error:", err)
-			}
-		}
-	}()
 	return storage
 }

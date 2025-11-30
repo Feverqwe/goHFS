@@ -29,7 +29,6 @@ func main() {
 		oldStorage := internal.GetStorage(internal.GetStoragePath())
 		kv := oldStorage.GetKeys(nil)
 		storage.SetObject(kv)
-		storage.Save()
 		oldStorage = nil
 	}
 
