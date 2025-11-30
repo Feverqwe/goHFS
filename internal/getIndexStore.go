@@ -9,16 +9,25 @@ import (
 )
 
 func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place string, fullPath string) *RootStore {
-	files := make([]File, 0)
+	files := make([]*File, 0)
 	showHidden := config.ShowHiddenFiles
 
 	linksSet := make(map[string]bool)
 
-	setProgress := func(f *File) {
-		key := getProgressKey(path.Join(place, f.Name))
-		if rawProgress, ok := storage.GetKey(key); ok {
-			if progress, ok := rawProgress.(float64); ok {
-				f.Progress = progress
+	enrichProgress := func(files []*File) {
+		keys := make([]string, 0)
+		keyFile := make(map[string]*File)
+		for _, f := range files {
+			key := getProgressKey(path.Join(place, f.Name))
+			keyFile[key] = f
+			keys = append(keys, key)
+		}
+		keyValue := storage.GetKeys(keys)
+		for k, rawProgress := range keyValue {
+			if f, ok := keyFile[k]; ok {
+				if progress, ok := rawProgress.(float64); ok {
+					f.Progress = progress
+				}
 			}
 		}
 	}
@@ -40,9 +49,7 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 				continue
 			}
 
-			setProgress(&f)
-
-			files = append(files, f)
+			files = append(files, &f)
 		}
 	}
 
@@ -76,10 +83,10 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 			}
 		}
 
-		setProgress(&file)
-
-		files = append(files, file)
+		files = append(files, &file)
 	}
+
+	enrichProgress(files)
 
 	isRoot := place == "/"
 	isWritable := config.IsWritable(path.Join(place, "tmp"))

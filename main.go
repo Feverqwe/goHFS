@@ -31,8 +31,6 @@ func main() {
 		storage.SetObject(kv)
 		storage.Save()
 		oldStorage = nil
-	} else {
-		log.Println("Migrate to bolt skip", dbErr)
 	}
 
 	callChan := make(chan string)
