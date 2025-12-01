@@ -15,21 +15,19 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 	linksSet := make(map[string]bool)
 
 	enrichProgress := func(files []*File) {
-		keys := make([]string, 0)
-		keyFile := make(map[string]*File)
-		for _, f := range files {
-			key := getProgressKey(path.Join(place, f.Name))
-			keyFile[key] = f
-			keys = append(keys, key)
-		}
-		keyValue := storage.GetKeys(keys)
-		for k, rawProgress := range keyValue {
-			if f, ok := keyFile[k]; ok {
-				if progress, ok := rawProgress.(float64); ok {
-					f.Progress = progress
+		storage.Read(func(r boltstorage.BoltRead) error {
+			for _, f := range files {
+				key := getProgressKey(path.Join(place, f.Name))
+				if v, err := r.Get(key); err == nil {
+					if v != nil {
+						if progress, ok := v.(float64); ok {
+							f.Progress = progress
+						}
+					}
 				}
 			}
-		}
+			return nil
+		})
 	}
 
 	for _, l := range config.Links {

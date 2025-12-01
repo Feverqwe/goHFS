@@ -1,7 +1,6 @@
 package boltstorage
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/boltdb/bolt"
@@ -18,28 +17,21 @@ func (s *BoltStorage) GetKeys(keys []string) map[string]interface{} {
 	var result = make(map[string]interface{})
 
 	if keys == nil {
-		err = s.db.View(func(tx *bolt.Tx) error {
-			b := tx.Bucket(s.bucket)
-			return b.ForEach(func(k, v []byte) error {
-				key := string(k)
-				if r, err := JSONToInterface(v); err == nil {
-					result[key] = r
-				} else {
-					log.Println("parse key value error", key, err)
+		err = s.Read(func(r BoltRead) error {
+			return r.ForEach(func(k string, v interface{}, err error) error {
+				if err != nil {
+					log.Println("parse key value error", err)
+					return nil
 				}
+				result[k] = v
 				return nil
 			})
 		})
 	} else {
-		err = s.db.View(func(tx *bolt.Tx) error {
-			b := tx.Bucket(s.bucket)
+		err = s.Read(func(r BoltRead) error {
 			for _, key := range keys {
-				if v := b.Get([]byte(key)); v != nil {
-					if r, err := JSONToInterface(v); err == nil {
-						result[key] = r
-					} else {
-						log.Println("parse key value error", key, err)
-					}
+				if v, err := r.Get(key); err == nil && v != nil {
+					result[key] = v
 				}
 			}
 			return nil
@@ -51,45 +43,26 @@ func (s *BoltStorage) GetKeys(keys []string) map[string]interface{} {
 	return result
 }
 
-func (s *BoltStorage) GetKey(key string) (r interface{}, err error) {
-	r = nil
-	err = s.db.View(func(tx *bolt.Tx) (err error) {
-		b := tx.Bucket(s.bucket)
-		if v := b.Get([]byte(key)); v != nil {
-			if r, err = JSONToInterface(v); err != nil {
-				err = fmt.Errorf("parse key %s value error: %w", key, err)
-			}
-		}
+func (s *BoltStorage) GetKey(key string) (v interface{}, err error) {
+	v = nil
+	err = s.Read(func(r BoltRead) (err error) {
+		v, err = r.Get(key)
 		return
 	})
 	return
 }
 
 func (s *BoltStorage) SetKey(key string, value interface{}) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(s.bucket)
-		v, err := InterfaceToJSON(value)
-		if err != nil {
-			return fmt.Errorf("serialize key %s value error: %w", key, err)
-		}
-		if err = b.Put([]byte(key), v); err != nil {
-			return fmt.Errorf("put key error %s %w", key, err)
-		}
-		return nil
+	return s.Write(func(w BoltWrite) error {
+		return w.Set(key, value)
 	})
 }
 
 func (s *BoltStorage) SetObject(keyValue map[string]interface{}) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(s.bucket)
+	return s.Write(func(w BoltWrite) error {
 		for key, value := range keyValue {
-			v, err := InterfaceToJSON(value)
-			if err != nil {
-				log.Println(fmt.Errorf("serialize key %s value error: %w", key, err))
-				continue
-			}
-			if err = b.Put([]byte(key), v); err != nil {
-				log.Println("put key error:", key, err)
+			if err := w.Set(key, value); err != nil {
+				log.Println("set key error:", key, err)
 			}
 		}
 		return nil
@@ -97,21 +70,35 @@ func (s *BoltStorage) SetObject(keyValue map[string]interface{}) error {
 }
 
 func (s *BoltStorage) DelKey(key string) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(s.bucket)
-		return b.Delete([]byte(key))
+	return s.Write(func(w BoltWrite) error {
+		return w.Delete(key)
 	})
 }
 
 func (s *BoltStorage) DelKeys(keys []string) error {
-	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(s.bucket)
+	return s.Write(func(w BoltWrite) error {
 		for _, key := range keys {
-			if err := b.Delete([]byte(key)); err != nil {
+			if err := w.Delete(key); err != nil {
 				log.Println("del key error", err)
 			}
 		}
 		return nil
+	})
+}
+
+func (s *BoltStorage) Read(cb func(r BoltRead) error) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(s.bucket)
+		r := BoltRead{b: b}
+		return cb(r)
+	})
+}
+
+func (s *BoltStorage) Write(cb func(w BoltWrite) error) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(s.bucket)
+		w := BoltWrite{b: b}
+		return cb(w)
 	})
 }
 
