@@ -135,6 +135,10 @@ func (s *BoltStorage) Sync() error {
 	return s.db.Sync()
 }
 
+func (s *BoltStorage) Close() error {
+	return s.db.Close()
+}
+
 func GetStorage(path string) *BoltStorage {
 	storage := &BoltStorage{
 		path:   path,
