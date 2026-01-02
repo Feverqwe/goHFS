@@ -484,6 +484,10 @@ func handleAction(router *Router, config *Config, doReload func()) {
 				return "", errors.New("place is not writable")
 			}
 
+			if _, err := os.Stat(osNewPath); err == nil {
+				return "", errors.New("target file exists")
+			}
+
 			err = os.Rename(osTargetPath, osNewPath)
 
 			return "ok", err
