@@ -46,6 +46,7 @@ type Config struct {
 	FfmpegPath           string
 	PreviewWorkers       int
 	PreviewVideoExts     []string
+	PreviewImageExts     []string
 	PreviewTtl           int64
 	prepWritablePatterns []PrepPattern
 }
@@ -144,6 +145,7 @@ func getNewConfig() Config {
 		PreviewWorkers:   2,
 		PreviewTtl:       7 * 24 * 3600,
 		PreviewVideoExts: []string{".mp4", ".mov", ".mkv", ".avi", ".webm"},
+		PreviewImageExts: []string{".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"},
 	}
 	pwd := getProfilePath()
 	config.Port = 80

@@ -37,7 +37,7 @@ type PreviewManager struct {
 }
 
 func NewPreviewManager(config *Config, storage *boltstorage.BoltStorage) *PreviewManager {
-	cacheDir := filepath.Join(GetPreviewsPath(), "previews")
+	cacheDir := GetPreviewsPath()
 	err := os.MkdirAll(cacheDir, 0755)
 	if err != nil {
 		log.Fatalf("Failed to create previews cache directory: %v", err)

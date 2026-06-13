@@ -6,9 +6,18 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place string, fullPath string) *RootStore {
+	previewExtensions := make(map[string]bool)
+	for _, ext := range config.PreviewVideoExts {
+		previewExtensions[strings.ToLower(ext)] = true
+	}
+	for _, ext := range config.PreviewImageExts {
+		previewExtensions[strings.ToLower(ext)] = true
+	}
+
 	files := make([]*File, 0)
 	showHidden := config.ShowHiddenFiles
 
@@ -43,6 +52,12 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 			f.IsDir = cache.isDir
 			f.Size = cache.size
 			f.Ctime = cache.ctime
+
+			if !f.IsDir {
+				ext := strings.ToLower(filepath.Ext(f.Name))
+				f.HasPreview = previewExtensions[ext]
+			}
+
 			if !showHidden && isHiddenName(f.Name) {
 				continue
 			}
@@ -79,6 +94,11 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 					file.Ctime = UnixMilli(stat.ModTime())
 				}
 			}
+
+			if !file.IsDir {
+				ext := strings.ToLower(filepath.Ext(file.Name))
+				file.HasPreview = previewExtensions[ext]
+			}
 		}
 
 		files = append(files, &file)
@@ -90,6 +110,7 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 	isWritable := config.IsWritable(path.Join(place, "tmp"))
 
 	dirSort, _ := storage.GetKey("dirSort-" + place)
+	viewMode, _ := storage.GetKey("viewMode-" + place)
 
 	result := RootStore{
 		Dir:        place,
@@ -100,6 +121,7 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 		ExtActions: config.ExtActions,
 		DirSort:    dirSort,
 		ShowHidden: showHidden,
+		ViewMode:   viewMode,
 	}
 
 	return &result

@@ -23,15 +23,17 @@ type RootStore struct {
 	ExtActions map[string][]ExtAction `json:"extActions"`
 	DirSort    interface{}            `json:"dirSort"`
 	ShowHidden bool                   `json:"showHidden"`
+	ViewMode   interface{}            `json:"viewMode"`
 }
 
 type File struct {
-	Name     string  `json:"name"`
-	IsDir    bool    `json:"isDir"`
-	IsLink   bool    `json:"isLink"`
-	Ctime    int64   `json:"ctime"` // ms
-	Size     int64   `json:"size"`  // bytes
-	Progress float64 `json:"progress"`
+	Name       string  `json:"name"`
+	IsDir      bool    `json:"isDir"`
+	IsLink     bool    `json:"isLink"`
+	Ctime      int64   `json:"ctime"` // ms
+	Size       int64   `json:"size"`  // bytes
+	Progress   float64 `json:"progress"`
+	HasPreview bool    `json:"hasPreview"`
 }
 
 func HandleDir(router *Router, config *Config, storage *boltstorage.BoltStorage, debugUi bool) {

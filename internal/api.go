@@ -40,8 +40,8 @@ func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage,
 	handleAction(apiRouter, config, doReload)
 	handleInterfaces(apiRouter, config)
 	handleDiskUsage(apiRouter, config)
-	handleFobidden(apiRouter)
 	handlePreview(apiRouter, config, previewMgr)
+	handleFobidden(apiRouter)
 
 	router.All("^/~/", gzipHandler.ServeHTTP)
 }
@@ -712,7 +712,7 @@ func handlePreview(router *Router, config *Config, pm *PreviewManager) {
 	const alreadyInQueueStatus = "already_in_queue"
 
 	type PreviewTaskState struct {
-		status string
+		Status string `json:"status"`
 	}
 
 	router.Get("/~/preview", func(w http.ResponseWriter, r *http.Request) {
@@ -756,9 +756,9 @@ func handlePreview(router *Router, config *Config, pm *PreviewManager) {
 
 		var result PreviewTaskState
 		if added {
-			result = PreviewTaskState{status: processingStatus}
+			result = PreviewTaskState{Status: processingStatus}
 		} else {
-			result = PreviewTaskState{status: alreadyInQueueStatus}
+			result = PreviewTaskState{Status: alreadyInQueueStatus}
 		}
 		writeApiResultWithStatus(w, http.StatusAccepted, result, nil)
 	})
