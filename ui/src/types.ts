@@ -4,6 +4,7 @@ export interface FileInfo {
   name: string;
   isDir: boolean;
   progress: number;
+  hasPreview: boolean;
 }
 
 export interface ExtAction {
@@ -17,6 +18,8 @@ export interface DirSort {
   revers: boolean;
 }
 
+export type ViewMode = 'list' | 'grid';
+
 export interface RootStore {
   dir: string;
   isRoot: boolean;
@@ -26,6 +29,7 @@ export interface RootStore {
   extActions: Partial<Record<string, ExtAction[]>>;
   dirSort: DirSort | null;
   showHidden?: boolean;
+  viewMode: ViewMode | null;
 }
 
 export interface DiskUsage {

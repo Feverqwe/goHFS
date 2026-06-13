@@ -14,11 +14,13 @@ import {
   ArrowBack as ArrowBackIcon,
   Sort as SortIcon,
   Upload as UploadIcon,
+  ViewList as ViewListIcon,
+  ViewModule as ViewModuleIcon,
 } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from './SelectProvider/SelectCtx';
-import {FileInfo} from '../../../types';
+import {FileInfo, ViewMode} from '../../../types';
 import useUpload from './hooks/useUpload';
 import File from './File/File';
 import DropZone from './DropZone';
@@ -48,9 +50,11 @@ const iconStyle = {
 interface FolderViewProps {
   files: FileInfo[];
   onShowSortDialog: () => void;
+  viewMode: ViewMode;
+  onChangeViewMode: (mode: ViewMode) => Promise<void>;
 }
 
-const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
+const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog, viewMode, onChangeViewMode}) => {
   const store = useContext(RootStoreCtx);
   const selectMode = useContext(SelectModeCtx);
   const [showAddressesDialog, setShowAddressesDialog] = useState(false);
@@ -60,6 +64,11 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
   const [showMkdirDialog, setShowMkdirDialog] = useState(false);
   const [showDiskUsageDialog, setShowDiskUsageDialog] = useState(false);
   const [showDirSizeDialog, setShowDirSizeDialog] = useState(false);
+
+  const toggleViewMode = useCallback(async () => {
+    const nextMode = viewMode === 'list' ? 'grid' : 'list';
+    await onChangeViewMode(nextMode);
+  }, [viewMode, onChangeViewMode]);
 
   const handleAddressesBtn = useCallback(() => {
     setShowAddressesDialog(true);
@@ -129,6 +138,17 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
                   <UploadIcon fontSize="small" />
                 </IconButton>
               ) : null}
+              <IconButton
+                title={viewMode === 'list' ? 'Grid view' : 'List view'}
+                onClick={toggleViewMode}
+                size="small"
+              >
+                {viewMode === 'list' ? (
+                  <ViewModuleIcon fontSize="small" />
+                ) : (
+                  <ViewListIcon fontSize="small" />
+                )}
+              </IconButton>
               <IconButton title="Sort" onClick={onShowSortDialog} size="small">
                 <SortIcon fontSize="small" />
               </IconButton>
@@ -148,15 +168,33 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog}) => {
             <ListItemText primary="Back" />
           </ListItemButton>
         )}
-        {files.map((file) => (
-          <File
-            key={`${file.isDir}_${file.name}`}
-            dir={store.dir}
-            file={file}
-            writable={store.isWritable}
-            onReload={handleReload}
-          />
-        ))}
+
+        {/* Рендеринг файлов с учетом выбранной сетки */}
+        {viewMode === 'grid' ? (
+          <Box display="flex" flexWrap="wrap" px={1}>
+            {files.map((file) => (
+              <File
+                key={`${file.isDir}_${file.name}`}
+                dir={store.dir}
+                file={file}
+                writable={store.isWritable}
+                onReload={handleReload}
+                viewMode={viewMode}
+              />
+            ))}
+          </Box>
+        ) : (
+          files.map((file) => (
+            <File
+              key={`${file.isDir}_${file.name}`}
+              dir={store.dir}
+              file={file}
+              writable={store.isWritable}
+              onReload={handleReload}
+              viewMode={viewMode}
+            />
+          ))
+        )}
       </List>
       {store.isWritable && <DropZone onUpload={handleUpload} />}
       {showAddressesDialog && <AddressesDialog onClose={handleCloseDialog} />}

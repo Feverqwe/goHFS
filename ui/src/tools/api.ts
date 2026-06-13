@@ -96,6 +96,14 @@ export const api = {
     method: 'GET',
     path: '/~/getStore',
   }),
+  previewCleanup: action<void, string>({
+    method: 'POST',
+    path: '/~/preview/cleanup',
+  }),
+  previewResetFailed: action<void, string>({
+    method: 'POST',
+    path: '/~/preview/resetFailed',
+  }),
 };
 
 export const apiUrl = {

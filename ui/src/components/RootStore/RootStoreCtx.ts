@@ -9,6 +9,7 @@ const defaultStore = {
   extHandle: {},
   extActions: {},
   dirSort: null,
-};
+  viewMode: null,
+} satisfies RootStore;
 
 export const RootStoreCtx = createContext<RootStore>(defaultStore);

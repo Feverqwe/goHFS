@@ -50,7 +50,7 @@ const FileMenu: FC<FileDialogProps> = ({
 
     if (launchUrl) {
       actions.push({
-        id: 'open',
+        id: 'launch',
         label: 'Launch',
         icon: <RocketLaunchIcon />,
         href: launchUrl,
@@ -70,7 +70,7 @@ const FileMenu: FC<FileDialogProps> = ({
       actions.push(dividerItem);
       customActions.forEach(({name, newPage}, index) => {
         actions.push({
-          id: String(index),
+          id: `ca-${index}`,
           label: name,
           icon: <OpenInNewIcon />,
           href: apiUrl.extAction({
@@ -146,9 +146,9 @@ const FileMenu: FC<FileDialogProps> = ({
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
-      {menu.map((item) => {
+      {menu.map((item, idx) => {
         if ('isDivider' in item) {
-          return <Divider />;
+          return <Divider key={idx} />;
         }
 
         return <ActionBtn key={item.id} item={item} onSuccess={onClose} />;

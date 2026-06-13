@@ -11,6 +11,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import DataUsageIcon from '@mui/icons-material/DataUsage';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import {DirSort, FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
@@ -140,6 +142,33 @@ const FolderMenu: FC<FolderMenuProps> = ({
 
           await updateStore();
 
+          onClose();
+        },
+      },
+      {
+        id: 'cleanPreviews',
+        title: 'Clean expired previews',
+        icon: <DeleteSweepIcon />,
+        onClick: async () => {
+          try {
+            await api.previewCleanup();
+          } catch (err) {
+            console.error('Failed to clear previews:', err);
+          }
+          onClose();
+        },
+      },
+      {
+        id: 'resetFailedPreviews',
+        title: 'Reset failed previews',
+        icon: <RestartAltIcon />,
+        onClick: async () => {
+          try {
+            await api.previewResetFailed();
+            await updateStore();
+          } catch (err) {
+            console.error('Failed to reset preview failure states:', err);
+          }
           onClose();
         },
       },
