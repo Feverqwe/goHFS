@@ -1,0 +1,53 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "input": {
+    "maxFileSize": 1048576
+  },
+  "output": {
+    "filePath": "repomix-output.md",
+    "style": "markdown",
+    "parsableStyle": true,
+    "fileSummary": true,
+    "directoryStructure": true,
+    "files": true,
+    "removeComments": false,
+    "removeEmptyLines": true, 
+    "compress": false,
+    "topFilesLength": 10,
+    "showLineNumbers": false,
+    "copyToClipboard": false,
+    "includeFullDirectoryStructure": true,
+    "tokenCountTree": true
+  },
+  "include": [
+    "**/*.go",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.json",
+    "**/*.mod"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "assets/**",
+      "package-lock.json",
+      "*.png",
+      "*.ico",
+      "*.icns",
+      "*.svg",
+      "*.sum",
+      ".gitignore",
+      "**/.eslintrc.json",
+      "**/.prettierrc.json",
+      "scripts/**",
+      "repomix.config.json",
+      "dist/**",
+      "**/node_modules/**",
+      "ui/fork/**"
+    ]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

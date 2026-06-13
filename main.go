@@ -18,6 +18,7 @@ func main() {
 	}
 
 	var config internal.Config
+	var previewMgr *internal.PreviewManager
 
 	var powerControl = internal.GetPowerControl()
 
@@ -55,10 +56,15 @@ func main() {
 					httpServer.Close()
 				}
 
+				if previewMgr != nil {
+					previewMgr.Close()
+				}
+
 				router := internal.NewRouter()
+				previewMgr = internal.NewPreviewManager(&config, storage)
 
 				powerLock(router, powerControl)
-				internal.HandleApi(router, &config, storage, DEBUG_UI, doReload)
+				internal.HandleApi(router, &config, storage, DEBUG_UI, doReload, previewMgr)
 				internal.HandleDir(router, &config, storage, DEBUG_UI)
 				fsServer(router)
 

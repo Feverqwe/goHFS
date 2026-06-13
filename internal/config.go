@@ -43,6 +43,10 @@ type Config struct {
 	WritablePatterns     []string
 	Salt                 string
 	Links                []*Link
+	FfmpegPath           string
+	PreviewWorkers       int
+	PreviewVideoExts     []string
+	PreviewTtl           int64
 	prepWritablePatterns []PrepPattern
 }
 
@@ -136,6 +140,10 @@ func getNewConfig() Config {
 		ExtActions:       make(map[string][]ExtAction),
 		WritablePatterns: make([]string, 0),
 		Links:            make([]*Link, 0),
+		FfmpegPath:       "ffmpeg",
+		PreviewWorkers:   2,
+		PreviewTtl:       7 * 24 * 3600,
+		PreviewVideoExts: []string{".mp4", ".mov", ".mkv", ".avi", ".webm"},
 	}
 	pwd := getProfilePath()
 	config.Port = 80
@@ -245,4 +253,9 @@ func GetStoragePath() string {
 func GetBoltStoragePath() string {
 	place := getProfilePath()
 	return filepath.Join(place, "storage.db")
+}
+
+func GetPreviewsPath() string {
+	place := getProfilePath()
+	return filepath.Join(place, "previews")
 }

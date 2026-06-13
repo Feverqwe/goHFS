@@ -29,7 +29,7 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage, debugUi bool, doReload func()) {
+func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage, debugUi bool, doReload func(), previewMgr *PreviewManager) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
@@ -41,6 +41,7 @@ func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage,
 	handleInterfaces(apiRouter, config)
 	handleDiskUsage(apiRouter, config)
 	handleFobidden(apiRouter)
+	handlePreview(apiRouter, config, previewMgr)
 
 	router.All("^/~/", gzipHandler.ServeHTTP)
 }
@@ -706,6 +707,80 @@ func handleAction(router *Router, config *Config, doReload func()) {
 	})
 }
 
+func handlePreview(router *Router, config *Config, pm *PreviewManager) {
+	const processingStatus = "processing"
+	const alreadyInQueueStatus = "already_in_queue"
+
+	type PreviewTaskState struct {
+		status string
+	}
+
+	router.Get("/~/preview", func(w http.ResponseWriter, r *http.Request) {
+		place := NormalizePath(r.URL.Query().Get("place"))
+		osFullPath, err := config.GetPlaceOsPath(place)
+		if err != nil {
+			w.WriteHeader(403)
+			return
+		}
+
+		stat, err := os.Stat(osFullPath)
+		if err != nil {
+			HandleOpenFileError(err, w)
+			return
+		}
+		if stat.IsDir() {
+			w.WriteHeader(400)
+			return
+		}
+
+		// Получаем ID превью на основе пути и даты модификации файла
+		previewID := pm.GetPreviewID(osFullPath, stat.ModTime().Unix())
+
+		if pm.IsFailed(previewID) {
+			writeApiResult(w, nil, errors.New("preview_generation_failed_permanently"))
+			return
+		}
+
+		previewPath := pm.GetPreviewPath(previewID)
+
+		// Проверяем, существует ли уже кэш
+		if _, err := os.Stat(previewPath); err == nil {
+			pm.TouchPreview(previewPath)
+			w.Header().Set("Content-Type", "image/jpeg")
+			http.ServeFile(w, r, previewPath)
+			return
+		}
+
+		// Если превью нет, добавляем задачу в очередь
+		added := pm.AddTask(osFullPath, previewID, config.PreviewVideoExts)
+
+		var result PreviewTaskState
+		if added {
+			result = PreviewTaskState{status: processingStatus}
+		} else {
+			result = PreviewTaskState{status: alreadyInQueueStatus}
+		}
+		writeApiResultWithStatus(w, http.StatusAccepted, result, nil)
+	})
+
+	router.Post("/~/preview/cleanup", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (string, error) {
+			pm.CleanCache(time.Duration(config.PreviewTtl) * time.Second)
+			return "ok", nil
+		})
+	})
+
+	router.Post("/~/preview/resetFailed", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (string, error) {
+			err := pm.ResetFailedStates()
+			if err != nil {
+				return "", err
+			}
+			return "ok", nil
+		})
+	})
+}
+
 func handleWww(router *Router, debugUi bool) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
@@ -762,14 +837,21 @@ func ParseJson[T any](data io.Reader) (*T, error) {
 
 func writeApiResult(w http.ResponseWriter, result interface{}, err error) error {
 	var statusCode int
-	var body interface{}
 	if err != nil {
 		statusCode = 500
+	} else {
+		statusCode = 200
+	}
+	return writeApiResultWithStatus(w, statusCode, result, err)
+}
+
+func writeApiResultWithStatus(w http.ResponseWriter, statusCode int, result interface{}, err error) error {
+	var body interface{}
+	if err != nil {
 		body = JsonFailResponse{
 			Error: err.Error(),
 		}
 	} else {
-		statusCode = 200
 		body = JsonSuccessResponse{
 			Result: result,
 		}
