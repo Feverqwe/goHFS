@@ -1,6 +1,5 @@
-import React, {FC, memo, useEffect, useState, useRef, useContext} from 'react';
+import React, {FC, memo, useEffect, useRef, useState} from 'react';
 import {Box, CircularProgress} from '@mui/material';
-import {RootStoreCtx} from '../../../../RootStore/RootStoreCtx'; // Импортируем контекст стора
 
 interface FilePreviewProps {
   name: string;
@@ -13,6 +12,9 @@ interface FilePreviewProps {
 const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, hasPreview}) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isIntersecting, setIsIntersecting] = useState(false); // Visibility tracking status
+
+  const refContainer = useRef<HTMLDivElement | null>(null);
   const refTimer = useRef<number | null>(null);
 
   const wSize = viewMode === 'grid' ? 150 : 40;
@@ -39,52 +41,76 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
     }
   }, [dir, name]);
 
+  // Phase 1: Set up intersection tracker
   useEffect(() => {
-    if (hasPreview) {
+    if (!hasPreview || previewUrl || !refContainer.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          observer.disconnect(); // Stop tracking once it becomes visible
+        }
+      },
+      {
+        rootMargin: '100px', // Pre-load 100px before the element rolls onto screen
+      },
+    );
+
+    observer.observe(refContainer.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasPreview, previewUrl]);
+
+  // Phase 2: Fire checking queues ONLY when inside view boundaries
+  useEffect(() => {
+    if (hasPreview && isIntersecting) {
       checkPreview();
     }
 
     return () => {
       if (refTimer.current) window.clearTimeout(refTimer.current);
     };
-  }, [checkPreview, hasPreview]); // Добавили зависимости
-
-  if (previewUrl) {
-    return (
-      <Box
-        component="img"
-        src={previewUrl}
-        alt={name}
-        sx={{
-          width: wSize,
-          height: hSize,
-          objectFit: 'contain',
-          borderRadius: '4px',
-        }}
-      />
-    );
-  }
+  }, [checkPreview, hasPreview, isIntersecting]);
 
   return (
-    <Box
-      position="relative"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      width={wSize}
-      height={hSize}
-    >
-      {defaultIcon}
-      {loading && (
-        <CircularProgress
-          size={wSize * 0.6}
+    <div ref={refContainer} style={{ width: wSize, height: hSize }}>
+      {previewUrl ? (
+        <Box
+          component="img"
+          src={previewUrl}
+          alt={name}
           sx={{
-            position: 'absolute',
-            color: 'primary.main',
+            width: wSize,
+            height: hSize,
+            objectFit: 'cover',
+            borderRadius: '4px',
           }}
         />
+      ) : (
+        <Box
+          position="relative"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          width={wSize}
+          height={hSize}
+        >
+          {defaultIcon}
+          {loading && (
+            <CircularProgress
+              size={hSize * 0.6}
+              sx={{
+                position: 'absolute',
+                color: 'primary.main',
+              }}
+            />
+          )}
+        </Box>
       )}
-    </Box>
+    </div>
   );
 };
 
