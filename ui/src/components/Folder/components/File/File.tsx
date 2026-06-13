@@ -114,12 +114,12 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
 
   const RawIcon = React.useMemo(() => {
     if (isDir) {
-      return <FolderIcon fontSize={viewMode === 'grid' ? 'large' : 'medium'} />;
+      return <FolderIcon fontSize={viewMode === 'grid' ? 'large' : 'medium'} className="file-icon" />;
     }
     const mimeType = mime.getType(name);
     const m = /^([^\/]+)/.exec(mimeType || '');
     const generalType = m && m[1];
-    const iconProps = {fontSize: viewMode === 'grid' ? 'large' : ('medium' as any)};
+    const iconProps = {fontSize: viewMode === 'grid' ? 'large' as const : 'medium' as const, className: 'file-icon'};
     switch (generalType) {
       case 'video':
         return <MovieIcon {...iconProps} />;
@@ -174,7 +174,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
             component: 'div',
           },
         }}
-        secondary={
+        secondary={(
           <>
             <SubLine
               style={viewMode === 'grid' ? {flexDirection: 'column', fontSize: '12px'} : undefined}
@@ -188,7 +188,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
               </ProgressCtr>
             )}
           </>
-        }
+        )}
         sx={NameSx}
       />
     );
@@ -291,17 +291,8 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
               className={menuAnchorEl ? 'menu-opened' : undefined}
               color={handleUrl ? 'primary' : undefined}
               onClick={handleMenuClick}
-              sx={{width: 40, height: 40}}
             >
-              <Box className="file-icon">
-                <FilePreview
-                  name={name}
-                  dir={dir}
-                  defaultIcon={RawIcon}
-                  viewMode="list"
-                  hasPreview={file.hasPreview}
-                />
-              </Box>
+              {RawIcon}
               <MoreHorizIcon className="menu-icon" />
             </MyIconButton>
           </IconBox>
