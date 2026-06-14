@@ -59,7 +59,7 @@ func (s *Config) GetAddress() string {
 
 func (s *Config) GetBrowserAddress() string {
 	addr := s.Address
-	if addr == "" {
+	if addr == "" || addr == "0.0.0.0" {
 		addr = "127.0.0.1"
 	}
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
