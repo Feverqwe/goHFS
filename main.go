@@ -22,16 +22,7 @@ func main() {
 
 	var powerControl = internal.GetPowerControl()
 
-	_, dbErr := os.Stat(internal.GetBoltStoragePath())
 	storage := boltstorage.GetStorage(internal.GetBoltStoragePath())
-
-	if os.IsNotExist(dbErr) {
-		log.Println("Migrate to bolt")
-		oldStorage := internal.GetStorage(internal.GetStoragePath())
-		kv := oldStorage.GetKeys(nil)
-		storage.SetObject(kv)
-		oldStorage = nil
-	}
 
 	callChan := make(chan string)
 

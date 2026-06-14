@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/natefinch/atomic"
 )
 
@@ -27,27 +27,27 @@ type PrepPattern struct {
 }
 
 type ExtAction struct {
-	Name    string `json:"name"`
-	Url     string `json:"url"`
-	NewPage bool   `json:"newPage"`
+	Name    string `json:"name" yaml:"name"`
+	Url     string `json:"url" yaml:"url"`
+	NewPage bool   `json:"newPage" yaml:"newPage"`
 }
 
 type Config struct {
-	Port                 int
-	Address              string
-	Public               string
-	Name                 string
-	ShowHiddenFiles      bool
-	ExtHandle            map[string]string
-	ExtActions           map[string][]ExtAction
-	WritablePatterns     []string
-	Salt                 string
-	Links                []*Link
-	FfmpegPath           string
-	PreviewWorkers       int
-	PreviewVideoExts     []string
-	PreviewImageExts     []string
-	PreviewTtl           int64
+	Port                 int                    `yaml:"port"`
+	Address              string                 `yaml:"address"`
+	Public               string                 `yaml:"public"`
+	Name                 string                 `yaml:"name"`
+	ShowHiddenFiles      bool                   `yaml:"showHiddenFiles"`
+	ExtHandle            map[string]string      `yaml:"extHandle"`
+	ExtActions           map[string][]ExtAction `yaml:"extActions"`
+	WritablePatterns     []string               `yaml:"writablePatterns"`
+	Salt                 string                 `yaml:"salt"`
+	Links                []*Link                `yaml:"links"`
+	FfmpegPath           string                 `yaml:"ffmpegPath"`
+	PreviewWorkers       int                    `yaml:"previewWorkers"`
+	PreviewVideoExts     []string               `yaml:"previewVideoExts"`
+	PreviewImageExts     []string               `yaml:"previewImageExts"`
+	PreviewTtl           int64                  `yaml:"previewTtl"`
 	prepWritablePatterns []PrepPattern
 }
 
@@ -96,7 +96,7 @@ func (s *Config) IsWritable(targetPath string) bool {
 			}
 			lowPath = strings.Join(pathParts[0:partCount], "/")
 		}
-		m, _ := path.Match(p.pattern, lowPath)
+		m, _ := filepath.Match(p.pattern, lowPath)
 		if p.isExclude && m {
 			return false
 		}
@@ -161,41 +161,47 @@ func getNewConfig() Config {
 
 func LoadConfig() Config {
 	config := getNewConfig()
+	yamlPath := getConfigYamlPath()
+	jsonPath := getConfigJsonPath()
 
-	path := getConfigPath()
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
+	if data, err := os.ReadFile(yamlPath); err == nil {
+		if err := yaml.Unmarshal(data, &config); err != nil {
+			log.Println("Load YAML config error:", err)
+		}
+	} else if os.IsNotExist(err) {
+		if jsonData, jsonErr := os.ReadFile(jsonPath); jsonErr == nil {
+			if err := json.Unmarshal(jsonData, &config); err != nil {
+				log.Println("Load legacy JSON config error:", err)
+			} else {
+				log.Println("Migrating legacy config.json to config.yaml...")
+				_ = SaveConfig(config)
+			}
+		} else if os.IsNotExist(jsonErr) {
 			if err := os.MkdirAll(getProfilePath(), 0750); err != nil {
 				log.Println("Create profile path error", err)
 			}
 
 			if err := SaveConfig(config); err != nil {
-				log.Println("Write new config error", err)
+				log.Println("Write new YAML config error", err)
 			}
-		}
-	} else {
-		if err := json.Unmarshal(data, &config); err != nil {
-			log.Println("Load config error", err)
-		}
-		if config.ExtHandle == nil {
-			config.ExtHandle = make(map[string]string)
-		}
-		if config.ExtActions == nil {
-			config.ExtActions = make(map[string][]ExtAction)
 		}
 	}
 
-	config.prepWritablePatterns = PrepPatterns(config.WritablePatterns)
+	if config.ExtHandle == nil {
+		config.ExtHandle = make(map[string]string)
+	}
+	if config.ExtActions == nil {
+		config.ExtActions = make(map[string][]ExtAction)
+	}
 
+	config.prepWritablePatterns = PrepPatterns(config.WritablePatterns)
 	return config
 }
 
 func SaveConfig(config Config) error {
-	path := getConfigPath()
+	path := getConfigYamlPath()
 	reader := bytes.NewReader(nil)
-	if data, err := json.MarshalIndent(config, "", "  "); err == nil {
+	if data, err := yaml.Marshal(config); err == nil {
 		reader.Reset(data)
 		err = atomic.WriteFile(path, reader)
 		return err
@@ -203,7 +209,12 @@ func SaveConfig(config Config) error {
 	return nil
 }
 
-func getConfigPath() string {
+func getConfigYamlPath() string {
+	place := getProfilePath()
+	return filepath.Join(place, "config.yaml")
+}
+
+func getConfigJsonPath() string {
 	place := getProfilePath()
 	return filepath.Join(place, "config.json")
 }
@@ -245,11 +256,6 @@ func getDefaultProfilePath() string {
 func GetLegacyStoragePath() string {
 	place := getProfilePath()
 	return filepath.Join(place, "storage.json")
-}
-
-func GetStoragePath() string {
-	place := getProfilePath()
-	return filepath.Join(place, "storage-v2.json")
 }
 
 func GetBoltStoragePath() string {

@@ -13,9 +13,9 @@ type LinkCache struct {
 }
 
 type Link struct {
-	Place    string `json:"place"`
-	Target   string `json:"target"`
-	CacheTTL int64  `json:"cacheTTL"`
+	Place    string `json:"place" yaml:"place"`
+	Target   string `json:"target" yaml:"target"`
+	CacheTTL int64  `json:"cacheTTL" yaml:"cacheTTL"`
 	cache    LinkCache
 }
 
