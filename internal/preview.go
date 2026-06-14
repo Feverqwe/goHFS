@@ -280,11 +280,11 @@ func (m *PreviewManager) generateImagePreview(src, dst string) error {
 
 func (m *PreviewManager) generateVideoPreview(src, dst string) error {
 	cmd := exec.Command(m.ffmpegPath,
-		"-ss", "30",
+		"-ss", "00:00:45",
 		"-i", src,
-		"-vf", "thumbnail=100,scale=300:-1",
+		"-vf", "thumbnail=300,scale=300:-1",
 		"-vframes", "1",
-		"-q:v", "4",
+		"-q:v", "5",
 		"-y",
 		dst,
 	)
