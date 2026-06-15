@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -278,9 +280,54 @@ func (m *PreviewManager) generateImagePreview(src, dst string) error {
 	return jpeg.Encode(outFile, newImg, &jpeg.Options{Quality: 75})
 }
 
+// parseDurationToSeconds конвертирует строку вида "01:23:45.67" в секунды (float64)
+func parseDurationToSeconds(timeStr string) float64 {
+	parts := strings.Split(timeStr, ":")
+	if len(parts) != 3 {
+		return 0
+	}
+	h, _ := strconv.ParseFloat(parts[0], 64)
+	m, _ := strconv.ParseFloat(parts[1], 64)
+	s, _ := strconv.ParseFloat(parts[2], 64)
+	return h*3600 + m*60 + s
+}
+
 func (m *PreviewManager) generateVideoPreview(src, dst string) error {
+	// 1. Быстро запрашиваем метаданные файла через сам ffmpeg
+	// Флаг -f null отправляет вывод в "пустоту", декодирование не происходит
+	probeCmd := exec.Command(m.ffmpegPath, "-i", src, "-f", "null", "-")
+
+	// ffmpeg пишет техническую информацию и метаданные в Stderr
+	var stderr bytes.Buffer
+	probeCmd.Stderr = &stderr
+	_ = probeCmd.Run() // Игнорируем ошибку выхода, так как у нас нет флага выходного файла
+
+	// 2. Ищем строку "Duration:" в выводе stderr
+	outputStr := stderr.String()
+	durationIdx := strings.Index(outputStr, "Duration:")
+
+	startTime := "45" // Значение по умолчанию на случай сбоя парсинга
+
+	if durationIdx != -1 {
+		// Обрезаем строку, оставляя данные после "Duration: "
+		subStr := outputStr[durationIdx+9:]
+		commaIdx := strings.Index(subStr, ",")
+		if commaIdx != -1 {
+			// Выделяем таймкод вида "01:23:45.67"
+			timeStr := strings.TrimSpace(subStr[:commaIdx])
+			totalSeconds := parseDurationToSeconds(timeStr)
+
+			if totalSeconds > 0 {
+				// Вычисляем 50% от длины видео
+				halfTime := totalSeconds / 2
+				startTime = strconv.FormatFloat(halfTime, 'f', 2, 64)
+			}
+		}
+	}
+
+	// 3. Запускаем генерацию превью с вычисленной секунды середины фильма
 	cmd := exec.Command(m.ffmpegPath,
-		"-ss", "00:00:45",
+		"-ss", startTime,
 		"-i", src,
 		"-vf", "thumbnail=300,scale=300:-1",
 		"-vframes", "1",
