@@ -27,6 +27,18 @@ const NameSx = {
   wordBreak: 'break-word',
 };
 
+const GridNameSx = {
+  wordBreak: 'break-word',
+  '& .MuiListItemText-primary': {
+    display: '-webkit-box',
+    WebkitLineClamp: 2, // Ограничиваем текст строго двумя строками
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'normal', // Разрешаем перенос строк внутри текста
+  },
+};
+
 interface FileProps {
   file: FileInfo;
   dir: string;
@@ -166,7 +178,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
         primary={name}
         slotProps={{
           primary: {
-            noWrap: viewMode === 'grid',
+            noWrap: false,
             variant: viewMode === 'grid' ? 'body2' : 'body1',
             title: name,
           },
@@ -189,7 +201,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
             )}
           </>
         )}
-        sx={NameSx}
+        sx={viewMode === 'grid' ? GridNameSx : NameSx}
       />
     );
   }, [name, ctime, sizeStr, progress, viewMode]);
@@ -244,8 +256,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
             display="flex"
             justifyContent="center"
             alignItems="center"
-            pt={2}
-            height="130px"
+            height="90px"
             position="relative"
           >
             <FilePreview
@@ -256,7 +267,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
               hasPreview={file.hasPreview}
             />
           </Box>
-          <Box p={1} flexGrow={1} width="100%" boxSizing="border-box">
+          <Box px={1} flexGrow={1} width="100%" boxSizing="border-box">
             {body}
           </Box>
         </CardActionArea>

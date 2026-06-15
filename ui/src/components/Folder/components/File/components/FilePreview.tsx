@@ -17,8 +17,8 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
   const refContainer = useRef<HTMLDivElement | null>(null);
   const refTimer = useRef<number | null>(null);
 
-  const wSize = viewMode === 'grid' ? 150 : 40;
-  const hSize = viewMode === 'grid' ? 140 : 40;
+  const wSize = viewMode === 'grid' ? 160 : 40;
+  const hSize = viewMode === 'grid' ? 100 : 40;
 
   const checkPreview = React.useCallback(async () => {
     const targetPlace = dir === '/' ? `/${name}` : `${dir}/${name}`;
@@ -85,7 +85,7 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
           sx={{
             width: wSize,
             height: hSize,
-            objectFit: 'cover',
+            objectFit: 'contain',
             borderRadius: '4px',
           }}
         />
