@@ -295,7 +295,7 @@ func parseDurationToSeconds(timeStr string) float64 {
 func (m *PreviewManager) generateVideoPreview(src, dst string) error {
 	// 1. Быстро запрашиваем метаданные файла через сам ffmpeg
 	// Флаг -f null отправляет вывод в "пустоту", декодирование не происходит
-	probeCmd := exec.Command(m.ffmpegPath, "-i", src, "-f", "null", "-")
+	probeCmd := exec.Command(m.ffmpegPath, "-i", src)
 
 	// ffmpeg пишет техническую информацию и метаданные в Stderr
 	var stderr bytes.Buffer
