@@ -16,6 +16,8 @@ import {
   Upload as UploadIcon,
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
 } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
@@ -52,9 +54,18 @@ interface FolderViewProps {
   onShowSortDialog: () => void;
   viewMode: ViewMode;
   onChangeViewMode: (mode: ViewMode) => Promise<void>;
+  gridPreviewSize: number;
+  onChangeGridPreviewSize: (size: number) => Promise<void>;
 }
 
-const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog, viewMode, onChangeViewMode}) => {
+const FolderView: FC<FolderViewProps> = ({
+  files,
+  onShowSortDialog,
+  viewMode,
+  onChangeViewMode,
+  gridPreviewSize,
+  onChangeGridPreviewSize,
+}) => {
   const store = useContext(RootStoreCtx);
   const selectMode = useContext(SelectModeCtx);
   const [showAddressesDialog, setShowAddressesDialog] = useState(false);
@@ -69,6 +80,14 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog, viewMode, onC
     const nextMode = viewMode === 'list' ? 'grid' : 'list';
     await onChangeViewMode(nextMode);
   }, [viewMode, onChangeViewMode]);
+
+  const handleZoomIn = useCallback(async () => {
+    await onChangeGridPreviewSize(gridPreviewSize + 30);
+  }, [gridPreviewSize, onChangeGridPreviewSize]);
+
+  const handleZoomOut = useCallback(async () => {
+    await onChangeGridPreviewSize(gridPreviewSize - 30);
+  }, [gridPreviewSize, onChangeGridPreviewSize]);
 
   const handleAddressesBtn = useCallback(() => {
     setShowAddressesDialog(true);
@@ -138,6 +157,26 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog, viewMode, onC
                   <UploadIcon fontSize="small" />
                 </IconButton>
               ) : null}
+              {viewMode === 'grid' && (
+                <>
+                  <IconButton
+                    title="Zoom out"
+                    onClick={handleZoomOut}
+                    size="small"
+                    disabled={gridPreviewSize <= 100}
+                  >
+                    <ZoomOutIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    title="Zoom in"
+                    onClick={handleZoomIn}
+                    size="small"
+                    disabled={gridPreviewSize >= 400}
+                  >
+                    <ZoomInIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
               <IconButton
                 title={viewMode === 'list' ? 'Grid view' : 'List view'}
                 onClick={toggleViewMode}
@@ -180,6 +219,7 @@ const FolderView: FC<FolderViewProps> = ({files, onShowSortDialog, viewMode, onC
                 writable={store.isWritable}
                 onReload={handleReload}
                 viewMode={viewMode}
+                gridPreviewSize={gridPreviewSize}
               />
             ))}
           </Box>

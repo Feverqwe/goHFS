@@ -45,6 +45,7 @@ interface FileProps {
   writable: boolean;
   onReload: () => Promise<void> | void;
   viewMode: ViewMode;
+  gridPreviewSize?: number;
 }
 
 const SubLine = styled('div')(() => {
@@ -83,7 +84,7 @@ const IconBox = styled(Box)(() => ({
   alignItems: 'center',
 }));
 
-const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
+const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPreviewSize}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir, progress} = file;
   const selectMode = useContext(SelectModeCtx);
@@ -126,12 +127,17 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
 
   const RawIcon = React.useMemo(() => {
     if (isDir) {
-      return <FolderIcon fontSize={viewMode === 'grid' ? 'large' : 'medium'} className="file-icon" />;
+      return (
+        <FolderIcon fontSize={viewMode === 'grid' ? 'large' : 'medium'} className="file-icon" />
+      );
     }
     const mimeType = mime.getType(name);
     const m = /^([^\/]+)/.exec(mimeType || '');
     const generalType = m && m[1];
-    const iconProps = {fontSize: viewMode === 'grid' ? 'large' as const : 'medium' as const, className: 'file-icon'};
+    const iconProps = {
+      fontSize: viewMode === 'grid' ? ('large' as const) : ('medium' as const),
+      className: 'file-icon',
+    };
     switch (generalType) {
       case 'video':
         return <MovieIcon {...iconProps} />;
@@ -186,7 +192,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
             component: 'div',
           },
         }}
-        secondary={(
+        secondary={
           <>
             <SubLine
               style={viewMode === 'grid' ? {flexDirection: 'column', fontSize: '12px'} : undefined}
@@ -200,7 +206,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
               </ProgressCtr>
             )}
           </>
-        )}
+        }
         sx={viewMode === 'grid' ? GridNameSx : NameSx}
       />
     );
@@ -212,10 +218,13 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
   }, []);
 
   if (viewMode === 'grid') {
+    const cardWidth = gridPreviewSize ?? 160;
+    const imageContainerHeight = Math.round(cardWidth * (90 / 160));
+
     return (
       <Box
         position="relative"
-        width="160px"
+        width={`${cardWidth}px`}
         display="flex"
         flexDirection="column"
         alignItems="stretch"
@@ -256,7 +265,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
             display="flex"
             justifyContent="center"
             alignItems="center"
-            height="90px"
+            height={`${imageContainerHeight}px`}
             position="relative"
           >
             <FilePreview
@@ -265,6 +274,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode}) => {
               defaultIcon={RawIcon}
               viewMode="grid"
               hasPreview={file.hasPreview}
+              gridPreviewSize={cardWidth}
             />
           </Box>
           <Box px={1} flexGrow={1} width="100%" boxSizing="border-box">

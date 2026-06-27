@@ -111,17 +111,19 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 
 	dirSort, _ := storage.GetKey("dirSort-" + place)
 	viewMode, _ := storage.GetKey("viewMode-" + place)
+	gridPreviewSize, _ := storage.GetKey("gridPreviewSize")
 
 	result := RootStore{
-		Dir:        place,
-		IsRoot:     isRoot,
-		IsWritable: isWritable,
-		Files:      files,
-		ExtHandle:  config.ExtHandle,
-		ExtActions: config.ExtActions,
-		DirSort:    dirSort,
-		ShowHidden: showHidden,
-		ViewMode:   viewMode,
+		Dir:             place,
+		IsRoot:          isRoot,
+		IsWritable:      isWritable,
+		Files:           files,
+		ExtHandle:       config.ExtHandle,
+		ExtActions:      config.ExtActions,
+		DirSort:         dirSort,
+		ShowHidden:      showHidden,
+		ViewMode:        viewMode,
+		GridPreviewSize: gridPreviewSize,
 	}
 
 	return &result

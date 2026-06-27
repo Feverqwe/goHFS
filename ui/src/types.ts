@@ -30,6 +30,7 @@ export interface RootStore {
   dirSort: DirSort | null;
   showHidden?: boolean;
   viewMode: ViewMode | null;
+  gridPreviewSize: number | null;
 }
 
 export interface DiskUsage {

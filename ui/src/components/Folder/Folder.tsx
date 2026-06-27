@@ -21,10 +21,15 @@ const Folder: FC = () => {
     return (store.viewMode as ViewMode) ?? 'list';
   });
 
+  const [gridPreviewSize, setGridPreviewSize] = useState<number>(() => {
+    return store.gridPreviewSize ?? 160;
+  });
+
   // Синхронизируем локальный стейт, если папка изменилась в RootStore
   useEffect(() => {
     setViewMode((store.viewMode as ViewMode) ?? 'list');
-  }, [store.dir, store.viewMode]);
+    setGridPreviewSize(store.gridPreviewSize ?? 160);
+  }, [store.dir, store.gridPreviewSize, store.viewMode]);
 
   const files = useMemo(() => store.files, [store.files]);
 
@@ -42,7 +47,14 @@ const Folder: FC = () => {
     [store.dir],
   );
 
-  // Кастомный обработчик для переключения вида отображения папки на сервере
+  const changeGridPreviewSize = useCallback(async (size: number) => {
+    const boundedSize = Math.max(100, Math.min(400, size));
+    setGridPreviewSize(boundedSize);
+    await api.storageSet<Record<string, number>>({
+      gridPreviewSize: boundedSize,
+    });
+  }, []);
+
   const changeViewMode = useCallback(
     async (mode: ViewMode) => {
       setViewMode(mode);
@@ -82,6 +94,8 @@ const Folder: FC = () => {
         onShowSortDialog={handleSortBtn}
         viewMode={viewMode}
         onChangeViewMode={changeViewMode}
+        gridPreviewSize={gridPreviewSize}
+        onChangeGridPreviewSize={changeGridPreviewSize}
       />
       {showSortDialog && (
         <SortDialog sortKey={sortKey} changeSort={changeSort} onClose={handleCloseSortDialog} />

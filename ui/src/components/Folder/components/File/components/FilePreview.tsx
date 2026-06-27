@@ -7,9 +7,17 @@ interface FilePreviewProps {
   defaultIcon: React.ReactNode;
   viewMode: 'list' | 'grid';
   hasPreview: boolean;
+  gridPreviewSize?: number;
 }
 
-const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, hasPreview}) => {
+const FilePreview: FC<FilePreviewProps> = ({
+  name,
+  dir,
+  defaultIcon,
+  viewMode,
+  hasPreview,
+  gridPreviewSize,
+}) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isIntersecting, setIsIntersecting] = useState(false); // Visibility tracking status
@@ -17,8 +25,11 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
   const refContainer = useRef<HTMLDivElement | null>(null);
   const refTimer = useRef<number | null>(null);
 
-  const wSize = viewMode === 'grid' ? 160 : 40;
-  const hSize = viewMode === 'grid' ? 100 : 40;
+  const baseWidth = gridPreviewSize ?? 160;
+  const baseHeight = Math.round(baseWidth * (100 / 160));
+
+  const wSize = viewMode === 'grid' ? baseWidth : 40;
+  const hSize = viewMode === 'grid' ? baseHeight : 40;
 
   const checkPreview = React.useCallback(async () => {
     const targetPlace = dir === '/' ? `/${name}` : `${dir}/${name}`;
@@ -76,7 +87,7 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
   }, [checkPreview, hasPreview, isIntersecting]);
 
   return (
-    <div ref={refContainer} style={{ width: wSize, height: hSize }}>
+    <div ref={refContainer} style={{width: wSize, height: hSize}}>
       {previewUrl ? (
         <Box
           component="img"

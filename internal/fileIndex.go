@@ -15,15 +15,16 @@ import (
 )
 
 type RootStore struct {
-	Dir        string                 `json:"dir"`
-	IsRoot     bool                   `json:"isRoot"`
-	IsWritable bool                   `json:"isWritable"`
-	Files      []*File                `json:"files"`
-	ExtHandle  map[string]string      `json:"extHandle"`
-	ExtActions map[string][]ExtAction `json:"extActions"`
-	DirSort    interface{}            `json:"dirSort"`
-	ShowHidden bool                   `json:"showHidden"`
-	ViewMode   interface{}            `json:"viewMode"`
+	Dir             string                 `json:"dir"`
+	IsRoot          bool                   `json:"isRoot"`
+	IsWritable      bool                   `json:"isWritable"`
+	Files           []*File                `json:"files"`
+	ExtHandle       map[string]string      `json:"extHandle"`
+	ExtActions      map[string][]ExtAction `json:"extActions"`
+	DirSort         interface{}            `json:"dirSort"`
+	ShowHidden      bool                   `json:"showHidden"`
+	ViewMode        interface{}            `json:"viewMode"`
+	GridPreviewSize interface{}            `json:"gridPreviewSize"`
 }
 
 type File struct {

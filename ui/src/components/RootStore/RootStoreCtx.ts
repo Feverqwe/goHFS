@@ -10,6 +10,7 @@ const defaultStore = {
   extActions: {},
   dirSort: null,
   viewMode: null,
+  gridPreviewSize: null,
 } satisfies RootStore;
 
 export const RootStoreCtx = createContext<RootStore>(defaultStore);
