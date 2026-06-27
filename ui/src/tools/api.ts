@@ -88,10 +88,6 @@ export const api = {
     method: 'POST',
     path: '/~/reloadConfig',
   }),
-  showHidden: action<{show: boolean}, boolean>({
-    method: 'POST',
-    path: '/~/showHidden',
-  }),
   getStore: action<{place: string}, RootStore>({
     method: 'GET',
     path: '/~/getStore',

@@ -425,10 +425,6 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		NewName string `json:"newName"`
 	}
 
-	type ShowHiddenPayload struct {
-		Show bool `json:"show"`
-	}
-
 	router.Post("/~/mkdir", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := ParseJson[MkdirPayload](r.Body)
@@ -562,19 +558,6 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			doReload()
 
 			return "ok", nil
-		})
-	})
-
-	router.Post("/~/showHidden", func(w http.ResponseWriter, r *http.Request) {
-		apiCall(w, func() (bool, error) {
-			payload, err := ParseJson[ShowHiddenPayload](r.Body)
-			if err != nil {
-				return false, err
-			}
-			config.ShowHiddenFiles = payload.Show
-			SaveConfig(*config)
-
-			return payload.Show, nil
 		})
 	})
 

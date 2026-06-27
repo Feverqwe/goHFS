@@ -19,7 +19,12 @@ func GetIndexStore(config *Config, storage *boltstorage.BoltStorage, place strin
 	}
 
 	files := make([]*File, 0)
-	showHidden := config.ShowHiddenFiles
+	showHidden := false
+	if v, err := storage.GetKey("showHidden"); err == nil && v != nil {
+		if val, ok := v.(bool); ok {
+			showHidden = val
+		}
+	}
 
 	linksSet := make(map[string]bool)
 

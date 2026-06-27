@@ -136,8 +136,8 @@ const FolderMenu: FC<FolderMenuProps> = ({
         title: store.showHidden ? 'Hide hidden' : 'Show hidden',
         icon: store.showHidden ? <VisibilityOffIcon /> : <VisibilityIcon />,
         onClick: async () => {
-          await api.showHidden({
-            show: !store.showHidden,
+          await api.storageSet<Record<string, boolean>>({
+            showHidden: !store.showHidden,
           });
 
           await updateStore();

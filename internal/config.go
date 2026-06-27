@@ -37,7 +37,6 @@ type Config struct {
 	Address              string                 `yaml:"address"`
 	Public               string                 `yaml:"public"`
 	Name                 string                 `yaml:"name"`
-	ShowHiddenFiles      bool                   `yaml:"showHiddenFiles"`
 	ExtHandle            map[string]string      `yaml:"extHandle"`
 	ExtActions           map[string][]ExtAction `yaml:"extActions"`
 	WritablePatterns     []string               `yaml:"writablePatterns"`
@@ -151,7 +150,6 @@ func getNewConfig() Config {
 	config.Port = 80
 	config.Public = pwd
 	config.Name = "HFS"
-	config.ShowHiddenFiles = false
 	config.ExtHandle[".mov"] = "/~/www/player.html?url={url}"
 	config.ExtHandle[".mp4"] = "/~/www/player.html?url={url}"
 	config.ExtHandle[".aac"] = "/~/www/player.html?url={url}"
