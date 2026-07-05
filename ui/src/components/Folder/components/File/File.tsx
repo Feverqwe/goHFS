@@ -78,6 +78,19 @@ const MyIconButton = styled(IconButton)(() => ({
   },
 }));
 
+const MyBox = styled(Box)(() => ({
+  '.menu-button': {
+    color: 'rgb(255 255 255 / 0.75)',
+  },
+  '&:hover .menu-button': {
+    backdropFilter: 'blur(4px)',
+    backgroundColor: 'rgb(0 0 0 / 10%)',
+  },
+  '.menu-button:hover, .menu-button.menu-opened': {
+    backgroundColor: 'rgb(0 0 0 / 20%)',
+  },
+}));
+
 const IconBox = styled(Box)(() => ({
   cursor: 'default',
   display: 'flex',
@@ -222,7 +235,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPrevi
     const imageContainerHeight = Math.round(cardWidth * (90 / 160));
 
     return (
-      <Box
+      <MyBox
         position="relative"
         width={`${cardWidth}px`}
         display="flex"
@@ -250,7 +263,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPrevi
         <Box position="absolute" top={4} right={4} zIndex={2}>
           <MyIconButton
             size="small"
-            className={menuAnchorEl ? 'menu-opened' : undefined}
+            className={`menu-button ${menuAnchorEl ? 'menu-opened' : ''}`}
             color={handleUrl ? 'primary' : undefined}
             onClick={handleMenuClick}
           >
@@ -297,7 +310,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPrevi
         {renameDialog ? (
           <RenameDialog onClose={handleCloseDialog} dir={dir} file={file} onSuccess={onReload} />
         ) : null}
-      </Box>
+      </MyBox>
     );
   }
 
