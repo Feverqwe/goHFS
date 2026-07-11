@@ -112,7 +112,7 @@ const FilePreview: FC<FilePreviewProps> = ({
           {defaultIcon}
           {loading && (
             <CircularProgress
-              size={hSize * 0.2}
+              size={48}
               sx={{
                 position: 'absolute',
                 color: 'primary.main',
