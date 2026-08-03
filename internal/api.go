@@ -37,6 +37,7 @@ func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage,
 	handleWww(apiRouter, debugUi)
 	handleStorage(apiRouter, storage)
 	handleStore(apiRouter, config, storage)
+	handleSearch(apiRouter, config, storage, debugUi)
 	handleAction(apiRouter, config, doReload)
 	handleInterfaces(apiRouter, config)
 	handleDiskUsage(apiRouter, config)

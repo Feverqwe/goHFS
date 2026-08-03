@@ -5,6 +5,8 @@ export interface FileInfo {
   isDir: boolean;
   progress: number;
   hasPreview: boolean;
+  dir?: string;
+  relativePath?: string;
 }
 
 export interface ExtAction {

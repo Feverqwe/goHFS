@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
+  Clear as ClearIcon,
+  Search as SearchIcon,
   Sort as SortIcon,
   Upload as UploadIcon,
   ViewList as ViewListIcon,
@@ -33,6 +35,7 @@ import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
 import MkdirDialog from './MkdirDialog';
 import DiskUsageDialog from './DiskUsageDialog/DiskUsageDialog';
 import DirSizeDialog from './DirSizeDialog/DirSizeDialog';
+import SearchDialog from './SearchDialog';
 
 const RootSx = {
   width: '100%',
@@ -56,6 +59,11 @@ interface FolderViewProps {
   onChangeViewMode: (mode: ViewMode) => Promise<void>;
   gridPreviewSize: number;
   onChangeGridPreviewSize: (size: number) => Promise<void>;
+  activeSearch: string | null;
+  searching: boolean;
+  searchError: string | null;
+  onSearch: (pattern: string) => Promise<void>;
+  onClearSearch: () => void;
 }
 
 const FolderView: FC<FolderViewProps> = ({
@@ -65,6 +73,11 @@ const FolderView: FC<FolderViewProps> = ({
   onChangeViewMode,
   gridPreviewSize,
   onChangeGridPreviewSize,
+  activeSearch,
+  searching,
+  searchError,
+  onSearch,
+  onClearSearch,
 }) => {
   const store = useContext(RootStoreCtx);
   const selectMode = useContext(SelectModeCtx);
@@ -75,6 +88,7 @@ const FolderView: FC<FolderViewProps> = ({
   const [showMkdirDialog, setShowMkdirDialog] = useState(false);
   const [showDiskUsageDialog, setShowDiskUsageDialog] = useState(false);
   const [showDirSizeDialog, setShowDirSizeDialog] = useState(false);
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
 
   const toggleViewMode = useCallback(async () => {
     const nextMode = viewMode === 'list' ? 'grid' : 'list';
@@ -117,11 +131,16 @@ const FolderView: FC<FolderViewProps> = ({
     setShowDirSizeDialog(true);
   }, []);
 
+  const handleSearchDialogBtn = useCallback(() => {
+    setShowSearchDialog(true);
+  }, []);
+
   const handleCloseDialog = useCallback(() => {
     setShowAddressesDialog(false);
     setShowMkdirDialog(false);
     setShowDiskUsageDialog(false);
     setShowDirSizeDialog(false);
+    setShowSearchDialog(false);
   }, []);
 
   const handleCloseMenu = useCallback(() => {
@@ -142,6 +161,7 @@ const FolderView: FC<FolderViewProps> = ({
     await updateStore();
   }, [updateStore]);
 
+  /* eslint-disable react/jsx-wrap-multilines */
   return (
     <>
       <List
@@ -191,10 +211,33 @@ const FolderView: FC<FolderViewProps> = ({
               <IconButton title="Sort" onClick={onShowSortDialog} size="small">
                 <SortIcon fontSize="small" />
               </IconButton>
+              <IconButton
+                title="Search"
+                onClick={handleSearchDialogBtn}
+                size="small"
+                color={activeSearch ? 'primary' : undefined}
+              >
+                <SearchIcon fontSize="small" />
+              </IconButton>
               <IconButton title="Menu" onClick={handleShowMenu} size="small">
                 <MenuIcon fontSize="small" />
               </IconButton>
             </Box>
+            {searchError && (
+              <Typography color="error" variant="caption" component={Box} px={1} pb={0.5}>
+                {searchError}
+              </Typography>
+            )}
+            {activeSearch && !searchError && (
+              <Box display="flex" alignItems="center" px={1} pb={0.5}>
+                <Typography color="text.secondary" variant="caption" flexGrow={1}>
+                  {searching ? 'Searching…' : `${files.length} result(s) for ${activeSearch}`}
+                </Typography>
+                <IconButton title="Clear search" onClick={onClearSearch} size="small">
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
           </Paper>
         }
         sx={RootSx}
@@ -213,25 +256,27 @@ const FolderView: FC<FolderViewProps> = ({
           <Box display="flex" flexWrap="wrap" px={1}>
             {files.map((file) => (
               <File
-                key={`${file.isDir}_${file.name}`}
-                dir={store.dir}
+                key={`${file.isDir}_${file.dir ?? store.dir}_${file.name}`}
+                dir={file.dir ?? store.dir}
                 file={file}
-                writable={store.isWritable}
+                writable={!activeSearch && store.isWritable}
                 onReload={handleReload}
                 viewMode={viewMode}
                 gridPreviewSize={gridPreviewSize}
+                displayName={file.relativePath}
               />
             ))}
           </Box>
         ) : (
           files.map((file) => (
             <File
-              key={`${file.isDir}_${file.name}`}
-              dir={store.dir}
+              key={`${file.isDir}_${file.dir ?? store.dir}_${file.name}`}
+              dir={file.dir ?? store.dir}
               file={file}
-              writable={store.isWritable}
+              writable={!activeSearch && store.isWritable}
               onReload={handleReload}
               viewMode={viewMode}
+              displayName={file.relativePath}
             />
           ))
         )}
@@ -240,13 +285,23 @@ const FolderView: FC<FolderViewProps> = ({
       {showAddressesDialog && <AddressesDialog onClose={handleCloseDialog} />}
       {showDiskUsageDialog && <DiskUsageDialog onClose={handleCloseDialog} />}
       {showDirSizeDialog && <DirSizeDialog onClose={handleCloseDialog} />}
+      {showSearchDialog && (
+        <SearchDialog
+          initialPattern={activeSearch ?? ''}
+          searching={searching}
+          error={searchError}
+          onSearch={onSearch}
+          onClear={onClearSearch}
+          onClose={handleCloseDialog}
+        />
+      )}
       {dialog}
       {selectMode && <SelectHeader />}
       {menuAnchorEl ? (
         <FolderMenu
           anchorEl={menuAnchorEl}
           onClose={handleCloseMenu}
-          sortedFiles={files}
+          sortedFiles={activeSearch ? store.files : files}
           onAddressesClick={handleAddressesBtn}
           onMkdirClick={handleMkdirDialogBtn}
           onDiskUsageClick={handleDiskUsageDialogBtn}
@@ -256,6 +311,7 @@ const FolderView: FC<FolderViewProps> = ({
       {showMkdirDialog && <MkdirDialog onClose={handleCloseDialog} dir={store.dir} />}
     </>
   );
+  /* eslint-enable react/jsx-wrap-multilines */
 };
 
 export default memo(FolderView);

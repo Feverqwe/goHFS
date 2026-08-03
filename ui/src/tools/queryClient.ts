@@ -12,6 +12,7 @@ export const queryClient = new QueryClient({
 
 export const queryKeys = {
   rootStore: (place: string) => ['rootStore', place] as const,
+  search: (place: string, pattern: string) => ['search', place, pattern] as const,
   addresses: ['addresses'] as const,
   diskUsage: (place: string) => ['diskUsage', place] as const,
   dirSize: (place: string) => ['dirSize', place] as const,

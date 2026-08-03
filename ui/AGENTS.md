@@ -18,6 +18,10 @@ These instructions extend the root `AGENTS.md` for code under `ui/`.
 - Preserve the project's Prettier style: single quotes, no spaces inside object braces, trailing commas, and a 100-column target.
 - Use Material UI components and the existing theme/cache helpers for UI consistent with the rest of the application.
 - Put backend calls in `src/tools/api.ts` and use the shared response handler. Keep request/response types explicit for new endpoints.
+- Use TanStack React Query for all server state. Read data with `useQuery` and perform writes with `useMutation`; do not manage request loading, error, race, or response state manually with `useEffect`/`useState`.
+- Define reusable query keys in `src/tools/queryClient.ts`. Query keys must include every input that can change the response, such as the current place, search pattern, or resource identifier.
+- After a successful mutation, update or invalidate every affected query through the shared `QueryClient`. Use `refetch` only for an explicit user refresh of the same query; do not bypass the query cache by calling API methods directly from components.
+- Use React Query's `enabled`, `isPending`/`isFetching`, `error`, caching, cancellation, and retry behavior instead of duplicating those mechanisms in component state. Keep only genuinely local UI state, such as an unsubmitted input value or dialog visibility, in React state.
 - The initial folder state comes from the `window.ROOT_STORE` script injected by Go. Any change to that state shape must also update the Go structs and injection path.
 - Keep public asset URLs under `/~/www`; Rspack's `publicPath` and the Go asset handler depend on this prefix.
 - Do not edit `dist/` directly. Work in `src/`, run the UI checks, and regenerate embedded resources only if the requested deliverable includes production assets.

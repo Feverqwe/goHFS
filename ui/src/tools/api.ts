@@ -1,5 +1,5 @@
 import {handleApiResponse} from './apiRequest';
-import {DirSize, DiskUsage, RootStore} from '../types';
+import {DirSize, DiskUsage, FileInfo, RootStore} from '../types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -91,6 +91,10 @@ export const api = {
   getStore: action<{place: string}, RootStore>({
     method: 'GET',
     path: '/~/getStore',
+  }),
+  search: action<{place: string; pattern: string}, FileInfo[]>({
+    method: 'GET',
+    path: '/~/search/files',
   }),
   previewCleanup: action<void, string>({
     method: 'POST',

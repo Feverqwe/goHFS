@@ -46,6 +46,7 @@ interface FileProps {
   onReload: () => Promise<void> | void;
   viewMode: ViewMode;
   gridPreviewSize?: number;
+  displayName?: string;
 }
 
 const SubLine = styled('div')(() => {
@@ -97,7 +98,15 @@ const IconBox = styled(Box)(() => ({
   alignItems: 'center',
 }));
 
-const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPreviewSize}) => {
+const File: FC<FileProps> = ({
+  file,
+  dir,
+  writable,
+  onReload,
+  viewMode,
+  gridPreviewSize,
+  displayName,
+}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir, progress} = file;
   const selectMode = useContext(SelectModeCtx);
@@ -191,15 +200,16 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPrevi
     setRenameDialog(false);
   }, []);
 
+  /* eslint-disable react/jsx-wrap-multilines */
   const body = useMemo(() => {
     return (
       <ListItemText
-        primary={name}
+        primary={displayName ?? name}
         slotProps={{
           primary: {
             noWrap: false,
             variant: viewMode === 'grid' ? 'body2' : 'body1',
-            title: name,
+            title: displayName ?? name,
           },
           secondary: {
             component: 'div',
@@ -223,7 +233,8 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, gridPrevi
         sx={viewMode === 'grid' ? GridNameSx : NameSx}
       />
     );
-  }, [name, ctime, sizeStr, progress, viewMode]);
+  }, [name, displayName, ctime, sizeStr, progress, viewMode]);
+  /* eslint-enable react/jsx-wrap-multilines */
 
   const handleIconBoxClick = useCallback((e: MouseEvent<unknown>) => {
     e.preventDefault();
