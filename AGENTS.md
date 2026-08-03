@@ -2,7 +2,7 @@
 
 ## Project overview
 
-GoHFS is a cross-platform desktop file server. The Go application exposes files and a JSON API over HTTP, persists UI state in BoltDB, generates previews with `ffmpeg`, and provides platform-specific tray/dialog/power-management integrations. The browser UI is a React/TypeScript application built with webpack and embedded into the Go binary.
+GoHFS is a cross-platform desktop file server. The Go application exposes files and a JSON API over HTTP, persists UI state in BoltDB, generates previews with `ffmpeg`, and provides platform-specific tray/dialog/power-management integrations. The browser UI is a React/TypeScript application built with Rspack and embedded into the Go binary.
 
 ## Repository map
 
@@ -58,4 +58,3 @@ There is currently no dedicated automated test suite. For behavior changes, add 
 - Keep OS-specific behavior behind existing Go build tags. When introducing a platform-specific symbol, provide implementations for every supported build target or a correctly tagged fallback.
 - Prefer focused changes. Do not modernize unrelated code, generated assets, dependencies, or formatting as part of a feature fix.
 - Never silently weaken path validation, upload-signature checks, or writable-pattern checks.
-

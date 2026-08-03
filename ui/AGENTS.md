@@ -4,7 +4,7 @@ These instructions extend the root `AGENTS.md` for code under `ui/`.
 
 ## Architecture
 
-- `src/folder.tsx` and `src/player.tsx` are the two webpack entry points.
+- `src/folder.tsx` and `src/player.tsx` are the two Rspack entry points.
 - `src/components/Folder/` contains browsing, selection, uploads, file actions, dialogs, sorting, previews, and display modes.
 - `src/components/Player/` contains media playback and URL/metadata handling.
 - `src/components/RootStore/` owns the server-provided directory state and refresh operation.
@@ -19,7 +19,7 @@ These instructions extend the root `AGENTS.md` for code under `ui/`.
 - Use Material UI components and the existing theme/cache helpers for UI consistent with the rest of the application.
 - Put backend calls in `src/tools/api.ts` and use the shared response handler. Keep request/response types explicit for new endpoints.
 - The initial folder state comes from the `window.ROOT_STORE` script injected by Go. Any change to that state shape must also update the Go structs and injection path.
-- Keep public asset URLs under `/~/www`; webpack's `publicPath` and the Go asset handler depend on this prefix.
+- Keep public asset URLs under `/~/www`; Rspack's `publicPath` and the Go asset handler depend on this prefix.
 - Do not edit `dist/` directly. Work in `src/`, run the UI checks, and regenerate embedded resources only if the requested deliverable includes production assets.
 - Maintain upload protocol compatibility: init returns a signed key and chunk size, and subsequent multipart chunks include the fields expected by `internal/api.go`.
 

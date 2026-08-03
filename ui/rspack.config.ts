@@ -1,9 +1,8 @@
-import {Configuration} from "webpack";
-import * as HtmlWebpackPlugin from "html-webpack-plugin";
-import * as Path from "path";
-import * as CopyPlugin from "copy-webpack-plugin";
+import {defineConfig} from '@rspack/cli';
+import {rspack} from '@rspack/core';
+import * as Path from 'path';
 
-const config: Configuration = {
+export default defineConfig({
   entry: {
     folder: './src/folder',
     player: './src/player',
@@ -29,59 +28,50 @@ const config: Configuration = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: [{
-          loader: 'ts-loader',
-        }],
         exclude: /node_modules/,
+        loader: 'builtin:swc-loader',
+        options: {
+          jsc: {
+            parser: {
+              syntax: 'typescript',
+              tsx: true,
+            },
+            transform: {
+              react: {
+                runtime: 'classic',
+              },
+            },
+          },
+        },
       },
       {
         test: /\.png$/,
-        use: [{
-          loader: 'url-loader',
-        }],
+        type: 'asset/resource',
       },
-      {
-        test: /\.less$/,
-        use: [
-          {
-            loader: 'style-loader',
-          }, {
-            loader: 'css-loader',
-            options: {
-              sourceMap: true,
-            },
-          }, {
-            loader: 'less-loader',
-            options: {
-              sourceMap: true,
-            },
-          },
-        ],
-      },
-    ]
+    ],
   },
   plugins: [
-    new HtmlWebpackPlugin({
+    new rspack.HtmlRspackPlugin({
       filename: 'folder.html',
       template: './src/assets/folder.html',
       chunks: ['folder'],
       scriptLoading: 'blocking',
     }),
-    new HtmlWebpackPlugin({
+    new rspack.HtmlRspackPlugin({
       filename: 'player.html',
       template: './src/assets/player.html',
       chunks: ['player'],
       scriptLoading: 'blocking',
     }),
-    new CopyPlugin({
-      patterns: [
-        { from: "./src/assets/icons", to: "icons" },
-      ],
+    new rspack.CopyRspackPlugin({
+      patterns: [{from: './src/assets/icons', to: 'icons'}],
     }),
   ],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
-};
-
-export default config;
+  watchOptions: {
+    ignored: /node_modules/,
+    poll: 1000,
+  },
+});
