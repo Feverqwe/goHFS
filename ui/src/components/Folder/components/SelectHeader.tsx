@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import {useMutation} from '@tanstack/react-query';
 import {SelectChangeSelectedCtx, SelectSelectedCtx} from './SelectProvider/SelectCtx';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {api} from '../../../tools/api';
@@ -24,6 +25,7 @@ const SelectHeader: FC = () => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
   const setDialog = useContext(DialogSetDataCtx);
   const updateStore = useContext(RootStoreUpdateCtx);
+  const {mutateAsync: removeAll} = useMutation({mutationFn: api.removeAll});
 
   const handleSelectAll = useCallback(
     (e: ChangeEvent, checked: boolean) => {
@@ -60,7 +62,7 @@ const SelectHeader: FC = () => {
       ),
       okText: 'Yes',
       onSubmit: async () => {
-        await api.removeAll({
+        await removeAll({
           place: dir,
           names: selected,
         });
@@ -73,7 +75,7 @@ const SelectHeader: FC = () => {
         handleClose();
       },
     });
-  }, [dir, selected, setDialog, handleClose, updateStore]);
+  }, [dir, selected, setDialog, handleClose, removeAll, updateStore]);
 
   return (
     <Paper square={true} sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1}}>

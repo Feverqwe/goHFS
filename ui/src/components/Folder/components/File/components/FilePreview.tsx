@@ -1,5 +1,7 @@
 import React, {FC, memo, useEffect, useRef, useState} from 'react';
 import {Box, CircularProgress} from '@mui/material';
+import {useQuery} from '@tanstack/react-query';
+import {queryKeys} from '../../../../../tools/queryClient';
 
 interface FilePreviewProps {
   name: string;
@@ -18,12 +20,9 @@ const FilePreview: FC<FilePreviewProps> = ({
   hasPreview,
   gridPreviewSize,
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [isIntersecting, setIsIntersecting] = useState(false); // Visibility tracking status
 
   const refContainer = useRef<HTMLDivElement | null>(null);
-  const refTimer = useRef<number | null>(null);
 
   const baseWidth = gridPreviewSize ?? 160;
   const baseHeight = Math.round(baseWidth * (100 / 160));
@@ -31,30 +30,24 @@ const FilePreview: FC<FilePreviewProps> = ({
   const wSize = viewMode === 'grid' ? baseWidth : 40;
   const hSize = viewMode === 'grid' ? baseHeight : 40;
 
-  const checkPreview = React.useCallback(async () => {
-    const targetPlace = dir === '/' ? `/${name}` : `${dir}/${name}`;
-    const url = `/~/preview?place=${encodeURIComponent(targetPlace)}`;
-
-    try {
+  const targetPlace = dir === '/' ? `/${name}` : `${dir}/${name}`;
+  const previewUrl = `/~/preview?place=${encodeURIComponent(targetPlace)}`;
+  const {data: previewStatus, isFetching} = useQuery({
+    queryKey: queryKeys.preview(targetPlace),
+    queryFn: async () => {
+      const url = `/~/preview?place=${encodeURIComponent(targetPlace)}`;
       const res = await fetch(url);
-      if (res.status === 200) {
-        setPreviewUrl(url);
-        setLoading(false);
-        if (refTimer.current) window.clearTimeout(refTimer.current);
-      } else if (res.status === 202) {
-        setLoading(true);
-        refTimer.current = window.setTimeout(checkPreview, 2000);
-      } else {
-        setLoading(false);
-      }
-    } catch (err) {
-      setLoading(false);
-    }
-  }, [dir, name]);
+      return res.status === 200 ? 'ready' : res.status === 202 ? 'pending' : 'unavailable';
+    },
+    enabled: hasPreview && isIntersecting,
+    refetchInterval: ({state}) => (state.data === 'pending' ? 2000 : false),
+    retry: false,
+    staleTime: ({state}) => (state.data === 'ready' ? Infinity : 0),
+  });
 
   // Phase 1: Set up intersection tracker
   useEffect(() => {
-    if (!hasPreview || previewUrl || !refContainer.current) return;
+    if (!hasPreview || previewStatus === 'ready' || !refContainer.current) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -73,22 +66,11 @@ const FilePreview: FC<FilePreviewProps> = ({
     return () => {
       observer.disconnect();
     };
-  }, [hasPreview, previewUrl]);
-
-  // Phase 2: Fire checking queues ONLY when inside view boundaries
-  useEffect(() => {
-    if (hasPreview && isIntersecting) {
-      checkPreview();
-    }
-
-    return () => {
-      if (refTimer.current) window.clearTimeout(refTimer.current);
-    };
-  }, [checkPreview, hasPreview, isIntersecting]);
+  }, [hasPreview, previewStatus]);
 
   return (
     <div ref={refContainer} style={{width: wSize, height: hSize}}>
-      {previewUrl ? (
+      {previewStatus === 'ready' ? (
         <Box
           component="img"
           src={previewUrl}
@@ -110,7 +92,7 @@ const FilePreview: FC<FilePreviewProps> = ({
           height={hSize}
         >
           {defaultIcon}
-          {loading && (
+          {(isFetching || previewStatus === 'pending') && (
             <CircularProgress
               size={48}
               sx={{

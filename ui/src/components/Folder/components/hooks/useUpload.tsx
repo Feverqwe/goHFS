@@ -3,6 +3,7 @@ import {SyntheticEvent, useCallback, useContext, useState} from 'react';
 import {Box, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import {useMutation} from '@tanstack/react-query';
 import {ApiError} from '../../../../tools/apiRequest';
 import MyDialog from '../MyDialog';
 import Report from '../Report';
@@ -30,6 +31,8 @@ const useUpload = (dir: string) => {
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
   const updateStore = useContext(RootStoreUpdateCtx);
+  const {mutateAsync: initUpload} = useMutation({mutationFn: api.uploadInit});
+  const {mutateAsync: uploadChunk} = useMutation({mutationFn: api.uploadChunk});
 
   const resetState = useCallback(() => {
     setReport(null);
@@ -47,7 +50,14 @@ const useUpload = (dir: string) => {
       setVisible(true);
       setDone(false);
 
-      const newReport = await upload(dir, queueFiles, setProgress, setRetry);
+      const newReport = await upload(
+        dir,
+        queueFiles,
+        setProgress,
+        setRetry,
+        initUpload,
+        uploadChunk,
+      );
       queueFiles.splice(0);
 
       setReport((prevReport) => {
@@ -57,7 +67,7 @@ const useUpload = (dir: string) => {
         return sumReport;
       });
     },
-    [dir, queueFiles],
+    [dir, initUpload, queueFiles, uploadChunk],
   );
 
   const handleClose = useCallback(
@@ -113,6 +123,8 @@ const upload = async (
   files: File[],
   setProgress: (val: number) => void,
   setRetry: (bool: boolean) => void,
+  initUpload: typeof api.uploadInit,
+  uploadChunk: typeof api.uploadChunk,
 ) => {
   let sumBytesLen = 0;
   let sumBytes = 0;
@@ -135,13 +147,13 @@ const upload = async (
     data.append('size', String(chunk.size));
     data.append('chunk', chunk);
 
-    await api.uploadChunk(data);
+    await uploadChunk(data);
 
     updateProgress(chunk.size);
   };
 
   const uploadFile = async (file: File) => {
-    const {key, chunkSize} = await api.uploadInit({
+    const {key, chunkSize} = await initUpload({
       fileName: file.name,
       size: file.size,
       place: dir,

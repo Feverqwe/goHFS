@@ -13,10 +13,12 @@ import DataUsageIcon from '@mui/icons-material/DataUsage';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
-import {DirSort, FileInfo} from '../../../../types';
+import {FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
 import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
+import {queryKeys} from '../../../../tools/queryClient';
 
 interface FolderMenuProps {
   anchorEl: Element;
@@ -39,6 +41,17 @@ const FolderMenu: FC<FolderMenuProps> = ({
 }) => {
   const store = useContext(RootStoreCtx);
   const updateStore = useContext(RootStoreUpdateCtx);
+  const queryClient = useQueryClient();
+  const {mutateAsync: reloadConfig} = useMutation({mutationFn: api.reloadConfig});
+  const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
+  const {mutateAsync: cleanupPreviews} = useMutation({
+    mutationFn: api.previewCleanup,
+    onSuccess: () => queryClient.invalidateQueries({queryKey: queryKeys.previews}),
+  });
+  const {mutateAsync: resetFailedPreviews} = useMutation({
+    mutationFn: api.previewResetFailed,
+    onSuccess: () => queryClient.invalidateQueries({queryKey: queryKeys.previews}),
+  });
 
   const menu = useMemo(
     () => [
@@ -126,7 +139,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
         title: 'Reload config',
         icon: <CachedIcon />,
         onClick: async () => {
-          await api.reloadConfig<Record<string, DirSort>>();
+          await reloadConfig();
 
           onClose();
         },
@@ -136,7 +149,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
         title: store.showHidden ? 'Hide hidden' : 'Show hidden',
         icon: store.showHidden ? <VisibilityOffIcon /> : <VisibilityIcon />,
         onClick: async () => {
-          await api.storageSet<Record<string, boolean>>({
+          await setStorage({
             showHidden: !store.showHidden,
           });
 
@@ -151,7 +164,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
         icon: <DeleteSweepIcon />,
         onClick: async () => {
           try {
-            await api.previewCleanup();
+            await cleanupPreviews();
           } catch (err) {
             console.error('Failed to clear previews:', err);
           }
@@ -164,7 +177,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
         icon: <RestartAltIcon />,
         onClick: async () => {
           try {
-            await api.previewResetFailed();
+            await resetFailedPreviews();
             await updateStore();
           } catch (err) {
             console.error('Failed to reset preview failure states:', err);
@@ -184,6 +197,10 @@ const FolderMenu: FC<FolderMenuProps> = ({
       onDirSizeClick,
       onDiskUsageClick,
       onAddressesClick,
+      cleanupPreviews,
+      reloadConfig,
+      resetFailedPreviews,
+      setStorage,
     ],
   );
 

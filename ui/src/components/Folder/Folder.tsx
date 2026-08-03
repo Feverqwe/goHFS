@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {FC, memo, useCallback, useContext, useMemo, useState, useEffect} from 'react';
+import {useMutation} from '@tanstack/react-query';
 import SelectProvider from './components/SelectProvider/SelectProvider';
 import FolderView from './components/FolderView';
 import {DirSort, FileInfo, ViewMode} from '../../types';
@@ -11,6 +12,7 @@ import {api} from '../../tools/api';
 const Folder: FC = () => {
   const store = useContext(RootStoreCtx);
   const [showSortDialog, setShowSortDialog] = useState(false);
+  const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
 
   const [sortKey, setSortKey] = useState(() => {
     return prepDirSort(store.dirSort) ?? {key: 'ctime', revers: true};
@@ -40,29 +42,32 @@ const Folder: FC = () => {
   const changeSort = useCallback(
     async (dirSort: DirSort) => {
       setSortKey(dirSort);
-      await api.storageSet<Record<string, DirSort>>({
+      await setStorage({
         [`dirSort-${store.dir}`]: dirSort,
       });
     },
-    [store.dir],
+    [setStorage, store.dir],
   );
 
-  const changeGridPreviewSize = useCallback(async (size: number) => {
-    const boundedSize = Math.max(100, Math.min(400, size));
-    setGridPreviewSize(boundedSize);
-    await api.storageSet<Record<string, number>>({
-      gridPreviewSize: boundedSize,
-    });
-  }, []);
+  const changeGridPreviewSize = useCallback(
+    async (size: number) => {
+      const boundedSize = Math.max(100, Math.min(400, size));
+      setGridPreviewSize(boundedSize);
+      await setStorage({
+        gridPreviewSize: boundedSize,
+      });
+    },
+    [setStorage],
+  );
 
   const changeViewMode = useCallback(
     async (mode: ViewMode) => {
       setViewMode(mode);
-      await api.storageSet<Record<string, ViewMode>>({
+      await setStorage({
         [`viewMode-${store.dir}`]: mode,
       });
     },
-    [store.dir],
+    [setStorage, store.dir],
   );
 
   const handleCloseSortDialog = useCallback(() => {

@@ -1,8 +1,10 @@
-import React, {FC, ReactNode, useCallback, useMemo, useState} from 'react';
+import React, {FC, ReactNode, useCallback} from 'react';
+import {useQuery} from '@tanstack/react-query';
 import {RootStoreCtx} from './RootStoreCtx';
 import {RootStore} from '../../types';
 import {RootStoreUpdateCtx} from './RootStoreUpdateCtx';
 import {api} from '../../tools/api';
+import {queryKeys} from '../../tools/queryClient';
 
 declare const ROOT_STORE: RootStore | undefined;
 
@@ -13,15 +15,16 @@ interface RootStoreProviderProps {
 }
 
 const RootStoreProvider: FC<RootStoreProviderProps> = ({children}) => {
-  const [currentStore, setCurrentStore] = useState<RootStore>(rootStore);
-  const place = useMemo(() => currentStore.dir, [currentStore.dir]);
+  const place = rootStore.dir;
+  const {data: currentStore, refetch} = useQuery({
+    queryKey: queryKeys.rootStore(place),
+    queryFn: () => api.getStore({place}),
+    initialData: rootStore,
+  });
 
   const handleUpdate = useCallback(async () => {
-    const store = await api.getStore({
-      place,
-    });
-    setCurrentStore(store);
-  }, [place]);
+    await refetch();
+  }, [refetch]);
 
   return (
     <RootStoreUpdateCtx.Provider value={handleUpdate}>

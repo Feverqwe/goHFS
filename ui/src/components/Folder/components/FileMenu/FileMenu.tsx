@@ -6,6 +6,7 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import {useMutation} from '@tanstack/react-query';
 import {ExtAction, FileInfo} from '../../../../types';
 import {api, apiUrl} from '../../../../tools/api';
 import {SelectChangeSelectedCtx} from '../SelectProvider/SelectCtx';
@@ -42,6 +43,7 @@ const FileMenu: FC<FileDialogProps> = ({
 }) => {
   const changeSelected = useContext(SelectChangeSelectedCtx);
   const updateStore = useContext(RootStoreUpdateCtx);
+  const {mutateAsync: remove} = useMutation({mutationFn: api.remove});
 
   const menu = useMemo<(Item | DividerItem)[]>(() => {
     const actions: (Item | DividerItem)[] = [];
@@ -118,7 +120,7 @@ const FileMenu: FC<FileDialogProps> = ({
           label: 'Delete',
           icon: <DeleteForeverIcon />,
           onSubmit: async () => {
-            await api.remove({
+            await remove({
               place: dir,
               name: file.name,
               isDir: file.isDir,
@@ -139,6 +141,7 @@ const FileMenu: FC<FileDialogProps> = ({
     file,
     changeSelected,
     onRename,
+    remove,
     updateStore,
   ]);
 

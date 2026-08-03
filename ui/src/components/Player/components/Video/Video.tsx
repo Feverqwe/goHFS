@@ -3,6 +3,7 @@ import {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
+import {useMutation} from '@tanstack/react-query';
 import addEvent from '../../../../tools/addEvent';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {TITLE} from '../../constants';
@@ -28,6 +29,7 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
   const toggleUrlDialog = useContext(UrlDialogCtx);
   const refVideo = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setPlaying] = useState(false);
+  const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
 
   const startTime = useMemo(() => {
     let time = 0;
@@ -238,7 +240,7 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
           if (lastSyncAt < now - 5 * 1000) {
             lastSyncAt = now;
             try {
-              await api.storageSet({
+              await setStorage({
                 [sid]: video.currentTime,
               });
             } catch (err) {
@@ -301,7 +303,7 @@ const Video: FC<VideoProps> = ({url, metadata}) => {
       }
       video.src = '';
     };
-  }, [toggleUrlDialog, url]);
+  }, [setStorage, toggleUrlDialog, url]);
 
   return <VideoTag ref={refVideo} controls={true} />;
 };

@@ -1,14 +1,5 @@
 import * as React from 'react';
-import {
-  memo,
-  ReactNode,
-  SyntheticEvent,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import {memo, ReactNode, SyntheticEvent, useCallback, useContext, useMemo} from 'react';
 import {
   Box,
   Button,
@@ -23,11 +14,13 @@ import {
 } from '@mui/material';
 import {capitalize, lowerCase} from 'lodash';
 import {filesize} from 'filesize';
+import {useQuery} from '@tanstack/react-query';
 import MyDialog from '../MyDialog';
 import {api} from '../../../../tools/api';
 import {DiskUsage} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
+import {queryKeys} from '../../../../tools/queryClient';
 
 interface DiskUsageDialogProps {
   onClose: () => void;
@@ -36,31 +29,19 @@ interface DiskUsageDialogProps {
 const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
   const store = useContext(RootStoreCtx);
 
-  const [isLoading, setLoading] = useState(true);
-  const [error, setError] = useState<null | Error>(null);
-  const [diskUsage, setDiskUsage] = useState<null | DiskUsage>(null);
-
-  const fetchData = useCallback(async () => {
-    return api.diskUsage({place: store.dir});
-  }, [store.dir]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const diskUsage = await fetchData();
-        setDiskUsage(diskUsage);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [fetchData, store.dir]);
+  const {
+    data: diskUsage,
+    isPending: isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.diskUsage(store.dir),
+    queryFn: () => api.diskUsage({place: store.dir}),
+  });
 
   const handleUpdate = useCallback(async () => {
-    const diskUsage = await fetchData();
-    setDiskUsage(diskUsage);
-  }, [fetchData]);
+    await refetch();
+  }, [refetch]);
 
   const handleClose = useCallback(
     (e: SyntheticEvent, reason?: string) => {

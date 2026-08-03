@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
+import {useMutation} from '@tanstack/react-query';
 import MyDialog from './MyDialog';
 import {FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
@@ -23,8 +24,14 @@ interface RenameDialogProps {
 }
 
 const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClose}) => {
-  const [isLoading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<null | Error>(null);
+  const {
+    mutateAsync: rename,
+    isPending: isLoading,
+    error,
+    reset,
+  } = useMutation({
+    mutationFn: api.rename,
+  });
 
   const handleClose = React.useCallback(
     (e: SyntheticEvent) => {
@@ -40,22 +47,19 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
       const {elements} = e.currentTarget;
       const newName = (elements as HTMLFormControlsCollection & {new_name: HTMLInputElement})
         .new_name.value;
-      setLoading(true);
       try {
-        await api.rename({
+        await rename({
           place: dir,
           name: file.name,
           newName,
         });
         await onSuccess();
         onClose();
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
+      } catch {
+        // The mutation exposes the error next to the submit button.
       }
     },
-    [dir, file.name, onSuccess, onClose],
+    [dir, file.name, onSuccess, onClose, rename],
   );
 
   return (
@@ -73,6 +77,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
             variant="standard"
             required={true}
             autoFocus={true}
+            onChange={reset}
           />
         </DialogContent>
         <DialogActions>

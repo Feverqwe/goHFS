@@ -10,30 +10,24 @@ import {
   Typography,
 } from '@mui/material';
 import QRCode from 'qrcode';
+import {useQuery} from '@tanstack/react-query';
 import MyDialog from './MyDialog';
 import {api} from '../../../tools/api';
+import {queryKeys} from '../../../tools/queryClient';
 
 interface AddressesDialogProps {
   onClose: () => void;
 }
 
 const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
-  const [isLoading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<null | Error>(null);
-  const [addresses, setAddresses] = React.useState<null | string[]>(null);
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const addresses = await api.addresses();
-        setAddresses(addresses);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const {
+    data: addresses,
+    isPending: isLoading,
+    error,
+  } = useQuery({
+    queryKey: queryKeys.addresses,
+    queryFn: () => api.addresses(),
+  });
 
   const handleClose = React.useCallback(
     (e: SyntheticEvent, reason?: string) => {
@@ -55,7 +49,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
           </>
         ) : (
           <Box justifyContent="space-around" display="flex" flexWrap="wrap">
-            {addresses!.map((address) => {
+            {addresses?.map((address) => {
               return <AddressItem key={address} address={address} />;
             })}
           </Box>

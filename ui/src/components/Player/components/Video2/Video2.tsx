@@ -2,6 +2,7 @@ import React, {FC, useContext, useEffect, useMemo, useRef, useState} from 'react
 import {styled} from '@mui/material';
 import Path from 'path-browserify';
 import Hls from 'hls.js';
+import {useMutation} from '@tanstack/react-query';
 import {isMobile as isMobilePlayer} from '../../../../../fork/@oplayer/core/dist/index.es';
 import type {Player as PlayerType} from '../../../../../fork/@oplayer/core/dist/src';
 import type OUIType from '../../../../../fork/@oplayer/ui/dist/src';
@@ -73,6 +74,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
   const [isPlaying, setPlaying] = useState(false);
   const refCtr = useRef<HTMLDivElement>(null);
   const refStartTime = useRef(metadata ?? 0);
+  const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
 
   const title = useMemo(() => {
     let uri;
@@ -445,7 +447,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         }
         try {
           // console.log('save', player.currentTime);
-          await api.storageSet({
+          await setStorage({
             [sid]: player.currentTime,
             [progressKey]:
               Math.trunc((100 / player.duration) * player.currentTime * 1000) / 1000 || undefined,
@@ -603,7 +605,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
 
       player.destroy();
     };
-  }, [url, toggleUrlDialog, title]);
+  }, [setStorage, url, toggleUrlDialog, title]);
 
   return <CtrTag ref={refCtr} />;
 };

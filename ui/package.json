@@ -24,6 +24,7 @@
     "@emotion/styled": "^11.6.0",
     "@mui/icons-material": "^7",
     "@mui/material": "^7",
+    "@tanstack/react-query": "^5.101.4",
     "@types/qrcode": "^1.5.5",
     "filesize": "^11.0.13",
     "hls.js": "^1.5.2",

@@ -1,14 +1,5 @@
 import * as React from 'react';
-import {
-  memo,
-  ReactNode,
-  SyntheticEvent,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import {memo, ReactNode, SyntheticEvent, useCallback, useContext, useMemo} from 'react';
 import {
   Box,
   Button,
@@ -23,11 +14,13 @@ import {
 } from '@mui/material';
 import {capitalize, lowerCase} from 'lodash';
 import {filesize} from 'filesize';
+import {useQuery} from '@tanstack/react-query';
 import MyDialog from '../MyDialog';
 import {api} from '../../../../tools/api';
 import {DirSize} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
+import {queryKeys} from '../../../../tools/queryClient';
 
 interface DirSizeDialogProps {
   onClose: () => void;
@@ -36,31 +29,19 @@ interface DirSizeDialogProps {
 const DirSizeDialog = memo(({onClose}: DirSizeDialogProps) => {
   const store = useContext(RootStoreCtx);
 
-  const [isLoading, setLoading] = useState(true);
-  const [error, setError] = useState<null | Error>(null);
-  const [dirSize, setDirSize] = useState<null | DirSize>(null);
-
-  const fetchData = useCallback(async () => {
-    return api.dirSize({place: store.dir});
-  }, [store.dir]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const dirSize = await fetchData();
-        setDirSize(dirSize);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [fetchData, store.dir]);
+  const {
+    data: dirSize,
+    isPending: isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.dirSize(store.dir),
+    queryFn: () => api.dirSize({place: store.dir}),
+  });
 
   const handleUpdate = useCallback(async () => {
-    const diskUsage = await fetchData();
-    setDirSize(diskUsage);
-  }, [fetchData]);
+    await refetch();
+  }, [refetch]);
 
   const handleClose = useCallback(
     (e: SyntheticEvent, reason?: string) => {

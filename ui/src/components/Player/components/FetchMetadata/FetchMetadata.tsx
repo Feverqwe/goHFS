@@ -1,5 +1,7 @@
-import React, {FC, ReactNode, useEffect, useState} from 'react';
+import React, {FC, ReactNode} from 'react';
+import {useQuery} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
+import {queryKeys} from '../../../../tools/queryClient';
 import {getSidV1, getSidV2} from '../../utils';
 
 interface FetchMetadataProps {
@@ -8,36 +10,16 @@ interface FetchMetadataProps {
 }
 
 const FetchMetadata: FC<FetchMetadataProps> = ({url, children}) => {
-  const [isDone, setDone] = useState(false);
-  const [data, setData] = useState<unknown>(null);
+  const keys = [getSidV2(url), getSidV1(url)];
+  const {data, isPending} = useQuery({
+    queryKey: queryKeys.storage(keys),
+    queryFn: async () => {
+      const result = await api.storageGet(keys);
+      return keys.map((key) => result[key]).find((value) => value !== undefined);
+    },
+  });
 
-  useEffect(() => {
-    (async () => {
-      setData(null);
-      setDone(false);
-
-      let data;
-      try {
-        const keys = [getSidV2(url), getSidV1(url)];
-        const result = await api.storageGet<Record<string, number>>(keys);
-        keys.some((key) => {
-          const value = result[key];
-          if (value !== undefined) {
-            data = value;
-            return true;
-          }
-          return false;
-        });
-      } catch (err) {
-        console.error('storageGet error: %O', err);
-      }
-
-      setData(data);
-      setDone(true);
-    })();
-  }, [url]);
-
-  if (!isDone) return null;
+  if (isPending) return null;
 
   return <>{children(data)}</>;
 };

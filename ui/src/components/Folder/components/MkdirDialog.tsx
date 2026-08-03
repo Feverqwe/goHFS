@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {SyntheticEvent, useContext} from 'react';
 import {Button, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
+import {useMutation} from '@tanstack/react-query';
 import MyDialog from './MyDialog';
 import {api} from '../../../tools/api';
 import useActionButton from '../hooks/useActionButton';
@@ -13,6 +14,7 @@ interface MkdirDialogProps {
 
 const MkdirDialog: React.FC<MkdirDialogProps> = ({dir, onClose}) => {
   const updateStore = useContext(RootStoreUpdateCtx);
+  const {mutateAsync: mkdir} = useMutation({mutationFn: api.mkdir});
 
   const handleClose = React.useCallback(
     (e: SyntheticEvent) => {
@@ -27,14 +29,14 @@ const MkdirDialog: React.FC<MkdirDialogProps> = ({dir, onClose}) => {
       e.preventDefault();
       const {elements} = e.currentTarget;
       const name = (elements as HTMLFormControlsCollection & {name: HTMLInputElement}).name.value;
-      await api.mkdir({
+      await mkdir({
         place: dir,
         name,
       });
       await updateStore();
       onClose();
     },
-    [dir, updateStore, onClose],
+    [dir, mkdir, updateStore, onClose],
   );
 
   const {isLoading, handleSubmit, stateNode} = useActionButton({onSubmit});
