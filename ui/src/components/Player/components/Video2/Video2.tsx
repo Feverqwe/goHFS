@@ -51,6 +51,12 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
 
     const player = videojs(videoElement, {
       autoplay: false,
+      controlBar: {
+        currentTimeDisplay: true,
+        durationDisplay: true,
+        remainingTimeDisplay: false,
+        timeDivider: true,
+      },
       controls: true,
       playbackRates: PLAYBACK_RATES,
       preload: 'auto',
