@@ -14,6 +14,10 @@ const PlayerContainer = styled('div')(({theme}) => ({
     touchAction: 'manipulation',
   },
 
+  '.video-js.vjs-user-inactive.vjs-playing': {
+    cursor: 'none',
+  },
+
   '.video-js.vjs-mobile-touch .vjs-big-play-button': {
     width: '2em',
     height: '2em',
