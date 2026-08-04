@@ -10,15 +10,20 @@ class Notice extends Component {
   private hideTimeout?: number;
 
   createEl(): Element {
-    return super.createEl(
+    const element = super.createEl(
       'div',
       {className: 'vjs-notice'},
       {'aria-atomic': 'true', 'aria-live': 'polite'},
     );
+    const textElement = document.createElement('span');
+    textElement.className = 'vjs-notice-text';
+    element.appendChild(textElement);
+    return element;
   }
 
   display(text: string): void {
-    this.el().textContent = text;
+    const textElement = this.el().querySelector('.vjs-notice-text');
+    if (textElement) textElement.textContent = text;
     this.addClass('vjs-notice-visible');
     window.clearTimeout(this.hideTimeout);
     this.hideTimeout = window.setTimeout(() => {

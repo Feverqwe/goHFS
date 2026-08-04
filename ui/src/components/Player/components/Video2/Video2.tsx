@@ -55,11 +55,16 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       playbackRates: PLAYBACK_RATES,
       preload: 'auto',
       responsive: true,
+      textTrackSettings: false,
     });
     const notice = addNotice(player);
     const showNotice = (text: string) => notice.display(text);
     const subtitleElement = document.createElement('div');
     subtitleElement.className = 'vjs-custom-subtitles';
+    const stopSubtitleInteraction = (event: Event) => event.stopPropagation();
+    ['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'touchstart'].forEach((type) => {
+      subtitleElement.addEventListener(type, stopSubtitleInteraction);
+    });
     player.el().appendChild(subtitleElement);
 
     let hls: Hls | undefined;
@@ -252,6 +257,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         navigator.mediaSession.setActionHandler('nexttrack', null);
       }
       trackController.dispose();
+      ['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'touchstart'].forEach((type) => {
+        subtitleElement.removeEventListener(type, stopSubtitleInteraction);
+      });
       hls?.destroy();
       player.dispose();
       container.replaceChildren();
