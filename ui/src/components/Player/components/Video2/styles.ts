@@ -1,6 +1,6 @@
-import { styled } from '@mui/material';
+import {styled} from '@mui/material';
 
-const PlayerContainer = styled('div')(({ theme }) => ({
+const PlayerContainer = styled('div')(({theme}) => ({
   width: '100%',
   height: '100%',
 
@@ -8,6 +8,25 @@ const PlayerContainer = styled('div')(({ theme }) => ({
     width: '100%',
     height: '100%',
     fontFamily: theme.typography.fontFamily,
+  },
+
+  '.video-js.vjs-mobile-touch': {
+    touchAction: 'manipulation',
+  },
+
+  '.video-js.vjs-mobile-touch .vjs-big-play-button': {
+    width: '2em',
+    height: '2em',
+    marginTop: '-1em',
+    marginLeft: '-1em',
+    border: 0,
+    borderRadius: '50%',
+    backgroundColor: '#6668ab',
+    lineHeight: '2em',
+
+    '&:active': {
+      transform: 'scale(0.9)',
+    },
   },
 
   '.video-js .vjs-control-bar': {
@@ -48,6 +67,10 @@ const PlayerContainer = styled('div')(({ theme }) => ({
     minWidth: 'auto',
   },
 
+  '.video-js .vjs-time-divider': {
+    padding: '0',
+  },
+
   '.video-js  .vjs-volume-horizontal': {
     margin: '8px 0',
   },
@@ -57,9 +80,9 @@ const PlayerContainer = styled('div')(({ theme }) => ({
   },
 
   '.video-js.vjs-layout-small .vjs-current-time, .video-js.vjs-layout-small .vjs-time-divider, .video-js.vjs-layout-small .vjs-duration':
-  {
-    display: 'flex',
-  },
+    {
+      display: 'flex',
+    },
 
   '.video-js .vjs-menu-button-popup .vjs-menu': {
     bottom: '28px',
@@ -98,12 +121,11 @@ const PlayerContainer = styled('div')(({ theme }) => ({
   },
 
   '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip, .video-js .vjs-progress-control:hover .vjs-play-progress .vjs-time-tooltip, .video-js.vjs-scrubbing.vjs-touch-enabled .vjs-progress-control .vjs-time-tooltip':
-  {
-    fontSize: '13px',
-  },
+    {
+      fontSize: '13px',
+    },
 
-  '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip':
-  {
+  '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip': {
     backgroundColor: 'rgba(28, 28, 28, .9)',
   },
 
@@ -128,14 +150,14 @@ const PlayerContainer = styled('div')(({ theme }) => ({
   },
 
   '.video-js .vjs-progress-control:hover .vjs-progress-holder, .video-js.vjs-scrubbing.vjs-touch-enabled .vjs-progress-control .vjs-progress-holder':
-  {
-    fontSize: '1.4em',
-  },
+    {
+      fontSize: '1.4em',
+    },
 
   '.video-js.vjs-layout-x-small .vjs-progress-control, .video-js.vjs-layout-tiny .vjs-progress-control':
-  {
-    display: 'flex',
-  },
+    {
+      display: 'flex',
+    },
 
   '.video-js .vjs-play-progress:before': {
     lineHeight: '0.6em',

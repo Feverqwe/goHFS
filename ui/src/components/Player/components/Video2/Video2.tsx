@@ -12,10 +12,14 @@ import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {
   DEBUG_EVENTS,
   DEBUG_EVENT_TYPES,
+  DOUBLE_TAP_DELAY,
   PLAYBACK_RATES,
   SAVE_INTERVAL,
   SHORT_SKIP,
   SKIP,
+  TAP_MAX_DURATION,
+  TAP_MAX_MOVEMENT,
+  TAP_ZONE_WIDTH,
 } from './constants';
 import {addNotice} from './Notice';
 import PlayerContainer from './styles';
@@ -26,6 +30,8 @@ interface Video2Props {
   url: string;
   metadata?: VideoMetadata;
 }
+
+type TapZone = 'left' | 'center' | 'right';
 
 const Video2: FC<Video2Props> = ({url, metadata}) => {
   const toggleUrlDialog = useContext(UrlDialogCtx);
@@ -44,6 +50,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !url) return;
+    const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    const isMobileTouch = hasCoarsePointer || navigator.maxTouchPoints > 0;
 
     const videoElement = document.createElement('video-js');
     videoElement.classList.add('vjs-big-play-centered');
@@ -63,6 +71,11 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       responsive: true,
       textTrackSettings: false,
     });
+    const playerElement = player.el() as HTMLElement;
+    if (isMobileTouch) {
+      player.addClass('vjs-mobile-touch');
+      player.addClass('vjs-show-big-play-button-on-pause');
+    }
     const notice = addNotice(player);
     const showNotice = (text: string) => notice.display(text);
     const subtitleElement = document.createElement('div');
@@ -71,7 +84,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     ['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'touchstart'].forEach((type) => {
       subtitleElement.addEventListener(type, stopSubtitleInteraction);
     });
-    player.el().appendChild(subtitleElement);
+    playerElement.appendChild(subtitleElement);
 
     let hls: Hls | undefined;
     if (isHlsUrl(url) && Hls.isSupported()) {
@@ -87,6 +100,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     let lastSyncAt = 0;
     let activelyPlaying = false;
     let hasStarted = false;
+    let touchStart: {x: number; y: number; at: number} | undefined;
+    let previousTap: {zone: TapZone; at: number} | undefined;
 
     const getCurrentTime = () => player.currentTime() ?? 0;
     const getDuration = () => player.duration() ?? NaN;
@@ -95,6 +110,69 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     };
     const showPlaybackRate = () => {
       showNotice(`Playback rate: ${player.playbackRate() ?? 1}`);
+    };
+    const seekBy = (offset: number) => {
+      const nextTime = Math.max(0, Math.min(getDuration() || Infinity, getCurrentTime() + offset));
+      player.currentTime(nextTime);
+      showTime();
+    };
+    const isTouchControl = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false;
+      return Boolean(
+        target.closest(
+          '.vjs-control-bar, .vjs-big-play-button, .vjs-menu, .vjs-modal-dialog, .vjs-custom-subtitles',
+        ),
+      );
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      if (!isMobileTouch || event.touches.length !== 1 || isTouchControl(event.target)) {
+        touchStart = undefined;
+        return;
+      }
+
+      const touch = event.touches[0];
+      touchStart = {x: touch.clientX, y: touch.clientY, at: Date.now()};
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      const start = touchStart;
+      touchStart = undefined;
+      if (!start || event.changedTouches.length !== 1 || isTouchControl(event.target)) return;
+
+      const touch = event.changedTouches[0];
+      const now = Date.now();
+      const isLongTap = now - start.at > TAP_MAX_DURATION;
+      const touchOffsetX = touch.clientX - start.x;
+      const touchOffsetY = touch.clientY - start.y;
+      const movedTooFar = Math.hypot(touchOffsetX, touchOffsetY) > TAP_MAX_MOVEMENT;
+      if (isLongTap || movedTooFar) {
+        previousTap = undefined;
+        return;
+      }
+
+      const playerRect = playerElement.getBoundingClientRect();
+      const horizontalPosition = (touch.clientX - playerRect.left) / playerRect.width;
+      let zone: TapZone = 'center';
+      if (horizontalPosition < TAP_ZONE_WIDTH) {
+        zone = 'left';
+      } else if (horizontalPosition > 1 - TAP_ZONE_WIDTH) {
+        zone = 'right';
+      }
+
+      if (previousTap?.zone === zone && now - previousTap.at <= DOUBLE_TAP_DELAY) {
+        previousTap = undefined;
+        if (zone === 'center') {
+          if (!player.paused()) player.pause();
+        } else {
+          seekBy(zone === 'left' ? -SKIP : SKIP);
+        }
+        player.userActive(true);
+        if (event.cancelable) event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        return;
+      }
+
+      previousTap = {zone, at: now};
     };
     const continuePlaying = () => {
       if (hasStarted) return;
@@ -177,12 +255,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           case 'ArrowRight': {
             const direction = code === 'ArrowLeft' ? -1 : 1;
             const offset = event.altKey ? SHORT_SKIP : SKIP;
-            const nextTime = Math.max(
-              0,
-              Math.min(getDuration() || Infinity, getCurrentTime() + direction * offset),
-            );
-            player.currentTime(nextTime);
-            showTime();
+            seekBy(direction * offset);
             handled = true;
             break;
           }
@@ -236,6 +309,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
     document.addEventListener('keydown', onKeydown, true);
+    playerElement.addEventListener('touchstart', onTouchStart, {capture: true, passive: true});
+    playerElement.addEventListener('touchend', onTouchEnd, {capture: true, passive: false});
 
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({title});
@@ -256,6 +331,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
 
     return () => {
       document.removeEventListener('keydown', onKeydown, true);
+      playerElement.removeEventListener('touchstart', onTouchStart, true);
+      playerElement.removeEventListener('touchend', onTouchEnd, true);
       setPlaying(false);
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = null;
