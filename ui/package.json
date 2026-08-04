@@ -27,22 +27,23 @@
     "@tanstack/react-query": "^5.101.4",
     "@types/qrcode": "^1.5.5",
     "filesize": "^11.0.13",
-    "hls.js": "^1.5.2",
+    "hls.js": "^1.6.16",
     "lodash": "^4.17.21",
     "mime": "^4.0.1",
     "path-browserify": "^1.0.1",
     "qrcode": "^1.5.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "video.js": "^8.23.9"
   },
   "devDependencies": {
+    "@rspack/cli": "^1.5.0",
+    "@rspack/core": "^1.5.0",
     "@types/lodash": "^4.17.7",
     "@types/path-browserify": "^1.0.0",
     "@types/react-dom": "^19.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.19.0",
-    "@typescript-eslint/parser": "^8.19.0",
-    "@rspack/cli": "^1.5.0",
-    "@rspack/core": "^1.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/parser": "^8.66.0",
     "del-cli": "^6.0.0",
     "eslint": "^8.27.0",
     "eslint-config-airbnb": "^19.0.4",
@@ -53,7 +54,7 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "ncp": "^2.0.0",
     "prettier": "^3.0.2",
-    "typescript": "^5.0.4"
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "eslint-config-airbnb": {

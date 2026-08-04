@@ -1,68 +1,26 @@
 import React, {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
-import {styled} from '@mui/material';
-import Path from 'path-browserify';
 import Hls from 'hls.js';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
 import {useMutation} from '@tanstack/react-query';
-import {isMobile as isMobilePlayer} from '../../../../../fork/@oplayer/core/dist/index.es';
-import type {Player as PlayerType} from '../../../../../fork/@oplayer/core/dist/src';
-import type OUIType from '../../../../../fork/@oplayer/ui/dist/src';
-import type {Setting} from '../../../../../fork/@oplayer/ui/dist/src';
 import {api} from '../../../../tools/api';
-import {getSidV2} from '../../utils';
-import {VideoMetadata} from '../../types';
-import {TITLE} from '../../constants';
-import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
-import {getOption, setOption} from '../../../Folder/utils';
-import {SHORT_SKIP, SKIP} from './constants';
 import {getProgressKey} from '../../../../tools/common';
-
-// eslint-disable-next-line global-require,@typescript-eslint/no-require-imports
-const {Player} = require('../../../../../fork/@oplayer/core/dist/index.es') as {
-  Player: typeof PlayerType;
-};
-// eslint-disable-next-line global-require,@typescript-eslint/no-require-imports
-const {default: OUI} = require('../../../../../fork/@oplayer/ui/dist/index.es') as {
-  default: typeof OUIType;
-};
-
-const PLAYER_MPB = 'player.mpb';
-const DEBUG_EVENTS = false;
-const SAVE_INTERVAL = 3 * 1000;
-
-const CtrTag = styled('div')(() => {
-  return {
-    width: '100%',
-    height: '100%',
-
-    '.subtitles-ctr': {
-      fontSize: '1.875em',
-      lineHeight: 'initial',
-      pointerEvents: 'auto',
-    },
-
-    '.progress-wrapper': {
-      padding: '6px 0px 6px',
-      transition: 'height, margin-bottom .1s',
-      '& .progress > div:nth-child(4) > span': {
-        transition: '.1s',
-      },
-      '&:hover': {
-        '& .progress': {
-          height: '6px',
-          marginBottom: '-1px',
-          '& > div:nth-child(4) > span': {
-            top: '-3px',
-          },
-        },
-      },
-    },
-    '.fullscreen': {
-      '.progress-wrapper:hover .progress > div:nth-child(4) > span': {
-        top: '-5px',
-      },
-    },
-  };
-});
+import {TITLE} from '../../constants';
+import {VideoMetadata} from '../../types';
+import {getSidV2} from '../../utils';
+import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
+import {
+  DEBUG_EVENTS,
+  DEBUG_EVENT_TYPES,
+  PLAYBACK_RATES,
+  SAVE_INTERVAL,
+  SHORT_SKIP,
+  SKIP,
+} from './constants';
+import {addNotice} from './Notice';
+import PlayerContainer from './styles';
+import {createTrackController} from './tracks';
+import {formatTime, getMediaTitle, isBrokenAndroidEdge, isHlsUrl} from './utils';
 
 interface Video2Props {
   url: string;
@@ -71,555 +29,236 @@ interface Video2Props {
 
 const Video2: FC<Video2Props> = ({url, metadata}) => {
   const toggleUrlDialog = useContext(UrlDialogCtx);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setPlaying] = useState(false);
-  const refCtr = useRef<HTMLDivElement>(null);
-  const refStartTime = useRef(metadata ?? 0);
   const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
-
-  const title = useMemo(() => {
-    let uri;
-    try {
-      uri = url && new URL(url, location.href);
-    } catch (err) {
-      // pass
-    }
-    if (uri) {
-      const name = Path.basename(uri.pathname);
-      return decodeURIComponent(name);
-    }
-    return '';
-  }, [url]);
+  const title = useMemo(() => getMediaTitle(url), [url]);
 
   useEffect(() => {
     document.title = `[${isPlaying ? '>' : '||'}] ${title}`;
     return () => {
       document.title = TITLE;
     };
-  }, [url, isPlaying, title]);
+  }, [isPlaying, title]);
 
   useEffect(() => {
-    const ctrEl = refCtr.current;
-    if (!ctrEl || !url) return;
+    const container = containerRef.current;
+    if (!container || !url) return;
+
+    const videoElement = document.createElement('video-js');
+    videoElement.classList.add('vjs-big-play-centered');
+    container.appendChild(videoElement);
+
+    const player = videojs(videoElement, {
+      autoplay: false,
+      controls: true,
+      playbackRates: PLAYBACK_RATES,
+      preload: 'auto',
+      responsive: true,
+    });
+    const notice = addNotice(player);
+    const showNotice = (text: string) => notice.display(text);
+    const subtitleElement = document.createElement('div');
+    subtitleElement.className = 'vjs-custom-subtitles';
+    player.el().appendChild(subtitleElement);
 
     let hls: Hls | undefined;
-    if (/\.m3u8$/.test(url)) {
+    if (isHlsUrl(url) && Hls.isSupported()) {
       hls = new Hls({
-        preferManagedMediaSource: false,
         maxBufferLength: 3 * 60,
+        preferManagedMediaSource: false,
+        renderTextTracksNatively: false,
       });
     }
+    const trackController = createTrackController(player, subtitleElement, showNotice, hls);
+    const sid = getSidV2(url);
+    const progressKey = getProgressKey(decodeURIComponent(sid));
+    let lastSyncAt = 0;
+    let activelyPlaying = false;
+    let hasStarted = false;
 
-    const startTime = refStartTime.current;
-
-    const player = Player.make(ctrEl, {
-      autoplay: false,
-    });
-    // fix for safari
-    (player as {play: () => void}).play = () => {
-      player.$video.play();
+    const getCurrentTime = () => player.currentTime() ?? 0;
+    const getDuration = () => player.duration() ?? NaN;
+    const showTime = () => {
+      showNotice(`${formatTime(getCurrentTime())} / ${formatTime(getDuration())}`);
     };
-
-    const ui = OUI({
-      autoFocus: true,
-      pictureInPicture: false,
-      miniProgressBar: getOption(PLAYER_MPB, false),
-      coverButton: isMobilePlayer,
-      ctrlHideBehavior: isMobilePlayer ? 'delay' : 'hover',
-      speeds: [
-        '3.0',
-        '2.75',
-        '2.5',
-        '2.25',
-        '2.0',
-        '1.75',
-        '1.5',
-        '1.25',
-        '1.0',
-        '0.75',
-        '0.5',
-      ].reverse(),
-      settings: [
-        {
-          name: 'Picture in Picture',
-          type: 'switcher',
-          onChange: async () => {
-            if (player.isInPip) {
-              await player.exitPip();
-            } else {
-              await player.enterPip();
-            }
-          },
-        },
-        {
-          name: 'Mini progress bar',
-          type: 'switcher',
-          onChange: () => {
-            const value = getOption(PLAYER_MPB, false);
-            setOption(PLAYER_MPB, !value);
-          },
-          default: getOption(PLAYER_MPB, false),
-        },
-      ],
-      theme: {
-        primaryColor: '#90caf9',
-      },
-    });
-
-    const plugins = [ui];
-
-    player.use(plugins).create();
-
-    ui.keyboard.unregister?.(['s', 'f', 'ArrowLeft', 'ArrowRight']);
-
-    window.addEventListener('fullscreenchange', () => {
-      if (player.isFullScreen) {
-        player.$root.classList.add('fullscreen');
-      } else {
-        player.$root.classList.remove('fullscreen');
-      }
-    });
-
-    const emitTime = () => {
-      player.emit('notice', {
-        text: `${formatTime(player.currentTime)} / ${formatTime(player.duration)}`,
-      });
+    const showPlaybackRate = () => {
+      showNotice(`Playback rate: ${player.playbackRate() ?? 1}`);
     };
-
-    const emitPlaybackRate = () => {
-      player.emit('notice', {
-        text: `Playback rate: ${player.playbackRate}`,
-      });
-    };
-
-    let onKeydown: (e: KeyboardEvent) => void;
-    document.addEventListener(
-      'keydown',
-      (onKeydown = (e: KeyboardEvent) => {
-        // console.log('keydown: %s', e.code);
-        const target = e.target as HTMLElement;
-        if (target && target.tagName === 'INPUT') return;
-
-        const {code} = e;
-
-        const isMeta = e.ctrlKey || e.metaKey || e.shiftKey;
-
-        if (isMeta) {
-          switch (code) {
-            case 'Period': {
-              e.preventDefault();
-              if (player.playbackRate < 3) {
-                player.setPlaybackRate(player.playbackRate + 0.25);
-              }
-              emitPlaybackRate();
-              break;
-            }
-            case 'Comma': {
-              e.preventDefault();
-              if (player.playbackRate > 0.25) {
-                player.setPlaybackRate(player.playbackRate - 0.25);
-              }
-              emitPlaybackRate();
-              break;
-            }
-            case 'Digit0': {
-              e.preventDefault();
-              player.setPlaybackRate(1);
-              emitPlaybackRate();
-              break;
-            }
-          }
-        }
-
-        // Bail if a modifier key is set
-        if (isMeta) {
-          return;
-        }
-
-        // showUrlForm(true);
-
-        switch (code) {
-          case 'ArrowLeft': {
-            e.preventDefault();
-            const offset = e.altKey ? SHORT_SKIP : SKIP;
-            player.seek(player.currentTime - offset);
-            emitTime();
-            break;
-          }
-          case 'ArrowRight': {
-            e.preventDefault();
-            const offset = e.altKey ? SHORT_SKIP : SKIP;
-            player.seek(player.currentTime + offset);
-            emitTime();
-            break;
-          }
-          case 'KeyF': {
-            if (player.isFullScreen) {
-              player.exitFullscreen().catch((err: unknown) => {
-                console.error('exitFullscreen error: %O', err);
-              });
-            } else {
-              player.enterFullscreen().catch((err: unknown) => {
-                console.error('requestFullscreen error: %O', err);
-              });
-            }
-            break;
-          }
-          case 'KeyN': {
-            e.preventDefault();
-            toggleUrlDialog();
-            break;
-          }
-          case 'KeyS': {
-            e.preventDefault();
-            const len = hls?.subtitleTracks.length;
-            if (hls && len) {
-              if (hls.subtitleTrack === len - 1) {
-                hls.subtitleTrack = -1;
-
-                player.emit('notice', {
-                  text: 'Subtitles: Disabled',
-                });
-              } else {
-                hls.subtitleTrack++;
-
-                const track = hls.subtitleTracks[hls.subtitleTrack];
-                player.emit('notice', {
-                  text: `Stream ${hls.subtitleTrack}: ${track.name}`,
-                });
-              }
-              updateSettings();
-            }
-            break;
-          }
-          case 'KeyA': {
-            e.preventDefault();
-            const len = hls?.audioTracks.length;
-            if (hls && len) {
-              if (hls.audioTrack === len - 1) {
-                hls.audioTrack = 0;
-              } else {
-                hls.audioTrack++;
-              }
-
-              const track = hls.audioTracks[hls.audioTrack];
-              player.emit('notice', {
-                text: `Audio ${hls.audioTrack}: ${track.name}`,
-              });
-              updateSettings();
-            }
-            break;
-          }
-        }
-      }),
-    );
-
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title,
-      });
-
-      navigator.mediaSession.setActionHandler('previoustrack', (details) => {
-        player.seek(player.currentTime - SHORT_SKIP);
-      });
-
-      navigator.mediaSession.setActionHandler('nexttrack', (details) => {
-        player.seek(player.currentTime + SHORT_SKIP);
-      });
-    }
-
-    let onTouchstart: (e: TouchEvent) => void;
-    if (isMobilePlayer) {
-      let startAt = 0;
-      document.addEventListener(
-        'touchstart',
-        (onTouchstart = (e: TouchEvent) => {
-          if (e.target !== ui.$mask) return;
-
-          const touch = e.changedTouches[0];
-          if (!touch) return;
-          const {clientX, target} = touch;
-          const targetEl = target as HTMLElement;
-          const w = targetEl.clientWidth;
-          const now = Date.now();
-
-          if (now - startAt > 300) {
-            startAt = now;
-          } else {
-            // center click
-            if (clientX > w / 3 && clientX < (w / 3) * 2) {
-              if (player.isPlaying) {
-                player.pause();
-              }
-              return;
-            }
-
-            let offset = SKIP;
-            if (clientX < targetEl.clientWidth / 2) {
-              offset *= -1;
-            }
-            player.seek(player.currentTime + offset);
-            emitTime();
-          }
-        }),
-      );
-
-      ui.$controllerBottom.setAttribute('style', 'zoom: 1.25');
-    }
-
-    player.on('play', () => {
-      setPlaying(player.isPlaying);
-    });
-    player.on('pause', () => {
-      setPlaying(player.isPlaying);
-    });
-
-    // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
-    DEBUG_EVENTS &&
-      [
-        'abort',
-        'canplay',
-        'canplaythrough',
-        'durationchange',
-        'emptied',
-        'ended',
-        'error',
-        'loadeddata',
-        'loadedmetadata',
-        'loadstart',
-        'pause',
-        'play',
-        'playing',
-        'ratechange',
-        'seeked',
-        'seeking',
-        'stalled',
-        'volumechange',
-        'waiting', // 'progress', 'suspend', 'timeupdate',
-      ].forEach((type) => {
-        player.$video.addEventListener(type, (e: Event) => {
-          console.log('Event %s: %O', type, e);
-        });
-      });
-
     const continuePlaying = () => {
-      if (startTime > 0) {
-        player.seek(startTime);
-      }
+      if (hasStarted) return;
+      hasStarted = true;
+      if ((metadata ?? 0) > 0) player.currentTime(metadata);
       player.play()?.catch((err: unknown) => {
         console.error('auto play error: %O', err);
       });
     };
-
-    const isBrokenAndroidEdgePlayer =
-      /Mozilla.+Android.+AppleWebKit.+Chrome.+Mobile.+Safari.+EdgA/.test(navigator.userAgent);
-    if (isBrokenAndroidEdgePlayer) {
-      player.once('loadedmetadata', () => {
-        if (player.duration > 0) {
-          continuePlaying();
-        } else {
-          player.once('durationchange', () => {
-            continuePlaying();
-          });
-        }
-      });
-    } else {
-      player.once('loadedmetadata', () => {
+    const onLoadedMetadata = () => {
+      if (isBrokenAndroidEdge(navigator.userAgent) && getDuration() <= 0) {
+        player.one('durationchange', continuePlaying);
+      } else {
         continuePlaying();
-      });
-    }
-
-    let isSeeking = false;
-    let isPlaying = false;
-    const sid = getSidV2(url);
-    const progressKey = getProgressKey(decodeURIComponent(sid));
-    let lastSyncAt = 0;
-    player.on('timeupdate', async () => {
+      }
+    };
+    const onPlay = () => {
+      activelyPlaying = true;
+      lastSyncAt = Date.now();
+      setPlaying(true);
+    };
+    const onPause = () => {
+      activelyPlaying = false;
+      setPlaying(false);
+    };
+    const onTimeUpdate = async () => {
       const now = Date.now();
+      if (!lastSyncAt) lastSyncAt = now;
+      if (lastSyncAt >= now - SAVE_INTERVAL || player.seeking() || !activelyPlaying) return;
 
-      if (!lastSyncAt) {
-        lastSyncAt = now;
-      }
-
-      if (lastSyncAt < now - SAVE_INTERVAL) {
-        lastSyncAt = now;
-        if (isSeeking || !isPlaying) {
-          return;
-        }
-        try {
-          // console.log('save', player.currentTime);
-          await setStorage({
-            [sid]: player.currentTime,
-            [progressKey]:
-              Math.trunc((100 / player.duration) * player.currentTime * 1000) / 1000 || undefined,
-          });
-        } catch (err) {
-          console.error('Storage.set error: %O', err);
-        }
-      }
-    });
-    player.on('seeking', () => {
-      isSeeking = true;
-    });
-    player.on('seeked', () => {
-      isSeeking = false;
-      lastSyncAt = Date.now();
-    });
-    player.on('pause', () => {
-      isPlaying = false;
-    });
-    player.on('play', () => {
-      isPlaying = true;
-      lastSyncAt = Date.now();
-    });
-
-    const updateSettings = () => {
-      const subsKey = 'subtitles';
-      ui.setting.unregister(subsKey);
-
-      const audioKey = 'audioTracks';
-      ui.setting.unregister(audioKey);
-
-      if (hls?.audioTracks.length) {
-        const tracksMenu = hls.audioTracks.map((audioTrack, index) => {
-          if (!hls) throw new Error('Unexpected case');
-
-          return {
-            name: `Audio ${index}: ${audioTrack.name}`,
-            type: 'switcher',
-            default: hls.audioTrack === index,
-            onChange: () => {
-              if (!hls) return;
-              hls.audioTrack = index;
-              updateSettings();
-            },
-          };
+      lastSyncAt = now;
+      const currentTime = getCurrentTime();
+      try {
+        await setStorage({
+          [sid]: currentTime,
+          [progressKey]: Math.trunc((100 / getDuration()) * currentTime * 1000) / 1000 || undefined,
         });
-
-        ui.setting.register([
-          {
-            key: audioKey,
-            name: 'Audio tracks',
-            type: 'selector',
-            children: tracksMenu as unknown as Setting<unknown>[],
-          },
-        ]);
+      } catch (err) {
+        console.error('Storage.set error: %O', err);
+      }
+    };
+    const onKeydown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, button, a, [contenteditable="true"]')) {
+        return;
       }
 
-      if (hls?.subtitleTracks.length) {
-        const sumMenu = hls.subtitleTracks.map((subtitle, index) => {
-          if (!hls) throw new Error('Unexpected case');
+      const {code} = event;
+      const hasModifier = event.ctrlKey || event.metaKey || event.shiftKey;
+      let handled = false;
 
-          return {
-            name: `Stream ${index}: ${subtitle.name}`,
-            type: 'switcher',
-            default: hls.subtitleTrack === index,
-            onChange: () => {
-              if (!hls) return;
-              if (hls.subtitleTrack === index) {
-                hls.subtitleTrack = -1;
+      if (hasModifier) {
+        const currentRate = player.playbackRate() ?? 1;
+        if (code === 'Period') {
+          player.playbackRate(Math.min(3, currentRate + 0.25));
+          showPlaybackRate();
+          handled = true;
+        } else if (code === 'Comma') {
+          player.playbackRate(Math.max(0.25, currentRate - 0.25));
+          showPlaybackRate();
+          handled = true;
+        } else if (code === 'Digit0') {
+          player.playbackRate(1);
+          showPlaybackRate();
+          handled = true;
+        }
+      } else {
+        switch (code) {
+          case 'Space':
+            if (!event.repeat) {
+              if (player.paused()) {
+                player.play()?.catch((err: unknown) => console.error('play error: %O', err));
               } else {
-                hls.subtitleTrack = index;
+                player.pause();
               }
-              updateSettings();
-            },
-          };
-        });
+              handled = true;
+            }
+            break;
+          case 'ArrowLeft':
+          case 'ArrowRight': {
+            const direction = code === 'ArrowLeft' ? -1 : 1;
+            const offset = event.altKey ? SHORT_SKIP : SKIP;
+            const nextTime = Math.max(
+              0,
+              Math.min(getDuration() || Infinity, getCurrentTime() + direction * offset),
+            );
+            player.currentTime(nextTime);
+            showTime();
+            handled = true;
+            break;
+          }
+          case 'KeyF':
+            if (!event.repeat) {
+              const operation = player.isFullscreen()
+                ? player.exitFullscreen()
+                : player.requestFullscreen();
+              operation.catch((err: unknown) => console.error('fullscreen error: %O', err));
+              handled = true;
+            }
+            break;
+          case 'KeyN':
+            if (!event.repeat) {
+              toggleUrlDialog();
+              handled = true;
+            }
+            break;
+          case 'KeyS':
+            if (!event.repeat) {
+              trackController.cycleSubtitleTrack();
+              handled = true;
+            }
+            break;
+          case 'KeyA':
+            if (!event.repeat) {
+              trackController.cycleAudioTrack();
+              handled = true;
+            }
+            break;
+        }
+      }
 
-        ui.setting.register([
-          {
-            key: subsKey,
-            name: 'Subtitles',
-            type: 'selector',
-            children: sumMenu as unknown as Setting<unknown>[],
-          },
-        ]);
+      if (handled) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
       }
     };
 
-    function handleCueChange(this: TextTrack) {
-      const {activeCues} = this;
-      if (activeCues?.length) {
-        let html = '';
-        for (let i = 0; i < activeCues.length; i++) {
-          const activeCue = activeCues[i] as VTTCue | undefined;
-          if (activeCue) {
-            html += activeCue.text
-              .replace(/\\h/g, '&nbsp;')
-              .split(/\r?\n/)
-              .map((item: string) => `<p><span>${item}</span></p>`)
-              .join('');
-          }
-        }
-        ui.subtitle.$dom.innerHTML = html;
-      } else {
-        ui.subtitle.$dom.innerHTML = '';
-      }
+    player.on('loadedmetadata', onLoadedMetadata);
+    player.on('play', onPlay);
+    player.on('pause', onPause);
+    player.on('timeupdate', onTimeUpdate);
+    player.on('seeked', () => {
+      lastSyncAt = Date.now();
+    });
+    if (DEBUG_EVENTS) {
+      player.on([...DEBUG_EVENT_TYPES], (event: Event) => {
+        console.log('Event %s: %O', event.type, event);
+      });
+    }
+    document.addEventListener('keydown', onKeydown, true);
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({title});
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        player.currentTime(Math.max(0, getCurrentTime() - SHORT_SKIP));
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        player.currentTime(Math.min(getDuration() || Infinity, getCurrentTime() + SHORT_SKIP));
+      });
     }
 
     if (hls) {
       hls.loadSource(url);
-      hls.attachMedia(player.$video);
-      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, updateSettings);
-      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, updateSettings);
-
-      let dispose = () => {};
-      hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, () => {
-        ui.subtitle.$dom.innerHTML = '';
-        dispose();
-        const track = player.$video.textTracks[hls?.subtitleTrack || 0];
-        if (!track) return;
-
-        track.mode = 'hidden';
-        track.addEventListener('cuechange', handleCueChange);
-        dispose = () => {
-          track.removeEventListener('cuechange', handleCueChange);
-        };
-      });
-
-      Object.assign(window, {hlsInstance: hls});
+      hls.attachMedia(player.tech(true).el() as HTMLMediaElement);
     } else {
-      player.load({
-        src: url,
-      });
+      player.src(url);
     }
 
-    const progressEl = (ui as unknown as {$progress: HTMLElement}).$progress;
-    progressEl.classList.add('progress-wrapper');
-    progressEl.children[0].classList.add('progress');
-
-    ui.subtitle.$dom.classList.add('subtitles-ctr');
-
     return () => {
-      document.removeEventListener('keydown', onKeydown);
-      document.removeEventListener('touchstart', onTouchstart);
+      document.removeEventListener('keydown', onKeydown, true);
+      setPlaying(false);
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = null;
         navigator.mediaSession.setActionHandler('previoustrack', null);
         navigator.mediaSession.setActionHandler('nexttrack', null);
       }
-
-      if (hls) {
-        hls.detachMedia();
-        hls.destroy();
-      }
-
-      player.destroy();
+      trackController.dispose();
+      hls?.destroy();
+      player.dispose();
+      container.replaceChildren();
     };
-  }, [setStorage, url, toggleUrlDialog, title]);
+  }, [metadata, setStorage, title, toggleUrlDialog, url]);
 
-  return <CtrTag ref={refCtr} />;
+  return <PlayerContainer ref={containerRef} />;
 };
-
-function padZero(time: number): string {
-  return time < 10 ? `0${time}` : `${time}`;
-}
-
-function formatTime(duration: number): string {
-  if (!isFinite(duration)) return '--:--';
-  const h = Math.floor(duration / 3600);
-  const m = Math.floor((duration % 3600) / 60);
-  const s = Math.floor((duration % 3600) % 60);
-  return `${h > 0 ? `${padZero(h)}:` : ''}${padZero(m)}:${padZero(s)}`;
-}
 
 export default Video2;

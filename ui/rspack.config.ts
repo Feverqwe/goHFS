@@ -3,6 +3,9 @@ import {rspack} from '@rspack/core';
 import * as Path from 'path';
 
 export default defineConfig({
+  experiments: {
+    css: true,
+  },
   entry: {
     folder: './src/folder',
     player: './src/player',
@@ -43,6 +46,11 @@ export default defineConfig({
             },
           },
         },
+      },
+      {
+        test: /\.css$/,
+        type: 'css/auto',
+        sideEffects: true,
       },
       {
         test: /\.png$/,
