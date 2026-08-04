@@ -18,6 +18,7 @@ const FetchMetadata: FC<FetchMetadataProps> = ({url, children}) => {
       return keys.map((key) => result[key]).find((value) => value !== undefined);
     },
     staleTime: Infinity,
+    gcTime: 0,
   });
 
   if (isPending) return null;
