@@ -53,8 +53,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
     const isMobileTouch = hasCoarsePointer || navigator.maxTouchPoints > 0;
 
-    const videoElement = document.createElement('video-js');
-    videoElement.classList.add('vjs-big-play-centered');
+    const videoElement = document.createElement('video');
+    videoElement.classList.add('video-js', 'vjs-big-play-centered');
     container.appendChild(videoElement);
 
     const player = videojs(videoElement, {
@@ -87,6 +87,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const showNotice = (text: string) => notice.display(text);
     const subtitleElement = document.createElement('div');
     subtitleElement.className = 'vjs-custom-subtitles';
+    subtitleElement.setAttribute('translate', 'yes');
     const stopSubtitleInteraction = (event: Event) => event.stopPropagation();
     ['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'touchstart'].forEach((type) => {
       subtitleElement.addEventListener(type, stopSubtitleInteraction);
