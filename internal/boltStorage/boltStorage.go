@@ -2,6 +2,8 @@ package boltstorage
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/boltdb/bolt"
 )
@@ -103,6 +105,10 @@ func (s *BoltStorage) Write(cb func(w BoltWrite) error) error {
 }
 
 func (s *BoltStorage) Load() error {
+	if err := os.MkdirAll(filepath.Dir(s.path), 0750); err != nil {
+		return err
+	}
+
 	db, err := bolt.Open(s.path, 0600, nil)
 	if err != nil {
 		return err
