@@ -1,5 +1,7 @@
 import {styled} from '@mui/material';
 
+const PRIMARY_COLOR = '#6668ab';
+
 const PlayerContainer = styled('div')(({theme}) => ({
   width: '100%',
   height: '100%',
@@ -30,7 +32,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     marginLeft: '-1em',
     border: 0,
     borderRadius: '50%',
-    backgroundColor: '#6668ab',
+    backgroundColor: PRIMARY_COLOR,
     lineHeight: '2em',
 
     '&:active': {
@@ -150,6 +152,28 @@ const PlayerContainer = styled('div')(({theme}) => ({
   '.video-js .vjs-custom-control-spacer': {
     display: 'block',
     flex: '1 1 auto',
+  },
+
+  '.video-js .vjs-slider': {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+
+  '.video-js .vjs-volume-bar': {
+    height: '0.4em',
+    margin: '1.3em 0.45em',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+
+  '.video-js .vjs-volume-level': {
+    height: '0.4em',
+  },
+
+  '.video-js .vjs-volume-level::before': {
+    lineHeight: '0.5em',
+  },
+
+  '.video-js .vjs-load-progress, .video-js .vjs-load-progress div': {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 
   '.video-js .vjs-progress-control': {
