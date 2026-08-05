@@ -62,6 +62,13 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       controlBar: {
         currentTimeDisplay: true,
         durationDisplay: true,
+        progressControl: {
+          seekBar: {
+            playProgressBar: {
+              timeTooltip: false,
+            },
+          },
+        },
         remainingTimeDisplay: false,
         timeDivider: true,
       },
@@ -108,8 +115,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const showTime = () => {
       showNotice(`${formatTime(getCurrentTime())} / ${formatTime(getDuration())}`);
     };
-    const showPlaybackRate = () => {
-      showNotice(`Playback rate: ${player.playbackRate() ?? 1}`);
+    const setPlaybackRate = (rate: number) => {
+      player.playbackRate(rate);
+      showNotice(`Playback rate: ${rate}`);
     };
     const seekBy = (offset: number) => {
       const nextTime = Math.max(0, Math.min(getDuration() || Infinity, getCurrentTime() + offset));
@@ -227,16 +235,13 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       if (hasModifier) {
         const currentRate = player.playbackRate() ?? 1;
         if (code === 'Period') {
-          player.playbackRate(Math.min(3, currentRate + 0.25));
-          showPlaybackRate();
+          setPlaybackRate(Math.min(3, currentRate + 0.25));
           handled = true;
         } else if (code === 'Comma') {
-          player.playbackRate(Math.max(0.25, currentRate - 0.25));
-          showPlaybackRate();
+          setPlaybackRate(Math.max(0.25, currentRate - 0.25));
           handled = true;
         } else if (code === 'Digit0') {
-          player.playbackRate(1);
-          showPlaybackRate();
+          setPlaybackRate(1);
           handled = true;
         }
       } else {

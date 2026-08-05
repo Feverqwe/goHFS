@@ -8,6 +8,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     width: '100%',
     height: '100%',
     fontFamily: theme.typography.fontFamily,
+    fontSize: theme.typography.pxToRem(12),
   },
 
   '.video-js.vjs-mobile-touch': {
@@ -16,6 +17,10 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js.vjs-user-inactive.vjs-playing': {
     cursor: 'none',
+  },
+
+  '.video-js .vjs-big-play-button': {
+    fontSize: '2.5em',
   },
 
   '.video-js.vjs-mobile-touch .vjs-big-play-button': {
@@ -65,7 +70,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     display: 'flex',
     alignItems: 'center',
     padding: '0 0.35em',
-    fontSize: '1.575em',
+    fontSize: '1.4em',
     lineHeight: 1,
     width: 'auto',
     minWidth: 'auto',
@@ -76,7 +81,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.video-js  .vjs-volume-horizontal': {
-    margin: '8px 0',
+    margin: '0.8em 0',
   },
 
   '.video-js .vjs-current-time, .video-js .vjs-time-divider, .video-js .vjs-duration': {
@@ -89,7 +94,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     },
 
   '.video-js .vjs-menu-button-popup .vjs-menu': {
-    bottom: '28px',
+    bottom: '2.8em',
     marginBottom: '1.2em',
   },
 
@@ -115,7 +120,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   '.video-js .vjs-menu li': {
     justifyContent: 'flex-start',
     padding: '0.45em 0.8em',
-    fontSize: '1.4em',
+    fontSize: '1.2em',
     textAlign: 'left',
     textTransform: 'none',
   },
@@ -124,14 +129,23 @@ const PlayerContainer = styled('div')(({theme}) => ({
     fontFamily: theme.typography.fontFamily,
   },
 
-  '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip, .video-js .vjs-progress-control:hover .vjs-play-progress .vjs-time-tooltip, .video-js.vjs-scrubbing.vjs-touch-enabled .vjs-progress-control .vjs-time-tooltip':
+  '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip, .video-js.vjs-scrubbing.vjs-touch-enabled .vjs-progress-control .vjs-mouse-display .vjs-time-tooltip':
     {
-      fontSize: '13px',
+      fontSize: '0.93em',
     },
+
+  '.video-js .vjs-mouse-display .vjs-time-tooltip': {
+    top: '-2.8em',
+  },
 
   '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip': {
     backgroundColor: 'rgba(28, 28, 28, .9)',
   },
+
+  '.video-js .vjs-volume-control:hover .vjs-volume-tooltip, .video-js .vjs-volume-control:hover .vjs-progress-holder:focus .vjs-volume-tooltip':
+    {
+      fontSize: '1.3em',
+    },
 
   '.video-js .vjs-custom-control-spacer': {
     display: 'block',
@@ -167,8 +181,16 @@ const PlayerContainer = styled('div')(({theme}) => ({
     lineHeight: '0.6em',
   },
 
-  '.vjs-playback-rate > .vjs-menu-button, .vjs-playback-rate .vjs-playback-rate-value': {
-    lineHeight: '45px',
+  '.vjs-playback-rate > .vjs-menu-button': {
+    lineHeight: '4.5em',
+  },
+
+  '.vjs-playback-rate .vjs-playback-rate-value': {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.4em',
+    lineHeight: 1,
   },
 
   '.vjs-text-track-display': {
@@ -183,11 +205,11 @@ const PlayerContainer = styled('div')(({theme}) => ({
     left: '2%',
     marginBottom: '2.2em',
     color: '#fff',
-    fontSize: '3.5em',
+    fontSize: '2.917em',
     lineHeight: 'initial',
     textAlign: 'center',
     textShadow:
-      '1px 0 1px #000, 0 1px 1px #000, -1px 0 1px #000, 0 -1px 1px #000, 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000',
+      '0.03em 0 0.03em #000, 0 0.03em 0.03em #000, -0.03em 0 0.03em #000, 0 -0.03em 0.03em #000, 0.03em 0.03em 0.03em #000, -0.03em -0.03em 0.03em #000, 0.03em -0.03em 0.03em #000, -0.03em 0.03em 0.03em #000',
     pointerEvents: 'none',
     transition: 'margin 0.3s',
 
@@ -216,7 +238,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     right: '0.625em',
     left: '0.625em',
     color: '#fff',
-    fontSize: '1.8em',
+    fontSize: '1.65em',
     transition: 'margin 0.2s',
   },
 
@@ -225,8 +247,8 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.vjs-notice-text': {
-    padding: '5px 10px',
-    borderRadius: '2px',
+    padding: '0.32em 0.64em',
+    borderRadius: '0.13em',
     background: 'rgba(28, 28, 28, 0.9)',
     fontSize: '0.875em',
     userSelect: 'all',
@@ -237,7 +259,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.vjs-fullscreen .vjs-notice': {
-    fontSize: '2.2em',
+    fontSize: '2.017em',
   },
 }));
 

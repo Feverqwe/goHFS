@@ -7,10 +7,10 @@ These instructions extend the root `AGENTS.md` for code under `ui/`.
 - `src/folder.tsx` and `src/player.tsx` are the two Rspack entry points.
 - `src/components/Folder/` contains browsing, selection, uploads, file actions, dialogs, sorting, previews, and display modes.
 - `src/components/Player/` contains media playback and URL/metadata handling.
+- `src/components/Player/components/Video2/` is the active player. It uses Video.js for playback and controls, Hls.js for supported HLS sources, a custom track controller for subtitles/audio, and colocated MUI-styled overrides for the Video.js UI.
 - `src/components/RootStore/` owns the server-provided directory state and refresh operation.
 - `src/tools/api.ts` is the typed API surface; `src/tools/apiRequest.ts` unwraps the backend response envelope.
 - `src/types.ts` mirrors JSON produced by Go structs such as `internal.RootStore` and `internal.File`.
-- `fork/@oplayer/**/dist` is a checked-in, prebuilt player dependency used by `Video2`. Treat it as vendored unless the task explicitly targets that fork.
 
 ## UI conventions
 
@@ -25,6 +25,9 @@ These instructions extend the root `AGENTS.md` for code under `ui/`.
 - The initial folder state comes from the `window.ROOT_STORE` script injected by Go. Any change to that state shape must also update the Go structs and injection path.
 - Keep public asset URLs under `/~/www`; Rspack's `publicPath` and the Go asset handler depend on this prefix.
 - Do not edit `dist/` directly. Work in `src/`, run the UI checks, and regenerate embedded resources only if the requested deliverable includes production assets.
+- Keep the Video.js instance lifecycle inside the player effect: dispose the player, destroy any Hls.js instance, unregister listeners, and clear custom DOM on cleanup.
+- Keep Video.js UI overrides scoped through `Video2/styles.ts`. Prefer Video.js component options over CSS hiding when a built-in control or child component can be disabled through configuration.
+- Preserve the custom track-controller path and non-native subtitle rendering when changing HLS, subtitle, or audio-track behavior.
 - Maintain upload protocol compatibility: init returns a signed key and chunk size, and subsequent multipart chunks include the fields expected by `internal/api.go`.
 
 ## Verification
