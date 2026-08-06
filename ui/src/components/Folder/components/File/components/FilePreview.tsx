@@ -84,12 +84,14 @@ const FilePreview: FC<FilePreviewProps> = ({
         />
       ) : (
         <Box
-          position="relative"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          width={wSize}
-          height={hSize}
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: wSize,
+            height: hSize,
+          }}
         >
           {defaultIcon}
           {(isFetching || previewStatus === 'pending') && (

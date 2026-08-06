@@ -51,7 +51,12 @@ const SelectBox: FC<SelectBoxProps> = ({name}) => {
   );
 
   return (
-    <Box display="flex" alignItems="center">
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
       <Checkbox size="small" checked={selected.includes(name)} onChange={handleSelect} />
     </Box>
   );

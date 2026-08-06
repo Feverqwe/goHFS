@@ -79,8 +79,19 @@ const SelectHeader: FC = () => {
 
   return (
     <Paper square={true} sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1}}>
-      <Box p={1} py={0.5} display="flex" alignItems="center">
-        <Box pr={1}>
+      <Box
+        sx={{
+          p: 1,
+          py: 0.5,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            pr: 1,
+          }}
+        >
           <Checkbox
             sx={{m: -1}}
             size="small"
@@ -88,10 +99,19 @@ const SelectHeader: FC = () => {
             onChange={handleSelectAll}
           />
         </Box>
-        <Box flexGrow={1} pr={1}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            pr: 1,
+          }}
+        >
           Selected: {selected.length}
         </Box>
-        <Box pr={1}>
+        <Box
+          sx={{
+            pr: 1,
+          }}
+        >
           <IconButton
             title="Delete"
             size="small"

@@ -167,7 +167,14 @@ const FolderView: FC<FolderViewProps> = ({
         component="nav"
         subheader={
           <Paper elevation={0} square={true}>
-            <Box p={1} py={0.5} display="flex" alignItems="center">
+            <Box
+              sx={{
+                p: 1,
+                py: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               <Typography component={Box} sx={PathLinePathSx} variant="body2">
                 {store.dir}
               </Typography>
@@ -223,13 +230,34 @@ const FolderView: FC<FolderViewProps> = ({
               </IconButton>
             </Box>
             {searchError && (
-              <Typography color="error" variant="caption" component={Box} px={1} pb={0.5}>
+              <Typography
+                color="error"
+                variant="caption"
+                component={Box}
+                sx={{
+                  px: 1,
+                  pb: 0.5,
+                }}
+              >
                 {searchError}
               </Typography>
             )}
             {activeSearch && !searchError && (
-              <Box display="flex" alignItems="center" px={1} pb={0.5}>
-                <Typography color="text.secondary" variant="caption" flexGrow={1}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  px: 1,
+                  pb: 0.5,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'text.secondary',
+                    flexGrow: 1,
+                  }}
+                >
                   {searching ? 'Searching…' : `${files.length} result(s) for ${activeSearch}`}
                 </Typography>
                 <IconButton title="Clear search" onClick={onClearSearch} size="small">
@@ -252,7 +280,13 @@ const FolderView: FC<FolderViewProps> = ({
 
         {/* Рендеринг файлов с учетом выбранной сетки */}
         {viewMode === 'grid' ? (
-          <Box display="flex" flexWrap="wrap" px={1}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              px: 1,
+            }}
+          >
             {files.map((file) => (
               <File
                 key={`${file.isDir}_${file.dir ?? store.dir}_${file.name}`}

@@ -114,7 +114,13 @@ const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
           </>
         ) : (
           diskUsage && (
-            <Box justifyContent="space-around" display="flex" flexWrap="wrap">
+            <Box
+              sx={{
+                justifyContent: 'space-around',
+                display: 'flex',
+                flexWrap: 'wrap',
+              }}
+            >
               <Table>
                 <TableBody>{rows}</TableBody>
               </Table>

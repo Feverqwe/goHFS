@@ -48,7 +48,13 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
             <Input fullWidth={true} value={error.message} readOnly />
           </>
         ) : (
-          <Box justifyContent="space-around" display="flex" flexWrap="wrap">
+          <Box
+            sx={{
+              justifyContent: 'space-around',
+              display: 'flex',
+              flexWrap: 'wrap',
+            }}
+          >
             {addresses?.map((address) => {
               return <AddressItem key={address} address={address} />;
             })}
@@ -91,7 +97,14 @@ const AddressItem = React.memo(({address}: AddressItemProps) => {
 
   return (
     <Box>
-      <Typography align="center" fontSize={14} color="text.secondary" gutterBottom>
+      <Typography
+        align="center"
+        gutterBottom
+        sx={{
+          fontSize: 14,
+          color: 'text.secondary',
+        }}
+      >
         {address}
       </Typography>
       <Box>

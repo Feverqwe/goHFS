@@ -62,13 +62,25 @@ const DialogProvider: FC<{children: ReactNode}> = ({children}) => {
               <Button type="submit" disabled={loading}>
                 {dialogData.okText || 'OK'}
                 {loading && (
-                  <Box display="flex" alignItems="center" ml={1}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      ml: 1,
+                    }}
+                  >
                     <CircularProgress size={20} />
                   </Box>
                 )}
               </Button>
               {error && (
-                <Box display="flex" alignItems="center" ml={1}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    ml: 1,
+                  }}
+                >
                   <Tooltip title={error.message}>
                     <ErrorIcon color="error" />
                   </Tooltip>

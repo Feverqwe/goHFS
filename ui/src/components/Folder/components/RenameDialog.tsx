@@ -72,12 +72,14 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
             name="new_name"
             fullWidth={true}
             defaultValue={file.name}
-            InputProps={{readOnly: isLoading}}
             label="New name"
             variant="standard"
             required={true}
             autoFocus={true}
             onChange={reset}
+            slotProps={{
+              input: {readOnly: isLoading},
+            }}
           />
         </DialogContent>
         <DialogActions>
@@ -85,11 +87,23 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
           <Button type="submit">
             Rename
             {isLoading ? (
-              <Box display="flex" alignItems="center" ml={1}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  ml: 1,
+                }}
+              >
                 <CircularProgress size={20} />
               </Box>
             ) : error ? (
-              <Box display="flex" alignItems="center" ml={1}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  ml: 1,
+                }}
+              >
                 <Tooltip title={error.message}>
                   <ErrorIcon color="error" />
                 </Tooltip>

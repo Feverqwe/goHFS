@@ -244,31 +244,42 @@ const File: FC<FileProps> = ({
 
     return (
       <MyBox
-        position="relative"
-        width={`${cardWidth}px`}
-        display="flex"
-        flexDirection="column"
-        alignItems="stretch"
-        m={1}
-        border="1px solid"
-        borderColor="divider"
-        borderRadius="8px"
-        overflow="hidden"
-        bgcolor="background.paper"
+        sx={{
+          position: 'relative',
+          width: `${cardWidth}px`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          m: 1,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          bgcolor: 'background.paper',
+        }}
       >
         {selectMode && (
           <Box
-            position="absolute"
-            top={2}
-            left={2}
-            zIndex={2}
-            bgcolor="rgba(0,0,0,0.4)"
-            borderRadius="4px"
+            sx={{
+              position: 'absolute',
+              top: 2,
+              left: 2,
+              zIndex: 2,
+              bgcolor: 'rgba(0,0,0,0.4)',
+              borderRadius: '4px',
+            }}
           >
             <SelectBox name={name} />
           </Box>
         )}
-        <Box position="absolute" top={4} right={4} zIndex={2}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            zIndex: 2,
+          }}
+        >
           <MyIconButton
             size="small"
             className={`menu-button ${menuAnchorEl ? 'menu-opened' : ''}`}
@@ -283,11 +294,13 @@ const File: FC<FileProps> = ({
           href={launchUrl ?? fileUrl}
         >
           <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height={`${imageContainerHeight}px`}
-            position="relative"
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: `${imageContainerHeight}px`,
+              position: 'relative',
+            }}
           >
             <FilePreview
               name={name}
@@ -298,7 +311,14 @@ const File: FC<FileProps> = ({
               gridPreviewSize={cardWidth}
             />
           </Box>
-          <Box px={1} flexGrow={1} width="100%" boxSizing="border-box">
+          <Box
+            sx={{
+              px: 1,
+              flexGrow: 1,
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
             {body}
           </Box>
         </CardActionArea>
@@ -325,10 +345,15 @@ const File: FC<FileProps> = ({
   // Стандартный List View вид
   return (
     <>
-      <Box display="flex" alignItems="stretch">
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'stretch',
+        }}
+      >
         {selectMode && <SelectBox name={name} />}
         <CardActionArea sx={{display: 'flex', alignItems: 'stretch'}} href={launchUrl ?? fileUrl}>
-          <IconBox pl={selectMode ? 0 : 1} onClick={handleIconBoxClick}>
+          <IconBox sx={{pl: selectMode ? 0 : 1}} onClick={handleIconBoxClick}>
             <MyIconButton
               className={menuAnchorEl ? 'menu-opened' : undefined}
               color={handleUrl ? 'primary' : undefined}
@@ -338,7 +363,12 @@ const File: FC<FileProps> = ({
               <MoreHorizIcon className="menu-icon" />
             </MyIconButton>
           </IconBox>
-          <Box flexGrow={1} sx={{p: 1}}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              p: 1,
+            }}
+          >
             {body}
           </Box>
         </CardActionArea>

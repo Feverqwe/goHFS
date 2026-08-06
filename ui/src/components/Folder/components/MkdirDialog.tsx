@@ -50,11 +50,13 @@ const MkdirDialog: React.FC<MkdirDialogProps> = ({dir, onClose}) => {
             margin="dense"
             name="name"
             fullWidth={true}
-            InputProps={{readOnly: isLoading}}
             label="Name"
             variant="standard"
             required={true}
             autoFocus={true}
+            slotProps={{
+              input: {readOnly: isLoading},
+            }}
           />
         </DialogContent>
         <DialogActions>

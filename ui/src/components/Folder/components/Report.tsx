@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Box, Input, Table, TableBody, TableCell, TableRow} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import {UploadResponse} from './hooks/useUpload';
 
 interface ReportProps {
@@ -19,7 +19,13 @@ const Report: React.FC<ReportProps> = ({report}) => {
               {!file.ok ? <Input fullWidth={true} value={file.error} readOnly /> : null}
             </TableCell>
             <TableCell padding="none" align="right">
-              <Box textAlign="center">{file.ok ? <CheckIcon /> : <ErrorOutlineIcon />}</Box>
+              <Box
+                sx={{
+                  textAlign: 'center',
+                }}
+              >
+                {file.ok ? <CheckIcon /> : <ErrorOutlinedIcon />}
+              </Box>
             </TableCell>
           </TableRow>
         ))}

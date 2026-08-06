@@ -2,7 +2,7 @@ import * as React from 'react';
 import {SyntheticEvent, useCallback, useContext, useState} from 'react';
 import {Box, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import {useMutation} from '@tanstack/react-query';
 import {ApiError} from '../../../../tools/apiRequest';
 import MyDialog from '../MyDialog';
@@ -87,10 +87,21 @@ const useUpload = (dir: string) => {
       <MyDialog fullWidth={true} onClose={handleClose} open={true}>
         {isDone ? (
           <DialogTitle>
-            <Box alignItems="center" display="flex">
+            <Box
+              sx={{
+                alignItems: 'center',
+                display: 'flex',
+              }}
+            >
               Upload {ok ? 'complete' : 'error'}
-              <Box alignItems="center" display="flex" p={1}>
-                {ok ? <CheckIcon color="primary" /> : <ErrorOutlineIcon color="error" />}
+              <Box
+                sx={{
+                  alignItems: 'center',
+                  display: 'flex',
+                  p: 1,
+                }}
+              >
+                {ok ? <CheckIcon color="primary" /> : <ErrorOutlinedIcon color="error" />}
               </Box>
             </Box>
           </DialogTitle>
