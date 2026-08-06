@@ -32,9 +32,10 @@ These instructions extend the root `AGENTS.md` for code under `ui/`.
 
 ## Verification
 
-From `ui/`, run:
+Use Node.js 24, pinned in `.nvmrc`. From `ui/`, run:
 
 ```sh
+nvm use
 npm run tsc
 npm run lint
 npm run build

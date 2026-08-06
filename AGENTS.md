@@ -16,6 +16,8 @@ GoHFS is a cross-platform desktop file server. The Go application exposes files 
 
 ## Development workflow
 
+Use Node.js 24 for UI tooling. From the repository root, run `nvm use`; the version is pinned in `.nvmrc`.
+
 Use the smallest relevant verification set for a change:
 
 ```sh
@@ -25,6 +27,7 @@ go test ./...
 go vet ./...
 
 # UI checks
+nvm use
 cd ui
 npm run tsc
 npm run lint
