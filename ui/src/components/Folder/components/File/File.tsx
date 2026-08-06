@@ -200,7 +200,6 @@ const File: FC<FileProps> = ({
     setRenameDialog(false);
   }, []);
 
-  /* eslint-disable react/jsx-wrap-multilines */
   const body = useMemo(() => {
     return (
       <ListItemText
@@ -234,8 +233,6 @@ const File: FC<FileProps> = ({
       />
     );
   }, [name, displayName, ctime, sizeStr, progress, viewMode]);
-  /* eslint-enable react/jsx-wrap-multilines */
-
   const handleIconBoxClick = useCallback((e: MouseEvent<unknown>) => {
     e.preventDefault();
     e.stopPropagation();

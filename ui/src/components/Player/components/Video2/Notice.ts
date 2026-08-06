@@ -5,7 +5,6 @@ import {NOTICE_DURATION} from './constants';
 const COMPONENT_NAME = 'GoHfsNotice';
 const Component = videojs.getComponent('Component');
 
-/* eslint-disable react/no-unused-class-component-methods */
 class Notice extends Component {
   private hideTimeout?: number;
 

@@ -161,7 +161,6 @@ const FolderView: FC<FolderViewProps> = ({
     await updateStore();
   }, [updateStore]);
 
-  /* eslint-disable react/jsx-wrap-multilines */
   return (
     <>
       <List
@@ -311,7 +310,6 @@ const FolderView: FC<FolderViewProps> = ({
       {showMkdirDialog && <MkdirDialog onClose={handleCloseDialog} dir={store.dir} />}
     </>
   );
-  /* eslint-enable react/jsx-wrap-multilines */
 };
 
 export default memo(FolderView);

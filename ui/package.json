@@ -11,10 +11,10 @@
     "dev": "rspack build --mode development --watch",
     "release": "npm run clean:dist && npm run build && npm run clean:www && npm run copy:dist",
     "tsc": "tsc --noEmit",
-    "lint": "npx eslint ./src && npm run prettier",
-    "prettier": "npx prettier --check ./src",
-    "prettier:fix": "npx prettier --write ./src",
-    "lint:fix": "npx eslint --fix ./src && npm run prettier:fix"
+    "lint": "eslint ./src && npm run prettier",
+    "prettier": "prettier --check ./src",
+    "prettier:fix": "prettier --write ./src",
+    "lint:fix": "eslint --fix ./src && npm run prettier:fix"
   },
   "author": "",
   "license": "ISC",
@@ -42,23 +42,11 @@
     "@types/lodash": "^4.17.7",
     "@types/path-browserify": "^1.0.0",
     "@types/react-dom": "^19.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.66.0",
-    "@typescript-eslint/parser": "^8.66.0",
+    "@gravity-ui/eslint-config": "^4.3.2",
     "del-cli": "^6.0.0",
-    "eslint": "^8.27.0",
-    "eslint-config-airbnb": "^19.0.4",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsx-a11y": "^6.6.1",
-    "eslint-plugin-react": "^7.31.10",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-unused-imports": "^4.1.4",
+    "eslint": "^9.39.0",
     "ncp": "^2.0.0",
     "prettier": "^3.0.2",
     "typescript": "^6.0.3"
-  },
-  "overrides": {
-    "eslint-config-airbnb": {
-      "eslint-plugin-react-hooks": "$eslint-plugin-react-hooks"
-    }
   }
 }
