@@ -22,11 +22,13 @@ Build mac app
 ./scripts/build.mac.sh
 ```
 
-Build resources with go-bindata
+Build application with embedded UI
 ---
 ````
-./scripts/build.resources.sh
+./scripts/build.sh
 ````
+
+The build script compiles the UI, copies it to `assets/www`, and embeds it in the Go binary.
 
 File icon, use rsrc 
 ---

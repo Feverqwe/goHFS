@@ -41,7 +41,7 @@ func HandleDir(router *Router, config *Config, storage *boltstorage.BoltStorage,
 	type contextType string
 	const contentKey contextType = "content"
 
-	data, err := assets.Asset("www/folder.html")
+	data, err := assets.WWW.ReadFile("www/folder.html")
 	if err != nil {
 		panic(err)
 	}

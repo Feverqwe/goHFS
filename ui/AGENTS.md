@@ -40,4 +40,4 @@ npm run lint
 npm run build
 ```
 
-For a release/embedding change, additionally run `npm run release` from `ui/`, then `./scripts/build.resources.sh` and `go test ./...` from the repository root. Review the generated `assets/bindata.go` diff separately because it is large.
+For a release/embedding change, additionally run `./scripts/build.sh` and `go test ./...` from the repository root. The build script runs the UI release and embeds `assets/www` directly through `go:embed`.

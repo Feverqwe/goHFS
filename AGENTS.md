@@ -10,8 +10,8 @@ GoHFS is a cross-platform desktop file server. The Go application exposes files 
 - `internal/`: HTTP routing, API handlers, path security, config, indexing, persistence, previews, and OS-specific integrations. See `internal/AGENTS.md`.
 - `ui/`: React 19 and TypeScript UI. See `ui/AGENTS.md`.
 - `ui/src/components/Player/components/Video2/`: the active Video.js/Hls.js media player, including custom track handling, controls, and scoped player styles.
-- `assets/bindata.go`: generated embedded assets consumed by the Go application.
-- `scripts/`: build, run, resource-generation, and packaging scripts.
+- `assets/embed.go`: embedded production UI and tray icon consumed by the Go application.
+- `scripts/`: UI/application build, run, and packaging scripts.
 - `FILE_windows.syso`, `assets/icon.ico`, `assets/icon.icns`: platform packaging resources.
 
 ## Development workflow
@@ -34,7 +34,7 @@ npm run build
 Useful project commands:
 
 ```sh
-./scripts/build.sh       # build the Go binary
+./scripts/build.sh       # build the UI and the Go binary with embedded assets
 ./scripts/run.sh         # build and run with embedded UI
 ./scripts/run.sh dev     # serve UI files from ui/dist
 ./scripts/build.mac.sh   # create the macOS app bundle
@@ -46,7 +46,7 @@ There is currently no dedicated automated test suite. For behavior changes, add 
 
 - Edit UI sources under `ui/src`, not `ui/dist` or `assets/www`.
 - `npm run release` rebuilds `ui/dist` and copies it to ignored `assets/www`.
-- `./scripts/build.resources.sh` regenerates the tracked `assets/bindata.go` from `assets/www` and icons. Regenerate it only when the task calls for updating embedded production assets; expect a large diff.
+- `./scripts/build.sh` runs the UI release before compiling, and `go:embed` packages `assets/www` into the binary without a generated Go source file.
 - Do not commit runtime/profile data such as `config.json`, `config.yaml`, `storage.json`, `storage.db`, `previews/`, or `open.lock`.
 - Do not commit local build products such as `goHFS`, `goHFS.exe`, `goHFS.app`, `ui/dist`, or `assets/www`.
 

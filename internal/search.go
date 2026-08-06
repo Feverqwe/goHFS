@@ -29,7 +29,7 @@ type searchRoot struct {
 }
 
 func handleSearch(router *Router, config *Config, storage *boltstorage.BoltStorage, debugUi bool) {
-	templateData, err := assets.Asset("www/folder.html")
+	templateData, err := assets.WWW.ReadFile("www/folder.html")
 	if err != nil {
 		panic(err)
 	}

@@ -786,7 +786,7 @@ func handleWww(router *Router, debugUi bool) {
 				mTime = info.ModTime()
 			}
 		} else {
-			content, err = assets.Asset(assetPath)
+			content, err = assets.WWW.ReadFile(assetPath)
 		}
 		if err != nil {
 			w.WriteHeader(404)
