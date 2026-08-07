@@ -96,8 +96,13 @@ const PlayerContainer = styled('div')(({theme}) => ({
     },
 
   '.video-js .vjs-menu-button-popup .vjs-menu': {
+    zIndex: 3,
     bottom: '2.8em',
     marginBottom: '1.2em',
+  },
+
+  '.video-js .vjs-menu-button-popup.vjs-hover, .video-js .vjs-menu-button-popup:focus-within': {
+    zIndex: 3,
   },
 
   '.video-js .vjs-menu-button-popup .vjs-menu .vjs-menu-content': {
@@ -178,6 +183,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js .vjs-progress-control': {
     position: 'absolute',
+    zIndex: 2,
     top: '-1.5em',
     right: '1.2em',
     left: '1.2em',
