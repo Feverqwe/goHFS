@@ -177,6 +177,7 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
   return (
     <Menu
       anchorEl={anchorEl}
+      disableRestoreFocus
       anchorOrigin={{horizontal: 'right', vertical: 'top'}}
       className="vjs-settings-menu"
       container={container}
