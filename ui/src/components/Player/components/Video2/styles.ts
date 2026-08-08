@@ -15,6 +15,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js.vjs-mobile-touch': {
     touchAction: 'manipulation',
+    fontSize: theme.typography.pxToRem(10),
   },
 
   '.video-js.vjs-user-inactive.vjs-playing': {
@@ -94,6 +95,10 @@ const PlayerContainer = styled('div')(({theme}) => ({
     {
       display: 'flex',
     },
+
+  '.video-js.vjs-mobile-touch.vjs-layout-small .vjs-playback-rate': {
+    display: 'block',
+  },
 
   '.video-js .vjs-menu-button-popup .vjs-menu': {
     zIndex: 3,
