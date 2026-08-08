@@ -22,8 +22,10 @@ import {
   TAP_ZONE_WIDTH,
 } from './constants';
 import {addNotice} from './Notice';
+import {addSettingsButton} from './SettingsButton';
+import SettingsMenu from './SettingsMenu';
 import PlayerContainer from './styles';
-import {createTrackController} from './tracks';
+import {createTrackController, type TrackController} from './tracks';
 import {formatTime, getMediaTitle, isBrokenAndroidEdge, isHlsUrl} from './utils';
 
 interface Video2Props {
@@ -33,10 +35,31 @@ interface Video2Props {
 
 type TapZone = 'left' | 'center' | 'right';
 
+interface SettingsControls {
+  container: HTMLElement;
+  player: ReturnType<typeof videojs>;
+  trackController: TrackController;
+}
+
+function blurFocusedPlayerControlOnEscape(event: KeyboardEvent): boolean {
+  const focusedElement = document.activeElement;
+  if (
+    event.code !== 'Escape' ||
+    !(focusedElement instanceof HTMLElement) ||
+    !focusedElement.closest('.vjs-control-bar, .vjs-big-play-button')
+  ) {
+    return false;
+  }
+  focusedElement.blur();
+  return true;
+}
+
 const Video2: FC<Video2Props> = ({url, metadata}) => {
   const toggleUrlDialog = useContext(UrlDialogCtx);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setPlaying] = useState(false);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLElement | null>(null);
+  const [settingsControls, setSettingsControls] = useState<SettingsControls>();
   const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
   const title = useMemo(() => getMediaTitle(url), [url]);
 
@@ -60,8 +83,12 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const player = videojs(videoElement, {
       autoplay: false,
       controlBar: {
+        audioTrackButton: false,
         currentTimeDisplay: true,
         durationDisplay: true,
+        fullscreenToggle: false,
+        pictureInPictureToggle: false,
+        playbackRateMenuButton: false,
         progressControl: {
           seekBar: {
             playProgressBar: {
@@ -70,6 +97,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
           },
         },
         remainingTimeDisplay: false,
+        subsCapsButton: false,
         timeDivider: true,
       },
       controls: true,
@@ -103,6 +131,11 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
     const trackController = createTrackController(player, subtitleElement, showNotice, hls);
+    addSettingsButton(player, (anchor) => {
+      player.userActive(true);
+      setSettingsAnchorEl(anchor);
+    });
+    setSettingsControls({container: playerElement, player, trackController});
     const sid = getSidV2(url);
     const progressKey = getProgressKey(decodeURIComponent(sid));
     let lastSyncAt = 0;
@@ -129,7 +162,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       if (!(target instanceof Element)) return false;
       return Boolean(
         target.closest(
-          '.vjs-control-bar, .vjs-big-play-button, .vjs-menu, .vjs-modal-dialog, .vjs-custom-subtitles',
+          '.vjs-control-bar, .vjs-big-play-button, .vjs-menu, .vjs-modal-dialog, .vjs-custom-subtitles, .vjs-settings-menu',
         ),
       );
     };
@@ -225,7 +258,12 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     };
     const onKeydown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest('input, textarea, select, button, a, [contenteditable="true"]')) {
+      if (blurFocusedPlayerControlOnEscape(event)) return;
+      if (
+        target?.closest(
+          'input, textarea, select, button, a, [contenteditable="true"], .vjs-settings-menu',
+        )
+      ) {
         return;
       }
 
@@ -336,6 +374,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     }
 
     return () => {
+      setSettingsAnchorEl(null);
+      setSettingsControls(undefined);
       document.removeEventListener('keydown', onKeydown, true);
       playerElement.removeEventListener('touchstart', onTouchStart, true);
       playerElement.removeEventListener('touchend', onTouchEnd, true);
@@ -355,7 +395,18 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     };
   }, [metadata, setStorage, title, toggleUrlDialog, url]);
 
-  return <PlayerContainer ref={containerRef} />;
+  return (
+    <>
+      <PlayerContainer ref={containerRef} />
+      <SettingsMenu
+        anchorEl={settingsAnchorEl}
+        container={settingsControls?.container ?? null}
+        onClose={() => setSettingsAnchorEl(null)}
+        player={settingsControls?.player}
+        trackController={settingsControls?.trackController}
+      />
+    </>
+  );
 };
 
 export default Video2;

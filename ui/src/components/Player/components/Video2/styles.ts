@@ -69,6 +69,11 @@ const PlayerContainer = styled('div')(({theme}) => ({
     lineHeight: 1.875,
   },
 
+  '.video-js .vjs-settings-button': {
+    cursor: 'pointer',
+    flex: 'none',
+  },
+
   '.video-js .vjs-time-control, .video-js .vjs-time-divider': {
     display: 'flex',
     alignItems: 'center',

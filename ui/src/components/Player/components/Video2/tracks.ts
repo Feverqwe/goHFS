@@ -31,10 +31,20 @@ interface TrackListLike<T> {
   removeTrack: (track: T) => void;
 }
 
-interface TrackController {
+export interface TrackOption {
+  index: number;
+  label: string;
+  selected: boolean;
+}
+
+export interface TrackController {
   cycleAudioTrack: () => void;
   cycleSubtitleTrack: () => void;
   dispose: () => void;
+  getAudioTracks: () => TrackOption[];
+  getSubtitleTracks: () => TrackOption[];
+  selectAudioTrack: (index: number) => void;
+  selectSubtitleTrack: (index: number | null) => void;
 }
 
 type IndexableAudioTrackList = AudioTrackList & {readonly [index: number]: AudioTrack};
@@ -207,6 +217,47 @@ export function createTrackController(
         nextIndex < 0
           ? 'Subtitles: Disabled'
           : `Stream ${nextIndex}: ${trackLabel(tracks[nextIndex], nextIndex)}`,
+      );
+      renderSubtitles();
+    },
+    getAudioTracks: () => {
+      const tracks: TrackOption[] = [];
+      for (let index = 0; index < audioTrackList.length; index++) {
+        const track = audioTrackList[index];
+        if (track) {
+          tracks.push({index, label: trackLabel(track, index), selected: track.enabled});
+        }
+      }
+      return tracks;
+    },
+    getSubtitleTracks: () =>
+      playerSubtitleTracks().map((track, index) => ({
+        index,
+        label: trackLabel(track, index),
+        selected: track.mode === 'showing',
+      })),
+    selectAudioTrack: (selectedIndex: number) => {
+      if (selectedIndex < 0 || selectedIndex >= audioTrackList.length) return;
+      for (let index = 0; index < audioTrackList.length; index++) {
+        const track = audioTrackList[index];
+        if (track) track.enabled = index === selectedIndex;
+      }
+      showNotice(
+        `Audio ${selectedIndex}: ${trackLabel(audioTrackList[selectedIndex], selectedIndex)}`,
+      );
+    },
+    selectSubtitleTrack: (selectedIndex: number | null) => {
+      const tracks = playerSubtitleTracks();
+      const normalizedIndex = selectedIndex ?? -1;
+      if (normalizedIndex < -1 || normalizedIndex >= tracks.length) return;
+      tracks.forEach((track, index) => {
+        track.mode = index === normalizedIndex ? 'showing' : 'disabled';
+      });
+      if (hls) hls.subtitleTrack = normalizedIndex;
+      showNotice(
+        normalizedIndex < 0
+          ? 'Subtitles: Disabled'
+          : `Stream ${normalizedIndex}: ${trackLabel(tracks[normalizedIndex], normalizedIndex)}`,
       );
       renderSubtitles();
     },
