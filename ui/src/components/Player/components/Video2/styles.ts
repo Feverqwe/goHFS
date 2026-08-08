@@ -64,9 +64,15 @@ const PlayerContainer = styled('div')(({theme}) => ({
     width: '4.5em',
   },
 
+  '.video-js .vjs-control.vjs-button': {
+    width: '3.5em',
+    height: '3.5em',
+    margin: '0.5em',
+  },
+
   '.video-js .vjs-button > .vjs-icon-placeholder::before': {
     fontSize: '2.4em',
-    lineHeight: 1.875,
+    lineHeight: 1.458,
   },
 
   '.video-js .vjs-settings-button': {

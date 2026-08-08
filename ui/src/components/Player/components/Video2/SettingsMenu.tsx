@@ -194,28 +194,24 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
     >
       {view === 'main' ? (
         <>
-          <MenuItem
-            data-settings-view="subtitles"
-            disabled={!subtitleTracks.length}
-            onClick={() => openSection('subtitles')}
-          >
-            <ListItemIcon>
-              <ClosedCaption fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Subtitles" secondary={currentSubtitle} />
-            <ChevronRight fontSize="small" />
-          </MenuItem>
-          <MenuItem
-            data-settings-view="audio"
-            disabled={!audioTracks.length}
-            onClick={() => openSection('audio')}
-          >
-            <ListItemIcon>
-              <GraphicEq fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Audio" secondary={currentAudio ?? 'Unavailable'} />
-            <ChevronRight fontSize="small" />
-          </MenuItem>
+          {subtitleTracks.length ? (
+            <MenuItem data-settings-view="subtitles" onClick={() => openSection('subtitles')}>
+              <ListItemIcon>
+                <ClosedCaption fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Subtitles" secondary={currentSubtitle} />
+              <ChevronRight fontSize="small" />
+            </MenuItem>
+          ) : null}
+          {audioTracks.length ? (
+            <MenuItem data-settings-view="audio" onClick={() => openSection('audio')}>
+              <ListItemIcon>
+                <GraphicEq fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Audio" secondary={currentAudio} />
+              <ChevronRight fontSize="small" />
+            </MenuItem>
+          ) : null}
           <MenuItem data-settings-view="speed" onClick={() => openSection('speed')}>
             <ListItemIcon>
               <SlowMotionVideo fontSize="small" />
@@ -229,14 +225,16 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
             </ListItemIcon>
             <ListItemText>{isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}</ListItemText>
           </MenuItem>
-          <MenuItem disabled={!isPictureInPictureSupported} onClick={togglePictureInPicture}>
-            <ListItemIcon>
-              <PictureInPictureAlt fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>
-              {isPictureInPicture ? 'Exit Picture-in-Picture' : 'Picture-in-Picture'}
-            </ListItemText>
-          </MenuItem>
+          {isPictureInPictureSupported ? (
+            <MenuItem onClick={togglePictureInPicture}>
+              <ListItemIcon>
+                <PictureInPictureAlt fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>
+                {isPictureInPicture ? 'Exit Picture-in-Picture' : 'Picture-in-Picture'}
+              </ListItemText>
+            </MenuItem>
+          ) : null}
         </>
       ) : null}
 
