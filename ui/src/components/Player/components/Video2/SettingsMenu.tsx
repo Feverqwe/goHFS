@@ -4,8 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ClosedCaption,
-  Fullscreen,
-  FullscreenExit,
   GraphicEq,
   PictureInPictureAlt,
   SlowMotionVideo,
@@ -84,7 +82,6 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
     const updateMenu = () => setRevision((value) => value + 1);
     const playerEvents = [
       'enterpictureinpicture',
-      'fullscreenchange',
       'leavepictureinpicture',
       'ratechange',
       'texttrackchange',
@@ -109,7 +106,6 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
   const currentAudio = audioTracks.find(({selected}) => selected)?.label;
   const currentSubtitle = subtitleTracks.find(({selected}) => selected)?.label ?? 'Off';
   const playbackRate = player?.playbackRate() ?? 1;
-  const isFullscreen = player?.isFullscreen() ?? false;
   const isPictureInPicture = player?.isInPictureInPicture() ?? false;
   const isPictureInPictureSupported = Boolean(
     player &&
@@ -132,12 +128,6 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
     player?.playbackRate(rate);
     setRevision((value) => value + 1);
     setView('main');
-  };
-  const toggleFullscreen = () => {
-    if (!player) return;
-    onClose();
-    const operation = player.isFullscreen() ? player.exitFullscreen() : player.requestFullscreen();
-    operation.catch((error: unknown) => console.error('fullscreen error: %O', error));
   };
   const togglePictureInPicture = () => {
     if (!player || !isPictureInPictureSupported) return;
@@ -219,12 +209,6 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
             </ListItemIcon>
             <ListItemText primary="Playback speed" secondary={`${playbackRate}×`} />
             <ChevronRight fontSize="small" />
-          </MenuItem>
-          <MenuItem onClick={toggleFullscreen}>
-            <ListItemIcon>
-              {isFullscreen ? <FullscreenExit fontSize="small" /> : <Fullscreen fontSize="small" />}
-            </ListItemIcon>
-            <ListItemText>{isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}</ListItemText>
           </MenuItem>
           {isPictureInPictureSupported ? (
             <MenuItem onClick={togglePictureInPicture}>

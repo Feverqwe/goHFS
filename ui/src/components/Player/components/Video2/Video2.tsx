@@ -86,7 +86,6 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
         audioTrackButton: false,
         currentTimeDisplay: true,
         durationDisplay: true,
-        fullscreenToggle: false,
         pictureInPictureToggle: false,
         playbackRateMenuButton: false,
         progressControl: {
