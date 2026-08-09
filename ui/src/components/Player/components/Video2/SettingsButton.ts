@@ -34,5 +34,10 @@ if (!videojs.getComponent(COMPONENT_NAME)) {
 }
 
 export function addSettingsButton(player: Player, onOpen: (anchor: HTMLElement) => void): void {
-  player.getChild('controlBar')?.addChild(COMPONENT_NAME, {onOpen});
+  const controlBar = player.getChild('controlBar');
+  if (!controlBar) return;
+
+  const fullscreenToggle = controlBar.getChild('FullscreenToggle');
+  const fullscreenIndex = fullscreenToggle ? controlBar.children().indexOf(fullscreenToggle) : -1;
+  controlBar.addChild(COMPONENT_NAME, {onOpen}, fullscreenIndex >= 0 ? fullscreenIndex : undefined);
 }
