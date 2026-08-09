@@ -282,9 +282,11 @@ const FolderView: FC<FolderViewProps> = ({
         {viewMode === 'grid' ? (
           <Box
             sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
+              display: 'grid',
+              gridTemplateColumns: `repeat(auto-fill, minmax(min(${gridPreviewSize}px, 100%), 1fr))`,
+              gap: 2,
               px: 1,
+              pt: 1,
             }}
           >
             {files.map((file) => (
@@ -295,7 +297,6 @@ const FolderView: FC<FolderViewProps> = ({
                 writable={!activeSearch && store.isWritable}
                 onReload={handleReload}
                 viewMode={viewMode}
-                gridPreviewSize={gridPreviewSize}
                 displayName={file.relativePath}
               />
             ))}

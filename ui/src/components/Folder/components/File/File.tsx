@@ -45,7 +45,6 @@ interface FileProps {
   writable: boolean;
   onReload: () => Promise<void> | void;
   viewMode: ViewMode;
-  gridPreviewSize?: number;
   displayName?: string;
 }
 
@@ -98,15 +97,7 @@ const IconBox = styled(Box)(() => ({
   alignItems: 'center',
 }));
 
-const File: FC<FileProps> = ({
-  file,
-  dir,
-  writable,
-  onReload,
-  viewMode,
-  gridPreviewSize,
-  displayName,
-}) => {
+const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, displayName}) => {
   const store = useContext(RootStoreCtx);
   const {size, ctime, name, isDir, progress} = file;
   const selectMode = useContext(SelectModeCtx);
@@ -239,18 +230,15 @@ const File: FC<FileProps> = ({
   }, []);
 
   if (viewMode === 'grid') {
-    const cardWidth = gridPreviewSize ?? 160;
-    const imageContainerHeight = Math.round(cardWidth * (90 / 160));
-
     return (
       <MyBox
         sx={{
           position: 'relative',
-          width: `${cardWidth}px`,
+          width: '100%',
+          minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
-          m: 1,
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: '8px',
@@ -298,7 +286,8 @@ const File: FC<FileProps> = ({
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              height: `${imageContainerHeight}px`,
+              width: '100%',
+              aspectRatio: '16 / 9',
               position: 'relative',
             }}
           >
@@ -308,7 +297,6 @@ const File: FC<FileProps> = ({
               defaultIcon={RawIcon}
               viewMode="grid"
               hasPreview={file.hasPreview}
-              gridPreviewSize={cardWidth}
             />
           </Box>
           <Box

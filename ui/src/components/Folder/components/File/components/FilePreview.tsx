@@ -9,26 +9,14 @@ interface FilePreviewProps {
   defaultIcon: React.ReactNode;
   viewMode: 'list' | 'grid';
   hasPreview: boolean;
-  gridPreviewSize?: number;
 }
 
-const FilePreview: FC<FilePreviewProps> = ({
-  name,
-  dir,
-  defaultIcon,
-  viewMode,
-  hasPreview,
-  gridPreviewSize,
-}) => {
+const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, hasPreview}) => {
   const [isIntersecting, setIsIntersecting] = useState(false); // Visibility tracking status
 
   const refContainer = useRef<HTMLDivElement | null>(null);
 
-  const baseWidth = gridPreviewSize ?? 160;
-  const baseHeight = Math.round(baseWidth * (100 / 160));
-
-  const wSize = viewMode === 'grid' ? baseWidth : 40;
-  const hSize = viewMode === 'grid' ? baseHeight : 40;
+  const previewSize = viewMode === 'grid' ? '100%' : 40;
 
   const targetPlace = dir === '/' ? `/${name}` : `${dir}/${name}`;
   const previewUrl = `/~/preview?place=${encodeURIComponent(targetPlace)}`;
@@ -69,15 +57,15 @@ const FilePreview: FC<FilePreviewProps> = ({
   }, [hasPreview, previewStatus]);
 
   return (
-    <div ref={refContainer} style={{width: wSize, height: hSize}}>
+    <div ref={refContainer} style={{width: previewSize, height: previewSize}}>
       {previewStatus === 'ready' ? (
         <Box
           component="img"
           src={previewUrl}
           alt={name}
           sx={{
-            width: wSize,
-            height: hSize,
+            width: previewSize,
+            height: previewSize,
             objectFit: 'contain',
             borderRadius: '4px',
           }}
@@ -89,8 +77,8 @@ const FilePreview: FC<FilePreviewProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: wSize,
-            height: hSize,
+            width: previewSize,
+            height: previewSize,
           }}
         >
           {defaultIcon}
