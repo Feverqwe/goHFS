@@ -288,6 +288,8 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, displayNa
               alignItems: 'center',
               width: '100%',
               aspectRatio: '16 / 9',
+              flexShrink: 0,
+              overflow: 'hidden',
               position: 'relative',
             }}
           >

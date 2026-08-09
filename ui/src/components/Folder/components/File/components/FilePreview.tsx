@@ -17,6 +17,11 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
   const refContainer = useRef<HTMLDivElement | null>(null);
 
   const previewSize = viewMode === 'grid' ? '100%' : 40;
+  const containerStyle: React.CSSProperties = {
+    width: previewSize,
+    height: previewSize,
+    ...(viewMode === 'grid' ? {position: 'absolute', inset: 0} : {}),
+  };
 
   const targetPlace = dir === '/' ? `/${name}` : `${dir}/${name}`;
   const previewUrl = `/~/preview?place=${encodeURIComponent(targetPlace)}`;
@@ -57,7 +62,7 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
   }, [hasPreview, previewStatus]);
 
   return (
-    <div ref={refContainer} style={{width: previewSize, height: previewSize}}>
+    <div ref={refContainer} style={containerStyle}>
       {previewStatus === 'ready' ? (
         <Box
           component="img"
@@ -68,6 +73,7 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
             height: previewSize,
             objectFit: 'contain',
             borderRadius: '4px',
+            display: 'block',
           }}
         />
       ) : (
