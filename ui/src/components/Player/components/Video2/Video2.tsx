@@ -1,6 +1,7 @@
 import React, {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import Hls from 'hls.js';
 import videojs from 'video.js';
+import type LiveTracker from 'video.js/dist/types/live-tracker';
 import 'video.js/dist/video-js.css';
 import {useMutation} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
@@ -106,6 +107,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       textTrackSettings: false,
     });
     const playerElement = player.el() as HTMLElement;
+    const liveTracker = player.getChild('liveTracker') as LiveTracker | undefined;
     if (isMobileTouch) {
       player.addClass('vjs-mobile-touch');
       player.addClass('vjs-show-big-play-button-on-pause');
@@ -121,8 +123,9 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     });
     playerElement.appendChild(subtitleElement);
 
+    const isHlsSource = isHlsUrl(url);
     let hls: Hls | undefined;
-    if (isHlsUrl(url) && Hls.isSupported()) {
+    if (isHlsSource && Hls.isSupported()) {
       hls = new Hls({
         maxBufferLength: 3 * 60,
         preferManagedMediaSource: false,
@@ -151,6 +154,21 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const setPlaybackRate = (rate: number) => {
       player.playbackRate(rate);
       showNotice(`Playback rate: ${rate}`);
+    };
+    const isAtHlsLiveEdge = () => {
+      if (!isHlsSource) return false;
+      if (!hls) return Boolean(liveTracker?.isLive() && liveTracker.atLiveEdge());
+
+      const liveSyncPosition = hls.liveSyncPosition;
+      return Boolean(
+        hls.latestLevelDetails?.live &&
+        liveSyncPosition !== null &&
+        getCurrentTime() >= liveSyncPosition,
+      );
+    };
+    const normalizePlaybackRateAtLiveEdge = () => {
+      if ((player.playbackRate() ?? 1) <= 1 || !isAtHlsLiveEdge()) return;
+      setPlaybackRate(1);
     };
     const seekBy = (offset: number) => {
       const nextTime = Math.max(0, Math.min(getDuration() || Infinity, getCurrentTime() + offset));
@@ -240,6 +258,8 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       setPlaying(false);
     };
     const onTimeUpdate = async () => {
+      normalizePlaybackRateAtLiveEdge();
+
       const now = Date.now();
       if (!lastSyncAt) lastSyncAt = now;
       if (lastSyncAt >= now - SAVE_INTERVAL || player.seeking() || !activelyPlaying) return;
