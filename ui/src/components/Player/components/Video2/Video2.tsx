@@ -21,6 +21,7 @@ import {
   TAP_MAX_DURATION,
   TAP_MAX_MOVEMENT,
   TAP_ZONE_WIDTH,
+  VOLUME_STEP,
 } from './constants';
 import {addNotice} from './Notice';
 import {addSettingsButton} from './SettingsButton';
@@ -154,6 +155,28 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
     const setPlaybackRate = (rate: number) => {
       player.playbackRate(rate);
       showNotice(`Playback rate: ${rate}`);
+    };
+    const onVolumeWheel = (event: WheelEvent) => {
+      if (
+        !(event.target instanceof Element) ||
+        !event.target.closest('.vjs-mute-control, .vjs-volume-control') ||
+        event.deltaY === 0
+      ) {
+        return;
+      }
+
+      const direction = event.deltaY < 0 ? 1 : -1;
+      const currentVolume = player.volume() ?? 1;
+      const nextVolume = Math.max(
+        0,
+        Math.min(1, Math.round((currentVolume + direction * VOLUME_STEP) * 100) / 100),
+      );
+      if (nextVolume > 0 && player.muted()) player.muted(false);
+      player.volume(nextVolume);
+      player.userActive(true);
+      showNotice(`Volume: ${Math.round(nextVolume * 100)}%`);
+      event.preventDefault();
+      event.stopPropagation();
     };
     const isAtHlsLiveEdge = () => {
       if (!isHlsSource) return false;
@@ -372,6 +395,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
     document.addEventListener('keydown', onKeydown, true);
+    playerElement.addEventListener('wheel', onVolumeWheel, {passive: false});
     playerElement.addEventListener('touchstart', onTouchStart, {capture: true, passive: true});
     playerElement.addEventListener('touchend', onTouchEnd, {capture: true, passive: false});
 
@@ -396,6 +420,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       setSettingsAnchorEl(null);
       setSettingsControls(undefined);
       document.removeEventListener('keydown', onKeydown, true);
+      playerElement.removeEventListener('wheel', onVolumeWheel);
       playerElement.removeEventListener('touchstart', onTouchStart, true);
       playerElement.removeEventListener('touchend', onTouchEnd, true);
       setPlaying(false);

@@ -8,6 +8,7 @@ export const TAP_MAX_MOVEMENT = 24;
 export const TAP_ZONE_WIDTH = 1 / 3;
 export const SHORT_SKIP = 3;
 export const SKIP = 10;
+export const VOLUME_STEP = 0.05;
 
 export const DEBUG_EVENT_TYPES = [
   'abort',
