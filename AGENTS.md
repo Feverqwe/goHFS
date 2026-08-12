@@ -32,7 +32,12 @@ cd ui
 npm run tsc
 npm run lint
 npm run build
+npm run build-storybook # required for changes that affect rendered UI
 ```
+
+Use Storybook as the default isolated environment for visual UI work. Add or update stories for reusable components whose rendered states change. Keep stories deterministic and independent of the Go server: model loading, empty, error, disabled, and other important states with story args or local mocks instead of live API calls.
+
+For visual changes, first complete a coherent implementation, then run `npm run storybook` from `ui/` and inspect the relevant stories at both desktop and narrow viewport widths. Refine issues found during this near-final visual check and report which stories and states were inspected.
 
 Useful project commands:
 
@@ -51,7 +56,7 @@ There is currently no dedicated automated test suite. For behavior changes, add 
 - `npm run release` rebuilds `ui/dist` and copies it to ignored `assets/www`.
 - `./scripts/build.sh` runs the UI release before compiling, and `go:embed` packages `assets/www` into the binary without a generated Go source file.
 - Do not commit runtime/profile data such as `config.json`, `config.yaml`, `storage.json`, `storage.db`, `previews/`, or `open.lock`.
-- Do not commit local build products such as `goHFS`, `goHFS.exe`, `goHFS.app`, `ui/dist`, or `assets/www`.
+- Do not commit local build products such as `goHFS`, `goHFS.exe`, `goHFS.app`, `ui/dist`, `ui/storybook-static`, or `assets/www`.
 
 ## Cross-cutting rules
 

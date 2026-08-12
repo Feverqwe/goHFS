@@ -11,5 +11,6 @@
     "outDir": "./dist/",
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true
-  }
+  },
+  "include": ["src", ".storybook"]
 }
