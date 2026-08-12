@@ -239,8 +239,6 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, displayNa
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
-          border: '1px solid',
-          borderColor: 'divider',
           borderRadius: '8px',
           overflow: 'hidden',
           bgcolor: 'background.paper',
