@@ -78,7 +78,10 @@ const SelectHeader: FC = () => {
   }, [dir, selected, setDialog, handleClose, removeAll, updateStore]);
 
   return (
-    <Paper square={true} sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1}}>
+    <Paper
+      square={true}
+      sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1, border: 0, boxShadow: 'none'}}
+    >
       <Box
         sx={{
           p: 1,
