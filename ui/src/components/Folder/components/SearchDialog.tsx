@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {FC, FormEvent, useCallback, useState} from 'react';
-import {Button, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
-import MyDialog from './MyDialog';
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
 
 interface SearchDialogProps {
   initialPattern: string;
@@ -37,7 +36,7 @@ const SearchDialog: FC<SearchDialogProps> = ({
   }, [onClear, onClose]);
 
   return (
-    <MyDialog fullWidth={true} maxWidth="sm" open={true} onClose={onClose}>
+    <Dialog fullWidth={true} maxWidth="sm" open={true} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Search files</DialogTitle>
         <DialogContent>
@@ -55,7 +54,12 @@ const SearchDialog: FC<SearchDialogProps> = ({
             slotProps={{inputLabel: {shrink: true}}}
           />
         </DialogContent>
-        <DialogActions>
+        <DialogActions
+          sx={{
+            flexWrap: 'wrap',
+            '& .MuiButton-root': {minWidth: 0, px: 1.25, whiteSpace: 'nowrap'},
+          }}
+        >
           {initialPattern && <Button onClick={handleClear}>Clear search</Button>}
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={searching || !pattern.trim()}>
@@ -63,7 +67,7 @@ const SearchDialog: FC<SearchDialogProps> = ({
           </Button>
         </DialogActions>
       </form>
-    </MyDialog>
+    </Dialog>
   );
 };
 

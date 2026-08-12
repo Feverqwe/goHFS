@@ -14,6 +14,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   IconButton,
   Stack,
   TextField,
@@ -85,6 +86,9 @@ const ThemePreview = () => (
           <Alert severity="error" icon={<ErrorOutlineRoundedIcon />}>
             Preview could not be generated. The original file is still available.
           </Alert>
+          <Alert severity="info" variant="outlined">
+            Outlined alerts keep their variant styling.
+          </Alert>
         </Stack>
 
         <Card>
@@ -118,6 +122,10 @@ const ThemePreview = () => (
         <Chip label="Indexing" color="info" variant="outlined" />
         <Chip label="Read only" color="warning" variant="outlined" />
         <Chip label="Unavailable" color="error" variant="outlined" />
+        <IconButton aria-label="Retry warning" color="warning" size="small">
+          <ErrorOutlineRoundedIcon />
+        </IconButton>
+        <CircularProgress aria-label="Warning progress" color="warning" size={24} />
       </Stack>
     </Box>
   </Box>

@@ -3,6 +3,7 @@ import {memo, ReactNode, SyntheticEvent, useCallback, useContext, useMemo} from 
 import {
   Box,
   Button,
+  Dialog,
   DialogActions,
   DialogContent,
   Input,
@@ -15,7 +16,6 @@ import {
 import {capitalize, lowerCase} from 'lodash';
 import {filesize} from 'filesize';
 import {useQuery} from '@tanstack/react-query';
-import MyDialog from '../MyDialog';
 import {api} from '../../../../tools/api';
 import {DiskUsage} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
@@ -103,7 +103,7 @@ const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
   }, [diskUsage]);
 
   return (
-    <MyDialog fullWidth={true} onClose={handleClose} open={true}>
+    <Dialog fullWidth={true} onClose={handleClose} open={true}>
       <DialogContent>
         {isLoading ? (
           <LinearProgress />
@@ -132,7 +132,7 @@ const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
           <ActionButton onSubmit={handleUpdate}>Update</ActionButton>
         </DialogActions>
       </DialogContent>
-    </MyDialog>
+    </Dialog>
   );
 });
 

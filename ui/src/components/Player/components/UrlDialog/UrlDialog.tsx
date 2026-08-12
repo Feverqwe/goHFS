@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {FC, SyntheticEvent, useCallback} from 'react';
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Paper,
   TextField,
 } from '@mui/material';
 
@@ -31,7 +31,7 @@ const UrlDialog: FC<UrlFormProps> = ({onClose, onSubmit}) => {
 
   return (
     <Dialog open={true} onClose={onClose} fullWidth>
-      <Paper component="form" method="GET" onSubmit={handleSubmit}>
+      <Box component="form" method="GET" onSubmit={handleSubmit}>
         <DialogTitle>Enter url:</DialogTitle>
         <DialogContent>
           <TextField fullWidth size="small" name="url" type="text" required autoFocus />
@@ -44,7 +44,7 @@ const UrlDialog: FC<UrlFormProps> = ({onClose, onSubmit}) => {
             Open
           </Button>
         </DialogActions>
-      </Paper>
+      </Box>
     </Dialog>
   );
 };

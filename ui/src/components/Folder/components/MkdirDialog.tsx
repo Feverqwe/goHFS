@@ -1,8 +1,7 @@
 import * as React from 'react';
 import {SyntheticEvent, useContext} from 'react';
-import {Button, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
 import {useMutation} from '@tanstack/react-query';
-import MyDialog from './MyDialog';
 import {api} from '../../../tools/api';
 import useActionButton from '../hooks/useActionButton';
 import {RootStoreUpdateCtx} from '../../RootStore/RootStoreUpdateCtx';
@@ -42,7 +41,7 @@ const MkdirDialog: React.FC<MkdirDialogProps> = ({dir, onClose}) => {
   const {isLoading, handleSubmit, stateNode} = useActionButton({onSubmit});
 
   return (
-    <MyDialog fullWidth={true} onClose={handleClose} open={true}>
+    <Dialog fullWidth={true} onClose={handleClose} open={true}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Create directory</DialogTitle>
         <DialogContent>
@@ -66,7 +65,7 @@ const MkdirDialog: React.FC<MkdirDialogProps> = ({dir, onClose}) => {
           </Button>
         </DialogActions>
       </form>
-    </MyDialog>
+    </Dialog>
   );
 };
 

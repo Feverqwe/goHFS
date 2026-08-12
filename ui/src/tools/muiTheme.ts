@@ -1,4 +1,5 @@
 import {alpha, createTheme} from '@mui/material/styles';
+import {alertClasses} from '@mui/material/Alert';
 
 const colors = {
   canvas: '#181b20',
@@ -159,18 +160,10 @@ const theme = createTheme({
         },
       },
     },
-    MuiButtonGroup: {
-      styleOverrides: {
-        grouped: {
-          borderColor: `${colors.line} !important`,
-        },
-      },
-    },
     MuiIconButton: {
       styleOverrides: {
         root: {
           borderRadius: 8,
-          color: colors.muted,
           transition: 'background-color 140ms ease, color 140ms ease, transform 140ms ease',
           '&:hover': {
             color: colors.text,
@@ -186,8 +179,6 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          border: `1px solid ${colors.line}`,
-          boxShadow: `0 12px 32px ${alpha('#000000', 0.2)}`,
         },
         outlined: {
           backgroundColor: colors.raised,
@@ -200,9 +191,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           position: 'relative',
-          overflow: 'hidden',
+          border: `1px solid ${colors.line}`,
           backgroundColor: colors.raised,
-          borderColor: colors.line,
           boxShadow: `0 8px 20px ${alpha('#000000', 0.16)}`,
         },
       },
@@ -223,7 +213,7 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderColor: colors.line,
+          border: `1px solid ${colors.line}`,
           backgroundColor: colors.panel,
           boxShadow: `0 24px 64px ${alpha('#000000', 0.45)}`,
         },
@@ -238,14 +228,14 @@ const theme = createTheme({
       },
     },
     MuiDialogActions: {
+      defaultProps: {
+        disableSpacing: true,
+      },
       styleOverrides: {
         root: {
           gap: 8,
           padding: '12px 20px 16px',
           borderTop: `1px solid ${colors.line}`,
-          '& > :not(style) ~ :not(style)': {
-            marginLeft: 0,
-          },
         },
       },
     },
@@ -333,9 +323,6 @@ const theme = createTheme({
     },
     MuiTabs: {
       styleOverrides: {
-        root: {
-          borderBottom: `1px solid ${colors.line}`,
-        },
         indicator: {
           height: 2,
           borderRadius: '2px 2px 0 0',
@@ -378,7 +365,7 @@ const theme = createTheme({
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderColor: colors.line,
+          border: `1px solid ${colors.line}`,
           backgroundColor: colors.raised,
           boxShadow: `0 18px 44px ${alpha('#000000', 0.36)}`,
         },
@@ -433,29 +420,22 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           backgroundImage: 'none',
-        },
-        colorSuccess: {
-          border: `1px solid ${alpha(colors.success, 0.3)}`,
-          backgroundColor: alpha(colors.success, 0.09),
-        },
-        colorWarning: {
-          border: `1px solid ${alpha(colors.warning, 0.3)}`,
-          backgroundColor: alpha(colors.warning, 0.09),
-        },
-        colorError: {
-          border: `1px solid ${alpha(colors.error, 0.3)}`,
-          backgroundColor: alpha(colors.error, 0.09),
-        },
-        colorInfo: {
-          border: `1px solid ${alpha(colors.info, 0.3)}`,
-          backgroundColor: alpha(colors.info, 0.09),
-        },
-      },
-    },
-    MuiCircularProgress: {
-      styleOverrides: {
-        root: {
-          color: colors.text,
+          [`&.${alertClasses.standard}.${alertClasses.colorSuccess}`]: {
+            border: `1px solid ${alpha(colors.success, 0.3)}`,
+            backgroundColor: alpha(colors.success, 0.09),
+          },
+          [`&.${alertClasses.standard}.${alertClasses.colorWarning}`]: {
+            border: `1px solid ${alpha(colors.warning, 0.3)}`,
+            backgroundColor: alpha(colors.warning, 0.09),
+          },
+          [`&.${alertClasses.standard}.${alertClasses.colorError}`]: {
+            border: `1px solid ${alpha(colors.error, 0.3)}`,
+            backgroundColor: alpha(colors.error, 0.09),
+          },
+          [`&.${alertClasses.standard}.${alertClasses.colorInfo}`]: {
+            border: `1px solid ${alpha(colors.info, 0.3)}`,
+            backgroundColor: alpha(colors.info, 0.09),
+          },
         },
       },
     },

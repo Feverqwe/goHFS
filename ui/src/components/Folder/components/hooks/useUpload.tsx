@@ -1,11 +1,17 @@
 import * as React from 'react';
 import {SyntheticEvent, useCallback, useContext, useState} from 'react';
-import {Box, DialogActions, DialogContent, DialogTitle, LinearProgress} from '@mui/material';
+import {
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import {useMutation} from '@tanstack/react-query';
 import {ApiError} from '../../../../tools/apiRequest';
-import MyDialog from '../MyDialog';
 import Report from '../Report';
 import {api} from '../../../../tools/api';
 import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
@@ -84,7 +90,7 @@ const useUpload = (dir: string) => {
   let dialog = null;
   if (visible) {
     dialog = (
-      <MyDialog fullWidth={true} onClose={handleClose} open={true}>
+      <Dialog fullWidth={true} onClose={handleClose} open={true}>
         {isDone ? (
           <DialogTitle>
             <Box
@@ -122,7 +128,7 @@ const useUpload = (dir: string) => {
             <ActionButton onSubmit={handleClose}>Close</ActionButton>
           </DialogActions>
         ) : null}
-      </MyDialog>
+      </Dialog>
     );
   }
 

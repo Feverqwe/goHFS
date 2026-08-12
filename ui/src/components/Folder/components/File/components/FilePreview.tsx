@@ -89,13 +89,7 @@ const FilePreview: FC<FilePreviewProps> = ({name, dir, defaultIcon, viewMode, ha
         >
           {defaultIcon}
           {(isFetching || previewStatus === 'pending') && (
-            <CircularProgress
-              size={48}
-              sx={{
-                position: 'absolute',
-                color: 'primary.main',
-              }}
-            />
+            <CircularProgress size={48} sx={{position: 'absolute'}} />
           )}
         </Box>
       )}

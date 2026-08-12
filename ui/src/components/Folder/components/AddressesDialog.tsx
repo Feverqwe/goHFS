@@ -3,6 +3,7 @@ import {SyntheticEvent} from 'react';
 import {
   Box,
   Button,
+  Dialog,
   DialogActions,
   DialogContent,
   Input,
@@ -11,7 +12,6 @@ import {
 } from '@mui/material';
 import QRCode from 'qrcode';
 import {useQuery} from '@tanstack/react-query';
-import MyDialog from './MyDialog';
 import {api} from '../../../tools/api';
 import {queryKeys} from '../../../tools/queryClient';
 
@@ -38,7 +38,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
   );
 
   return (
-    <MyDialog fullWidth={true} onClose={handleClose} open={true}>
+    <Dialog fullWidth={true} onClose={handleClose} open={true}>
       <DialogContent>
         {isLoading ? (
           <LinearProgress />
@@ -64,7 +64,7 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
           <Button onClick={handleClose}>Close</Button>
         </DialogActions>
       </DialogContent>
-    </MyDialog>
+    </Dialog>
   );
 });
 

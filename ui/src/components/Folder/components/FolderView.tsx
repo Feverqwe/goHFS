@@ -166,7 +166,7 @@ const FolderView: FC<FolderViewProps> = ({
       <List
         component="nav"
         subheader={
-          <Paper elevation={0} square={true} sx={{border: 0, boxShadow: 'none'}}>
+          <Paper elevation={0} square={true}>
             <Box
               sx={{
                 p: 1,

@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -12,7 +13,6 @@ import {
 } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
 import {useMutation} from '@tanstack/react-query';
-import MyDialog from './MyDialog';
 import {FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
 
@@ -63,7 +63,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
   );
 
   return (
-    <MyDialog fullWidth={true} onClose={handleClose} open={true}>
+    <Dialog fullWidth={true} onClose={handleClose} open={true}>
       <form onSubmit={handleRename}>
         <DialogTitle>Rename</DialogTitle>
         <DialogContent>
@@ -112,7 +112,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
           </Button>
         </DialogActions>
       </form>
-    </MyDialog>
+    </Dialog>
   );
 };
 

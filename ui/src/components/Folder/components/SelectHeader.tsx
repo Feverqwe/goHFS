@@ -79,8 +79,9 @@ const SelectHeader: FC = () => {
 
   return (
     <Paper
+      elevation={0}
       square={true}
-      sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1, border: 0, boxShadow: 'none'}}
+      sx={{position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1}}
     >
       <Box
         sx={{

@@ -1,8 +1,7 @@
 import * as React from 'react';
 import {SyntheticEvent} from 'react';
-import {ButtonGroup, DialogContent} from '@mui/material';
+import {ButtonGroup, Dialog, DialogContent} from '@mui/material';
 
-import MyDialog from '../MyDialog';
 import {DirSort} from '../../../../types';
 import SortButton from './SortButton';
 
@@ -35,7 +34,7 @@ const SortDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseDialogP
   );
 
   return (
-    <MyDialog onClose={handleClose} open={true}>
+    <Dialog onClose={handleClose} open={true}>
       <DialogContent>
         <ButtonGroup orientation="vertical">
           {Object.entries(keyName).map(([type, name]) => {
@@ -53,7 +52,7 @@ const SortDialog = React.memo(({sortKey, changeSort, onClose}: SortChooseDialogP
           })}
         </ButtonGroup>
       </DialogContent>
-    </MyDialog>
+    </Dialog>
   );
 });
 
