@@ -17,6 +17,10 @@ const PlayerContainer = styled('div')(({theme}) => ({
     touchAction: 'manipulation',
   },
 
+  '.video-js:focus, .video-js .vjs-tech:focus': {
+    outline: 'none',
+  },
+
   '.video-js.vjs-user-inactive.vjs-playing': {
     cursor: 'none',
   },
