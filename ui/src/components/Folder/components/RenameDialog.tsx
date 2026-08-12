@@ -1,20 +1,10 @@
 import * as React from 'react';
 import {FormEvent, SyntheticEvent} from 'react';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Tooltip,
-} from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
 import {useMutation} from '@tanstack/react-query';
 import {FileInfo} from '../../../types';
 import {api} from '../../../tools/api';
+import useActionButton from '../hooks/useActionButton';
 
 interface RenameDialogProps {
   dir: string;
@@ -24,12 +14,7 @@ interface RenameDialogProps {
 }
 
 const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClose}) => {
-  const {
-    mutateAsync: rename,
-    isPending: isLoading,
-    error,
-    reset,
-  } = useMutation({
+  const {mutateAsync: rename} = useMutation({
     mutationFn: api.rename,
   });
 
@@ -47,24 +32,25 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
       const {elements} = e.currentTarget;
       const newName = (elements as HTMLFormControlsCollection & {new_name: HTMLInputElement})
         .new_name.value;
-      try {
-        await rename({
-          place: dir,
-          name: file.name,
-          newName,
-        });
-        await onSuccess();
-        onClose();
-      } catch {
-        // The mutation exposes the error next to the submit button.
-      }
+      await rename({
+        place: dir,
+        name: file.name,
+        newName,
+      });
+      await onSuccess();
+      onClose();
     },
     [dir, file.name, onSuccess, onClose, rename],
   );
 
+  const {isLoading, handleSubmit, reset, stateNode} = useActionButton({
+    onSubmit: handleRename,
+    iconSize: 20,
+  });
+
   return (
     <Dialog fullWidth={true} onClose={handleClose} open={true}>
-      <form onSubmit={handleRename}>
+      <form onSubmit={handleSubmit}>
         <DialogTitle>Rename</DialogTitle>
         <DialogContent>
           <TextField
@@ -86,29 +72,7 @@ const RenameDialog: React.FC<RenameDialogProps> = ({dir, file, onSuccess, onClos
           <Button onClick={handleClose}>Close</Button>
           <Button type="submit">
             Rename
-            {isLoading ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  ml: 1,
-                }}
-              >
-                <CircularProgress size={20} />
-              </Box>
-            ) : error ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  ml: 1,
-                }}
-              >
-                <Tooltip title={error.message}>
-                  <ErrorIcon color="error" />
-                </Tooltip>
-              </Box>
-            ) : null}
+            {stateNode}
           </Button>
         </DialogActions>
       </form>

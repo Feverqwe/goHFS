@@ -1,19 +1,10 @@
 import * as React from 'react';
-import {SyntheticEvent} from 'react';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  Input,
-  LinearProgress,
-  Typography,
-} from '@mui/material';
+import {Box, Typography} from '@mui/material';
 import QRCode from 'qrcode';
 import {useQuery} from '@tanstack/react-query';
 import {api} from '../../../tools/api';
 import {queryKeys} from '../../../tools/queryClient';
+import AsyncDataDialog from './AsyncDataDialog/AsyncDataDialog';
 
 interface AddressesDialogProps {
   onClose: () => void;
@@ -29,42 +20,20 @@ const AddressesDialog = React.memo(({onClose}: AddressesDialogProps) => {
     queryFn: () => api.addresses(),
   });
 
-  const handleClose = React.useCallback(
-    (e: SyntheticEvent, reason?: string) => {
-      e.preventDefault();
-      onClose();
-    },
-    [onClose],
-  );
-
   return (
-    <Dialog fullWidth={true} onClose={handleClose} open={true}>
-      <DialogContent>
-        {isLoading ? (
-          <LinearProgress />
-        ) : error ? (
-          <>
-            <p>Error:</p>
-            <Input fullWidth={true} value={error.message} readOnly />
-          </>
-        ) : (
-          <Box
-            sx={{
-              justifyContent: 'space-around',
-              display: 'flex',
-              flexWrap: 'wrap',
-            }}
-          >
-            {addresses?.map((address) => {
-              return <AddressItem key={address} address={address} />;
-            })}
-          </Box>
-        )}
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-        </DialogActions>
-      </DialogContent>
-    </Dialog>
+    <AsyncDataDialog error={error} loading={isLoading} onClose={onClose}>
+      <Box
+        sx={{
+          justifyContent: 'space-around',
+          display: 'flex',
+          flexWrap: 'wrap',
+        }}
+      >
+        {addresses?.map((address) => {
+          return <AddressItem key={address} address={address} />;
+        })}
+      </Box>
+    </AsyncDataDialog>
   );
 });
 

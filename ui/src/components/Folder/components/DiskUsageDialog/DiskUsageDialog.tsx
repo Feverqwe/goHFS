@@ -1,18 +1,6 @@
 import * as React from 'react';
-import {memo, ReactNode, SyntheticEvent, useCallback, useContext, useMemo} from 'react';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  Input,
-  LinearProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '@mui/material';
+import {memo, ReactNode, useCallback, useContext, useMemo} from 'react';
+import {Box, LinearProgress, Table, TableBody, TableCell, TableRow} from '@mui/material';
 import {capitalize, lowerCase} from 'lodash';
 import {filesize} from 'filesize';
 import {useQuery} from '@tanstack/react-query';
@@ -20,6 +8,7 @@ import {api} from '../../../../tools/api';
 import {DiskUsage} from '../../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
+import AsyncDataDialog from '../AsyncDataDialog/AsyncDataDialog';
 import {queryKeys} from '../../../../tools/queryClient';
 
 interface DiskUsageDialogProps {
@@ -42,14 +31,6 @@ const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
   const handleUpdate = useCallback(async () => {
     await refetch();
   }, [refetch]);
-
-  const handleClose = useCallback(
-    (e: SyntheticEvent, reason?: string) => {
-      e.preventDefault();
-      onClose();
-    },
-    [onClose],
-  );
 
   const rows = useMemo(() => {
     if (!diskUsage) return null;
@@ -103,36 +84,26 @@ const DiskUsageDialog = memo(({onClose}: DiskUsageDialogProps) => {
   }, [diskUsage]);
 
   return (
-    <Dialog fullWidth={true} onClose={handleClose} open={true}>
-      <DialogContent>
-        {isLoading ? (
-          <LinearProgress />
-        ) : error ? (
-          <>
-            <p>Error:</p>
-            <Input fullWidth={true} value={error.message} readOnly />
-          </>
-        ) : (
-          diskUsage && (
-            <Box
-              sx={{
-                justifyContent: 'space-around',
-                display: 'flex',
-                flexWrap: 'wrap',
-              }}
-            >
-              <Table>
-                <TableBody>{rows}</TableBody>
-              </Table>
-            </Box>
-          )
-        )}
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-          <ActionButton onSubmit={handleUpdate}>Update</ActionButton>
-        </DialogActions>
-      </DialogContent>
-    </Dialog>
+    <AsyncDataDialog
+      actions={<ActionButton onSubmit={handleUpdate}>Update</ActionButton>}
+      error={error}
+      loading={isLoading}
+      onClose={onClose}
+    >
+      {diskUsage && (
+        <Box
+          sx={{
+            justifyContent: 'space-around',
+            display: 'flex',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Table>
+            <TableBody>{rows}</TableBody>
+          </Table>
+        </Box>
+      )}
+    </AsyncDataDialog>
   );
 });
 

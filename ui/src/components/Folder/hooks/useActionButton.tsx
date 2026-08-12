@@ -16,6 +16,11 @@ const useActionButton = <ELEMENT, EVENT>({
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = React.useState<null | Error>(null);
 
+  const reset = useCallback(() => {
+    setLoading(false);
+    setError(null);
+  }, []);
+
   const handleSubmit = useCallback(
     async (e: SyntheticEvent<ELEMENT, EVENT>) => {
       setLoading(true);
@@ -57,7 +62,7 @@ const useActionButton = <ELEMENT, EVENT>({
     return icon;
   }, [isLoading, error, isIcon, iconSize]);
 
-  return {isLoading, error, handleSubmit, stateNode};
+  return {isLoading, error, handleSubmit, reset, stateNode};
 };
 
 export default useActionButton;
