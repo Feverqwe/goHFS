@@ -45,6 +45,16 @@ const PlayerContainer = styled('div')(({theme}) => ({
     outline: 'none',
   },
 
+  '.video-js .vjs-control:focus, .video-js .vjs-control:focus::before, .video-js .vjs-slider:focus':
+    {
+      boxShadow: 'none',
+      textShadow: 'none',
+    },
+
+  '.video-js .vjs-control:focus .vjs-svg-icon': {
+    filter: 'none',
+  },
+
   '.video-js.vjs-user-inactive.vjs-playing': {
     cursor: 'none',
   },
@@ -96,15 +106,16 @@ const PlayerContainer = styled('div')(({theme}) => ({
     },
   },
 
-  '.video-js.vjs-layout-small .vjs-control-bar': {
+  '.video-js.vjs-layout-small .vjs-control-bar, .video-js.vjs-layout-x-small .vjs-control-bar': {
     paddingRight: 0,
     paddingLeft: 0,
   },
 
-  '.video-js.vjs-layout-small .vjs-control.vjs-button': {
-    marginRight: '0.25em',
-    marginLeft: '0.25em',
-  },
+  '.video-js.vjs-layout-small .vjs-control.vjs-button, .video-js.vjs-layout-x-small .vjs-control.vjs-button':
+    {
+      marginRight: '0.25em',
+      marginLeft: '0.25em',
+    },
 
   '.video-js.vjs-layout-small .vjs-time-control, .video-js.vjs-layout-small .vjs-time-divider': {
     fontSize: '1.25em',
@@ -156,6 +167,23 @@ const PlayerContainer = styled('div')(({theme}) => ({
     {
       display: 'flex',
     },
+
+  '.video-js.vjs-layout-x-small .vjs-current-time': {
+    display: 'flex',
+    paddingRight: '0.2em',
+    paddingLeft: '0.2em',
+    fontSize: '1.25em',
+  },
+
+  '.video-js.vjs-layout-x-small .vjs-time-divider, .video-js.vjs-layout-x-small .vjs-duration': {
+    display: 'none',
+  },
+
+  '@media (max-width: 255px)': {
+    '.video-js.vjs-layout-x-small .vjs-current-time': {
+      display: 'none',
+    },
+  },
 
   '.video-js .vjs-menu-button-popup .vjs-menu': {
     zIndex: 3,
