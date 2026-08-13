@@ -31,6 +31,9 @@ import {createTrackController, type TrackController} from './tracks';
 import {formatTime, getMediaTitle, isBrokenAndroidEdge, isHlsUrl} from './utils';
 
 interface Video2Props {
+  autoplay?: boolean;
+  loadSource?: boolean;
+  poster?: string;
   url: string;
   metadata?: VideoMetadata;
 }
@@ -56,7 +59,7 @@ function blurFocusedPlayerControlOnEscape(event: KeyboardEvent): boolean {
   return true;
 }
 
-const Video2: FC<Video2Props> = ({url, metadata}) => {
+const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, url, metadata}) => {
   const toggleUrlDialog = useContext(UrlDialogCtx);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setPlaying] = useState(false);
@@ -103,6 +106,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       },
       controls: true,
       playbackRates: PLAYBACK_RATES,
+      poster,
       preload: 'auto',
       responsive: true,
       textTrackSettings: false,
@@ -260,6 +264,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       if (hasStarted) return;
       hasStarted = true;
       if ((metadata ?? 0) > 0) player.currentTime(metadata);
+      if (!autoplay) return;
       player.play()?.catch((err: unknown) => {
         console.error('auto play error: %O', err);
       });
@@ -409,11 +414,13 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       });
     }
 
-    if (hls) {
-      hls.loadSource(url);
-      hls.attachMedia(player.tech(true).el() as HTMLMediaElement);
-    } else {
-      player.src(url);
+    if (loadSource) {
+      if (hls) {
+        hls.loadSource(url);
+        hls.attachMedia(player.tech(true).el() as HTMLMediaElement);
+      } else {
+        player.src(url);
+      }
     }
 
     return () => {
@@ -437,7 +444,7 @@ const Video2: FC<Video2Props> = ({url, metadata}) => {
       player.dispose();
       container.replaceChildren();
     };
-  }, [metadata, setStorage, title, toggleUrlDialog, url]);
+  }, [autoplay, loadSource, metadata, poster, setStorage, title, toggleUrlDialog, url]);
 
   return (
     <>

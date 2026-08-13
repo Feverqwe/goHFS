@@ -87,6 +87,20 @@ const PlayerContainer = styled('div')(({theme}) => ({
     },
   },
 
+  '.video-js.vjs-layout-small .vjs-control-bar': {
+    paddingRight: 0,
+    paddingLeft: 0,
+  },
+
+  '.video-js.vjs-layout-small .vjs-control.vjs-button': {
+    marginRight: '0.25em',
+    marginLeft: '0.25em',
+  },
+
+  '.video-js.vjs-layout-small .vjs-time-control, .video-js.vjs-layout-small .vjs-time-divider': {
+    fontSize: '1.25em',
+  },
+
   '.video-js .vjs-control': {
     width: '4.5em',
   },
