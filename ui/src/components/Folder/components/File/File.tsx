@@ -9,6 +9,7 @@ import {
   Movie as MovieIcon,
 } from '@mui/icons-material';
 import {Box, CardActionArea, IconButton, LinearProgress, ListItemText, styled} from '@mui/material';
+import {alpha} from '@mui/material/styles';
 import Path from 'path-browserify';
 import {filesize} from 'filesize';
 import mime from 'mime';
@@ -78,16 +79,16 @@ const MyIconButton = styled(IconButton)(() => ({
   },
 }));
 
-const MyBox = styled(Box)(() => ({
+const MyBox = styled(Box)(({theme}) => ({
   '.menu-button': {
-    color: 'rgb(255 255 255 / 0.75)',
+    color: alpha(theme.palette.common.white, 0.75),
   },
   '&:hover .menu-button': {
     backdropFilter: 'blur(4px)',
-    backgroundColor: 'rgb(0 0 0 / 10%)',
+    backgroundColor: alpha(theme.palette.common.black, 0.1),
   },
   '.menu-button:hover, .menu-button.menu-opened': {
-    backgroundColor: 'rgb(0 0 0 / 20%)',
+    backgroundColor: alpha(theme.palette.common.black, 0.2),
   },
 }));
 
@@ -251,7 +252,7 @@ const File: FC<FileProps> = ({file, dir, writable, onReload, viewMode, displayNa
               top: 2,
               left: 2,
               zIndex: 2,
-              bgcolor: 'rgba(0,0,0,0.4)',
+              bgcolor: (theme) => alpha(theme.palette.common.black, 0.4),
               borderRadius: '4px',
             }}
           >

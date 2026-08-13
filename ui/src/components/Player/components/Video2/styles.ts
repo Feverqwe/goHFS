@@ -1,6 +1,19 @@
 import {styled} from '@mui/material';
+import {alpha} from '@mui/material/styles';
 
-const PRIMARY_COLOR = '#6668ab';
+const getSubtitleShadow = (color: string) =>
+  [
+    '0.03em 0 0.03em',
+    '0 0.03em 0.03em',
+    '-0.03em 0 0.03em',
+    '0 -0.03em 0.03em',
+    '0.03em 0.03em 0.03em',
+    '-0.03em -0.03em 0.03em',
+    '0.03em -0.03em 0.03em',
+    '-0.03em 0.03em 0.03em',
+  ]
+    .map((shadow) => `${shadow} ${color}`)
+    .join(', ');
 
 const PlayerContainer = styled('div')(({theme}) => ({
   width: '100%',
@@ -9,6 +22,8 @@ const PlayerContainer = styled('div')(({theme}) => ({
   '.video-js': {
     width: '100%',
     height: '100%',
+    color: theme.palette.common.white,
+    backgroundColor: theme.palette.common.black,
     fontFamily: theme.typography.fontFamily,
     fontSize: theme.typography.pxToRem(12),
   },
@@ -27,6 +42,15 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js .vjs-big-play-button': {
     fontSize: '2.5em',
+    borderColor: theme.palette.primary.main,
+    backgroundColor: alpha(theme.palette.primary.main, 0.88),
+    color: theme.palette.primary.contrastText,
+  },
+
+  '.video-js:hover .vjs-big-play-button, .video-js .vjs-big-play-button:focus': {
+    borderColor: theme.palette.primary.light,
+    backgroundColor: theme.palette.primary.light,
+    color: theme.palette.primary.contrastText,
   },
 
   '.video-js.vjs-mobile-touch .vjs-big-play-button': {
@@ -36,7 +60,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     marginLeft: '-1em',
     border: 0,
     borderRadius: '50%',
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: theme.palette.primary.main,
     lineHeight: '2em',
 
     '&:active': {
@@ -57,7 +81,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
       right: 0,
       bottom: 0,
       left: 0,
-      background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.65))',
+      background: `linear-gradient(transparent, ${alpha(theme.palette.common.black, 0.65)})`,
       content: '""',
       pointerEvents: 'none',
     },
@@ -123,7 +147,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   '.video-js .vjs-menu-button-popup .vjs-menu .vjs-menu-content': {
     bottom: 0,
     borderRadius: '0.2em',
-    backgroundColor: 'rgba(28, 28, 28, 0.92)',
+    backgroundColor: alpha(theme.palette.background.paper, 0.92),
     fontFamily: theme.typography.fontFamily,
   },
 
@@ -147,7 +171,18 @@ const PlayerContainer = styled('div')(({theme}) => ({
     textTransform: 'none',
   },
 
+  '.video-js .vjs-menu li.vjs-menu-item:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+
+  '.video-js .vjs-menu li.vjs-selected': {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+  },
+
   '.video-js .vjs-time-tooltip, .video-js .vjs-volume-tooltip': {
+    backgroundColor: alpha(theme.palette.background.paper, 0.92),
+    color: theme.palette.text.primary,
     fontFamily: theme.typography.fontFamily,
   },
 
@@ -161,7 +196,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.video-js .vjs-progress-control:hover .vjs-mouse-display .vjs-time-tooltip': {
-    backgroundColor: 'rgba(28, 28, 28, .9)',
+    backgroundColor: alpha(theme.palette.background.paper, 0.9),
   },
 
   '.video-js .vjs-volume-control:hover .vjs-volume-tooltip, .video-js .vjs-volume-control:hover .vjs-progress-holder:focus .vjs-volume-tooltip':
@@ -175,17 +210,18 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.video-js .vjs-slider': {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: alpha(theme.palette.common.white, 0.2),
   },
 
   '.video-js .vjs-volume-bar': {
     height: '0.4em',
     margin: '1.3em 0.45em',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: alpha(theme.palette.common.white, 0.3),
   },
 
   '.video-js .vjs-volume-level': {
     height: '0.4em',
+    backgroundColor: theme.palette.primary.main,
   },
 
   '.video-js .vjs-volume-level::before': {
@@ -193,7 +229,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.video-js .vjs-load-progress, .video-js .vjs-load-progress div': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: alpha(theme.palette.common.white, 0.1),
   },
 
   '.video-js .vjs-progress-control': {
@@ -226,6 +262,10 @@ const PlayerContainer = styled('div')(({theme}) => ({
     lineHeight: '0.6em',
   },
 
+  '.video-js .vjs-play-progress': {
+    backgroundColor: theme.palette.primary.main,
+  },
+
   '.vjs-playback-rate > .vjs-menu-button': {
     lineHeight: '4.5em',
   },
@@ -249,12 +289,11 @@ const PlayerContainer = styled('div')(({theme}) => ({
     bottom: '2%',
     left: '2%',
     marginBottom: '2.2em',
-    color: '#fff',
+    color: theme.palette.common.white,
     fontSize: '2.917em',
     lineHeight: 'initial',
     textAlign: 'center',
-    textShadow:
-      '0.03em 0 0.03em #000, 0 0.03em 0.03em #000, -0.03em 0 0.03em #000, 0 -0.03em 0.03em #000, 0.03em 0.03em 0.03em #000, -0.03em -0.03em 0.03em #000, 0.03em -0.03em 0.03em #000, -0.03em 0.03em 0.03em #000',
+    textShadow: getSubtitleShadow(theme.palette.common.black),
     pointerEvents: 'none',
     transition: 'margin 0.3s',
 
@@ -282,7 +321,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     top: '0.625em',
     right: '0.625em',
     left: '0.625em',
-    color: '#fff',
+    color: theme.palette.common.white,
     fontSize: '1.65em',
     transition: 'margin 0.2s',
   },
@@ -294,7 +333,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   '.vjs-notice-text': {
     padding: '0.32em 0.64em',
     borderRadius: '0.13em',
-    background: 'rgba(28, 28, 28, 0.9)',
+    background: alpha(theme.palette.background.paper, 0.9),
     fontSize: '0.875em',
     userSelect: 'all',
   },

@@ -1,11 +1,12 @@
 import React, {FC, useState} from 'react';
 import {Fade, styled} from '@mui/material';
+import {alpha} from '@mui/material/styles';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
-const MyDiv = styled('div')(() => {
+const MyDiv = styled('div')(({theme}) => {
   return {
     display: 'flex',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: alpha(theme.palette.background.default, 0.72),
 
     position: 'absolute',
     top: 0,

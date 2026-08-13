@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {useState} from 'react';
 import {GlobalStyles} from '@mui/material';
+import {Theme} from '@mui/material/styles';
 import UrlDialog from './components/UrlDialog/UrlDialog';
 import UrlDialogCtx from './components/UrlDialog/UrlDialogCtx';
 import {changeUrlParams} from '../../tools/urlParams';
@@ -9,9 +10,9 @@ import FetchMetadata from './components/FetchMetadata/FetchMetadata';
 import {VideoMetadata} from './types';
 import Video2 from './components/Video2/Video2';
 
-const RootStyles = {
+const RootStyles = (theme: Theme) => ({
   html: {
-    backgroundColor: '#000',
+    backgroundColor: theme.palette.common.black,
     width: '100%',
     height: '100%',
   },
@@ -26,7 +27,7 @@ const RootStyles = {
     height: '100%',
     overflow: 'hidden',
   },
-};
+});
 
 const Player = React.memo(() => {
   const {url} = getParamsFromUrl();
