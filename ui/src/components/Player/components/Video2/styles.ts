@@ -20,12 +20,21 @@ const PlayerContainer = styled('div')(({theme}) => ({
   height: '100%',
 
   '.video-js': {
+    display: 'block',
     width: '100%',
     height: '100%',
     color: theme.palette.common.white,
     backgroundColor: theme.palette.common.black,
     fontFamily: theme.typography.fontFamily,
     fontSize: theme.typography.pxToRem(12),
+  },
+
+  '.video-js .vjs-tech': {
+    objectFit: 'contain',
+  },
+
+  '.video-js .vjs-poster img': {
+    display: 'block',
   },
 
   '.video-js.vjs-mobile-touch': {

@@ -22,6 +22,23 @@ const DEMO_POSTER = `data:image/svg+xml,${encodeURIComponent(`
   </svg>
 `)}`;
 
+const DEMO_VERTICAL_POSTER = `data:image/svg+xml,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280">
+    <rect width="720" height="1280" fill="#11151b"/>
+    <path d="M0 1010 172 610l132 174 158-314 119 232 139-118v696H0Z" fill="#252930"/>
+    <path d="m0 1100 154-280 130 152 174-276 112 190 150-116v510H0Z" fill="#30353d"/>
+    <path d="M0 1178h720M0 1218h720M0 1258h720" stroke="#49515c" stroke-width="2"/>
+    <circle cx="530" cy="226" r="64" fill="#d5dae0"/>
+    <circle cx="530" cy="226" r="49" fill="#11151b"/>
+    <path d="M504 226h52M530 200v52" stroke="#d5dae0" stroke-width="3"/>
+    <g fill="#f2f4f7" font-family="Roboto, Helvetica, Arial, sans-serif">
+      <text x="48" y="76" font-size="17" letter-spacing="4">GOHFS / VERTICAL ARCHIVE</text>
+      <text x="48" y="112" font-size="13" fill="#b2b9c2" letter-spacing="2">NORTH RIDGE · CAMERA 07</text>
+    </g>
+    <path d="M48 136h212" stroke="#d5dae0" stroke-width="3"/>
+  </svg>
+`)}`;
+
 const queryClient = new QueryClient({
   defaultOptions: {
     mutations: {retry: false},
@@ -33,16 +50,24 @@ interface PlayerStoryProps {
   aspectRatio: number;
   currentTime: string;
   duration: string;
+  fillViewport: boolean;
   frameWidth: number;
+  mediaOrientation: 'landscape' | 'portrait';
+  mobileTouch: boolean;
   showSettings: boolean;
+  subtitleText: string;
 }
 
 const PlayerStory: FC<PlayerStoryProps> = ({
   aspectRatio,
   currentTime,
   duration,
+  fillViewport,
   frameWidth,
+  mediaOrientation,
+  mobileTouch,
   showSettings,
+  subtitleText,
 }) => {
   const frameRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +79,19 @@ const PlayerStory: FC<PlayerStoryProps> = ({
 
       player.classList.add('vjs-paused', 'vjs-user-active');
       player.classList.remove('vjs-has-started', 'vjs-user-inactive');
+      player.classList.toggle('vjs-mobile-touch', mobileTouch);
+      player.classList.toggle('vjs-show-big-play-button-on-pause', mobileTouch);
+      const subtitleElement = player.querySelector<HTMLElement>('.vjs-custom-subtitles');
+      if (subtitleElement && subtitleElement.textContent !== subtitleText) {
+        subtitleElement.replaceChildren();
+        subtitleText.split('\n').forEach((line) => {
+          const paragraph = document.createElement('p');
+          const text = document.createElement('span');
+          text.textContent = line;
+          paragraph.appendChild(text);
+          subtitleElement.appendChild(paragraph);
+        });
+      }
       const currentTimeDisplay = player.querySelector('.vjs-current-time-display');
       const durationDisplay = player.querySelector('.vjs-duration-display');
       if (currentTimeDisplay?.lastChild) currentTimeDisplay.lastChild.textContent = currentTime;
@@ -72,7 +110,7 @@ const PlayerStory: FC<PlayerStoryProps> = ({
     preparePlayer();
     const interval = window.setInterval(preparePlayer, 50);
     return () => window.clearInterval(interval);
-  }, [currentTime, duration, showSettings]);
+  }, [currentTime, duration, mobileTouch, showSettings, subtitleText]);
 
   return (
     <Box
@@ -81,14 +119,15 @@ const PlayerStory: FC<PlayerStoryProps> = ({
         minHeight: '100vh',
         placeItems: 'center',
         bgcolor: '#080a0d',
-        p: 2,
+        p: fillViewport ? 0 : 2,
       }}
     >
       <Box
         ref={frameRef}
         sx={{
-          width: `min(${frameWidth}px, calc(100vw - 32px))`,
-          aspectRatio,
+          width: fillViewport ? '100vw' : `min(${frameWidth}px, calc(100vw - 32px))`,
+          height: fillViewport ? '100vh' : undefined,
+          aspectRatio: fillViewport ? undefined : aspectRatio,
           overflow: 'hidden',
           bgcolor: 'common.black',
           boxShadow: '0 28px 80px rgba(0, 0, 0, 0.55)',
@@ -104,7 +143,7 @@ const PlayerStory: FC<PlayerStoryProps> = ({
             <Video2
               autoplay={false}
               loadSource={false}
-              poster={DEMO_POSTER}
+              poster={mediaOrientation === 'portrait' ? DEMO_VERTICAL_POSTER : DEMO_POSTER}
               url="/media/archive/north-ridge.mp4"
             />
           </QueryClientProvider>
@@ -121,12 +160,19 @@ const meta = {
     aspectRatio: 16 / 9,
     currentTime: '0:00',
     duration: '0:00',
+    fillViewport: false,
     frameWidth: 960,
+    mediaOrientation: 'landscape',
+    mobileTouch: false,
     showSettings: false,
+    subtitleText: '',
   },
   argTypes: {
     aspectRatio: {control: false},
+    fillViewport: {control: false},
     frameWidth: {control: {max: 1280, min: 320, step: 20, type: 'range'}},
+    mobileTouch: {control: false},
+    subtitleText: {control: false},
   },
   parameters: {
     layout: 'fullscreen',
@@ -150,11 +196,13 @@ export const NarrowSettingsOpen: Story = {
   args: {frameWidth: 360, showSettings: true},
 };
 
-export const VerticalTwoHours: Story = {
+export const VerticalMediaTwoHours: Story = {
   args: {
-    aspectRatio: 9 / 16,
     currentTime: '1:00:00',
     duration: '2:00:00',
-    frameWidth: 390,
+    fillViewport: true,
+    mediaOrientation: 'portrait',
+    mobileTouch: true,
+    subtitleText: 'Ветер стихает\nThe wind is settling',
   },
 };
