@@ -2,6 +2,7 @@ import {Box} from '@mui/material';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import React, {FC, useEffect, useRef} from 'react';
+import videojs from 'video.js';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import Video2 from './Video2';
 
@@ -54,9 +55,50 @@ interface PlayerStoryProps {
   frameWidth: number;
   mediaOrientation: 'landscape' | 'portrait';
   mobileTouch: boolean;
+  progressTooltipPercent: number;
   showSettings: boolean;
   subtitleText: string;
+  timelineDuration: number;
+  volumeExpanded: boolean;
 }
+
+const formatTimelineTime = (time: number) => {
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time % 3600) / 60);
+  const seconds = Math.floor(time % 60);
+  return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+const prepareTimeline = (
+  player: HTMLElement,
+  timelineDuration: number,
+  progressTooltipPercent: number,
+) => {
+  const playerApi = videojs.getPlayer(player.id);
+  if (playerApi && timelineDuration > 0) playerApi.duration(timelineDuration);
+
+  const mouseDisplay = player.querySelector<HTMLElement>(
+    '.vjs-progress-control .vjs-mouse-display',
+  );
+  const timeTooltip = mouseDisplay?.querySelector<HTMLElement>('.vjs-time-tooltip');
+  if (!mouseDisplay || !timeTooltip) return;
+
+  if (progressTooltipPercent < 0) {
+    mouseDisplay.style.removeProperty('display');
+    mouseDisplay.style.removeProperty('left');
+    timeTooltip.style.removeProperty('display');
+    timeTooltip.style.removeProperty('transform');
+    timeTooltip.style.removeProperty('visibility');
+    return;
+  }
+
+  mouseDisplay.style.display = 'block';
+  mouseDisplay.style.left = `${progressTooltipPercent * 100}%`;
+  timeTooltip.style.display = 'block';
+  timeTooltip.style.transform = 'translateX(-50%)';
+  timeTooltip.style.visibility = 'visible';
+  timeTooltip.textContent = formatTimelineTime(timelineDuration * progressTooltipPercent);
+};
 
 const PlayerStory: FC<PlayerStoryProps> = ({
   aspectRatio,
@@ -66,8 +108,11 @@ const PlayerStory: FC<PlayerStoryProps> = ({
   frameWidth,
   mediaOrientation,
   mobileTouch,
+  progressTooltipPercent,
   showSettings,
   subtitleText,
+  timelineDuration,
+  volumeExpanded,
 }) => {
   const frameRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +126,8 @@ const PlayerStory: FC<PlayerStoryProps> = ({
       player.classList.remove('vjs-has-started', 'vjs-user-inactive');
       player.classList.toggle('vjs-mobile-touch', mobileTouch);
       player.classList.toggle('vjs-show-big-play-button-on-pause', mobileTouch);
+      prepareTimeline(player, timelineDuration, progressTooltipPercent);
+      player.querySelector('.vjs-volume-panel')?.classList.toggle('vjs-hover', volumeExpanded);
       const subtitleElement = player.querySelector<HTMLElement>('.vjs-custom-subtitles');
       if (subtitleElement && subtitleElement.textContent !== subtitleText) {
         subtitleElement.replaceChildren();
@@ -110,7 +157,16 @@ const PlayerStory: FC<PlayerStoryProps> = ({
     preparePlayer();
     const interval = window.setInterval(preparePlayer, 50);
     return () => window.clearInterval(interval);
-  }, [currentTime, duration, mobileTouch, showSettings, subtitleText]);
+  }, [
+    currentTime,
+    duration,
+    mobileTouch,
+    progressTooltipPercent,
+    showSettings,
+    subtitleText,
+    timelineDuration,
+    volumeExpanded,
+  ]);
 
   return (
     <Box
@@ -164,15 +220,21 @@ const meta = {
     frameWidth: 960,
     mediaOrientation: 'landscape',
     mobileTouch: false,
+    progressTooltipPercent: -1,
     showSettings: false,
     subtitleText: '',
+    timelineDuration: 0,
+    volumeExpanded: false,
   },
   argTypes: {
     aspectRatio: {control: false},
     fillViewport: {control: false},
     frameWidth: {control: {max: 1280, min: 320, step: 20, type: 'range'}},
     mobileTouch: {control: false},
+    progressTooltipPercent: {control: false},
     subtitleText: {control: false},
+    timelineDuration: {control: false},
+    volumeExpanded: {control: false},
   },
   parameters: {
     layout: 'fullscreen',
@@ -196,6 +258,19 @@ export const NarrowSettingsOpen: Story = {
   args: {frameWidth: 360, showSettings: true},
 };
 
+export const VolumeExpanded: Story = {
+  args: {duration: '2:00:00', timelineDuration: 2 * 60 * 60, volumeExpanded: true},
+};
+
+export const ProgressTooltip: Story = {
+  args: {
+    currentTime: '1:00:00',
+    duration: '2:00:00',
+    progressTooltipPercent: 0.5,
+    timelineDuration: 2 * 60 * 60,
+  },
+};
+
 export const VerticalMediaTwoHours: Story = {
   args: {
     currentTime: '1:00:00',
@@ -204,5 +279,6 @@ export const VerticalMediaTwoHours: Story = {
     mediaOrientation: 'portrait',
     mobileTouch: true,
     subtitleText: 'Ветер стихает\nThe wind is settling',
+    timelineDuration: 2 * 60 * 60,
   },
 };

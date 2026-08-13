@@ -61,9 +61,15 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js .vjs-big-play-button': {
     fontSize: '2.5em',
-    borderColor: theme.palette.primary.main,
+    width: '2em',
+    height: '2em',
+    marginTop: '-1em',
+    marginLeft: '-1em',
+    border: 0,
+    borderRadius: '50%',
     backgroundColor: alpha(theme.palette.primary.main, 0.88),
     color: theme.palette.primary.contrastText,
+    lineHeight: '2em',
   },
 
   '.video-js:hover .vjs-big-play-button, .video-js .vjs-big-play-button:focus': {
@@ -73,14 +79,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.video-js.vjs-mobile-touch .vjs-big-play-button': {
-    width: '2em',
-    height: '2em',
-    marginTop: '-1em',
-    marginLeft: '-1em',
-    border: 0,
-    borderRadius: '50%',
     backgroundColor: theme.palette.primary.main,
-    lineHeight: '2em',
 
     '&:active': {
       transform: 'scale(0.9)',
@@ -126,9 +125,15 @@ const PlayerContainer = styled('div')(({theme}) => ({
   },
 
   '.video-js .vjs-control.vjs-button': {
-    width: '3.5em',
-    height: '3.5em',
-    margin: '0.5em',
+    width: '3.667em',
+    height: '3.667em',
+    margin: '0.4165em',
+  },
+
+  '.video-js .vjs-button:focus-visible, .video-js .vjs-slider:focus-visible': {
+    outline: `2px solid ${theme.palette.primary.light}`,
+    outlineOffset: '2px',
+    boxShadow: `0 0 0 2px ${alpha(theme.palette.common.black, 0.45)}`,
   },
 
   '.video-js .vjs-button > .vjs-icon-placeholder::before': {
@@ -157,6 +162,21 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js  .vjs-volume-horizontal': {
     margin: '0.8em 0',
+  },
+
+  '.video-js .vjs-volume-panel.vjs-volume-panel-horizontal:focus-within': {
+    width: '10em',
+    transition: 'width 120ms ease-out',
+  },
+
+  '.video-js .vjs-volume-panel:focus-within .vjs-volume-control.vjs-volume-horizontal': {
+    position: 'relative',
+    width: '5em',
+    height: '3em',
+    marginRight: 0,
+    visibility: 'visible',
+    opacity: 1,
+    transition: 'visibility 0s, opacity 120ms ease-out, width 120ms ease-out',
   },
 
   '.video-js .vjs-current-time, .video-js .vjs-time-divider, .video-js .vjs-duration': {
@@ -286,12 +306,12 @@ const PlayerContainer = styled('div')(({theme}) => ({
   '.video-js .vjs-progress-control': {
     position: 'absolute',
     zIndex: 2,
-    top: '-1.5em',
+    top: '-1.8335em',
     right: '1.2em',
     left: '1.2em',
     display: 'flex',
     width: 'auto',
-    height: '3em',
+    height: '3.667em',
   },
 
   '.video-js .vjs-progress-control .vjs-progress-holder': {
@@ -315,6 +335,16 @@ const PlayerContainer = styled('div')(({theme}) => ({
 
   '.video-js .vjs-play-progress': {
     backgroundColor: theme.palette.primary.main,
+  },
+
+  '@media (prefers-reduced-motion: reduce)': {
+    '.video-js .vjs-volume-panel, .video-js .vjs-volume-control, .video-js .vjs-custom-subtitles': {
+      transition: 'none',
+    },
+
+    '.video-js.vjs-mobile-touch .vjs-big-play-button:active': {
+      transform: 'none',
+    },
   },
 
   '.vjs-playback-rate > .vjs-menu-button': {
