@@ -160,6 +160,17 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
       player.playbackRate(rate);
       showNotice(`Playback rate: ${rate}`);
     };
+    const adjustVolume = (direction: -1 | 1) => {
+      const currentVolume = player.volume() ?? 1;
+      const nextVolume = Math.max(
+        0,
+        Math.min(1, Math.round((currentVolume + direction * VOLUME_STEP) * 100) / 100),
+      );
+      if (nextVolume > 0 && player.muted()) player.muted(false);
+      player.volume(nextVolume);
+      player.userActive(true);
+      showNotice(`Volume: ${Math.round(nextVolume * 100)}%`);
+    };
     const onVolumeWheel = (event: WheelEvent) => {
       if (
         !(event.target instanceof Element) ||
@@ -170,15 +181,7 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
       }
 
       const direction = event.deltaY < 0 ? 1 : -1;
-      const currentVolume = player.volume() ?? 1;
-      const nextVolume = Math.max(
-        0,
-        Math.min(1, Math.round((currentVolume + direction * VOLUME_STEP) * 100) / 100),
-      );
-      if (nextVolume > 0 && player.muted()) player.muted(false);
-      player.volume(nextVolume);
-      player.userActive(true);
-      showNotice(`Volume: ${Math.round(nextVolume * 100)}%`);
+      adjustVolume(direction);
       event.preventDefault();
       event.stopPropagation();
     };
@@ -350,6 +353,11 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
             handled = true;
             break;
           }
+          case 'ArrowUp':
+          case 'ArrowDown':
+            adjustVolume(code === 'ArrowUp' ? 1 : -1);
+            handled = true;
+            break;
           case 'KeyF':
             if (!event.repeat) {
               const operation = player.isFullscreen()
