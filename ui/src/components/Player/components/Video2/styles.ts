@@ -4,6 +4,7 @@ import {alpha} from '@mui/material/styles';
 const CONTROL_BAR_HEIGHT = '54px';
 const CONTROL_TARGET_MARGIN = '5px';
 const CONTROL_TARGET_SIZE = '44px';
+const PROGRESS_CONTROL_HEIGHT = '30px';
 
 const getSubtitleShadow = (color: string) =>
   [
@@ -260,7 +261,7 @@ const PlayerContainer = styled('div')(({theme}) => ({
     left: '1.2em',
     display: 'flex',
     width: 'auto',
-    height: CONTROL_TARGET_SIZE,
+    height: PROGRESS_CONTROL_HEIGHT,
   },
 
   '.video-js .vjs-progress-control .vjs-progress-holder': {
