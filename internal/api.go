@@ -370,6 +370,8 @@ func handleDiskUsage(router *Router, config *Config) {
 }
 
 func handleStorage(router *Router, storage *boltstorage.BoltStorage) {
+	router.Custom(nil, []string{"/~/storage/get", "/~/storage/set", "/~/storage/del"}, handleStorageCORS)
+
 	router.Post("/~/storage/get", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (map[string]interface{}, error) {
 			keys, err := ParseJson[[]string](r.Body)
