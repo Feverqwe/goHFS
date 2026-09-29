@@ -564,11 +564,22 @@ func handleAction(router *Router, config *Config, doReload func()) {
 		})
 	})
 
-	variables := []string{"url", "path", "dir", "name", "hostname"}
-	prepareHandlerUrl := func(query url.Values, handlerUrl string) (finalUrl string, err error) {
+	variables := []string{"url", "path", "dir", "name", "hostname", "schema"}
+	prepareHandlerUrl := func(r *http.Request, handlerUrl string) (finalUrl string, err error) {
+		query := r.URL.Query()
 		rawPlace := query.Get("place")
 		rawName := query.Get("name")
 		hostname := query.Get("hostname")
+		schema := "http"
+		if r.TLS != nil {
+			schema = "https"
+		}
+		// nginx must overwrite this header with the original request scheme.
+		forwardedProto, _, _ := strings.Cut(r.Header.Get("X-Forwarded-Proto"), ",")
+		forwardedProto = strings.ToLower(strings.TrimSpace(forwardedProto))
+		if forwardedProto == "http" || forwardedProto == "https" {
+			schema = forwardedProto
+		}
 
 		rPath := NormalizePath(path.Join(rawPlace, rawName))
 
@@ -600,6 +611,8 @@ func handleAction(router *Router, config *Config, doReload func()) {
 				finalUrl = strings.ReplaceAll(finalUrl, "{name}", url.QueryEscape(path.Base(osPath)))
 			case "hostname":
 				finalUrl = strings.ReplaceAll(finalUrl, "{hostname}", url.QueryEscape(hostname))
+			case "schema":
+				finalUrl = strings.ReplaceAll(finalUrl, "{schema}", url.QueryEscape(schema))
 			}
 		}
 		return
@@ -640,7 +653,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			return
 		}
 
-		finalUrl, err := prepareHandlerUrl(query, handlerUrl)
+		finalUrl, err := prepareHandlerUrl(r, handlerUrl)
 		if err != nil {
 			emitError(w, 500, err)
 			return
@@ -683,7 +696,7 @@ func handleAction(router *Router, config *Config, doReload func()) {
 			return
 		}
 
-		finalUrl, err := prepareHandlerUrl(query, currectAction.Url)
+		finalUrl, err := prepareHandlerUrl(r, currectAction.Url)
 		if err != nil {
 			emitError(w, 500, err)
 			return

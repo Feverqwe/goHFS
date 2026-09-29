@@ -164,6 +164,20 @@ legacy `config.json` is migrated automatically when no YAML configuration exists
 UI preferences are stored in `storage.db`, while generated previews live in the
 `previews` directory beside the configuration.
 
+URLs in `extHandle` and `extActions` support `{url}`, `{path}`, `{dir}`, `{name}`,
+`{hostname}`, and `{schema}` placeholders. `{schema}` expands to `http` or `https`,
+using `X-Forwarded-Proto` when present and valid, otherwise the request's TLS state.
+Placeholder values are query-escaped, so `{url}` can be passed as a query parameter.
+
+When nginx terminates HTTPS in front of GoHFS, set this header in the proxy location
+so it overwrites any client-supplied value:
+
+```nginx
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+For a comma-separated `X-Forwarded-Proto` chain, GoHFS uses the first value.
+
 ## Development
 
 Build and run against files in `ui/dist`:
