@@ -44,6 +44,13 @@ func TestStorageCORS(t *testing.T) {
 			if got := res.Header().Get("Access-Control-Allow-Origin"); (got == mediaToolsOrigin) != tt.allowed {
 				t.Fatalf("unexpected allowed origin %q", got)
 			}
+			wantCredentials := ""
+			if tt.allowed {
+				wantCredentials = "true"
+			}
+			if got := res.Header().Get("Access-Control-Allow-Credentials"); got != wantCredentials {
+				t.Fatalf("allowed credentials = %q, want %q", got, wantCredentials)
+			}
 			if tt.allowed {
 				if res.Header().Get("Access-Control-Allow-Methods") != "POST" || res.Header().Get("Access-Control-Allow-Headers") != "Content-Type" {
 					t.Fatal("missing preflight permissions")
@@ -65,6 +72,13 @@ func TestStorageCORS(t *testing.T) {
 			router.ServeHTTP(res, req)
 			if res.Code != http.StatusOK || res.Header().Get("Access-Control-Allow-Origin") != origin {
 				t.Fatalf("POST %s: status %d, headers %v", step.path, res.Code, res.Header())
+			}
+			wantCredentials := ""
+			if origin == mediaToolsOrigin {
+				wantCredentials = "true"
+			}
+			if got := res.Header().Get("Access-Control-Allow-Credentials"); got != wantCredentials {
+				t.Fatalf("POST %s: allowed credentials = %q, want %q", step.path, got, wantCredentials)
 			}
 			if step.path == "/~/storage/get" {
 				var response struct{ Result map[string]interface{} }

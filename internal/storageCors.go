@@ -15,6 +15,7 @@ func handleStorageCORS(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			w.Header().Set("Access-Control-Allow-Origin", mediaToolsOrigin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", http.MethodPost)
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 			w.WriteHeader(http.StatusNoContent)
@@ -22,6 +23,7 @@ func handleStorageCORS(w http.ResponseWriter, r *http.Request) {
 		}
 		if r.Method == http.MethodPost {
 			w.Header().Set("Access-Control-Allow-Origin", mediaToolsOrigin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
 	}
 	if next, ok := GetNext(r); ok {
