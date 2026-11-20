@@ -44,7 +44,7 @@ export const LongContent: Story = {
   args: {
     report: [
       {
-        filename: 'quarterly-archive-with-a-very-long-descriptive-filename-2026-08-13.tar.gz',
+        filename: 'Project assets/Exports/quarterly-archive-with-a-very-long-filename.tar.gz',
         ok: false,
         error:
           'Upload failed after several attempts because the remote destination stopped accepting data.',

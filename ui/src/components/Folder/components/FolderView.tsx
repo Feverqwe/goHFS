@@ -25,7 +25,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import {SelectModeCtx} from './SelectProvider/SelectCtx';
 import {FileInfo, ViewMode} from '../../../types';
-import useUpload from './hooks/useUpload';
+import useUpload, {type UploadEntry} from './hooks/useUpload';
 import File from './File/File';
 import DropZone from './DropZone';
 import AddressesDialog from './AddressesDialog';
@@ -36,6 +36,33 @@ import MkdirDialog from './MkdirDialog';
 import DiskUsageDialog from './DiskUsageDialog/DiskUsageDialog';
 import DirSizeDialog from './DirSizeDialog/DirSizeDialog';
 import SearchDialog from './SearchDialog';
+
+function chooseUpload(folder: boolean, onUpload: (entries: UploadEntry[]) => void) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = !folder;
+  input.webkitdirectory = folder;
+  input.addEventListener('change', () => {
+    const entries: UploadEntry[] = [];
+    const directories = new Set<string>();
+    for (const file of Array.from(input.files ?? [])) {
+      const path = file.webkitRelativePath || file.name;
+      const parts = path.split('/');
+      parts.pop();
+      let directory = '';
+      for (const part of parts) {
+        directory = directory ? directory + '/' + part : part;
+        if (!directories.has(directory)) {
+          directories.add(directory);
+          entries.push({path: directory});
+        }
+      }
+      entries.push({path, file});
+    }
+    onUpload(entries);
+  });
+  input.click();
+}
 
 const RootSx = {
   width: '100%',
@@ -107,18 +134,6 @@ const FolderView: FC<FolderViewProps> = ({
     setShowAddressesDialog(true);
   }, []);
 
-  const handleUploadBtn = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.addEventListener('change', (e: Event) => {
-      if (!input.files?.length) return;
-      const files = Array.from(input.files);
-      handleUpload(files);
-    });
-    input.dispatchEvent(new MouseEvent('click'));
-  }, [handleUpload]);
-
   const handleMkdirDialogBtn = useCallback(() => {
     setShowMkdirDialog(true);
   }, []);
@@ -179,7 +194,11 @@ const FolderView: FC<FolderViewProps> = ({
                 {store.dir}
               </Typography>
               {store.isWritable ? (
-                <IconButton title="Upload" onClick={handleUploadBtn} size="small">
+                <IconButton
+                  title="Upload"
+                  onClick={() => chooseUpload(false, handleUpload)}
+                  size="small"
+                >
                   <UploadIcon fontSize="small" />
                 </IconButton>
               ) : null}
@@ -338,6 +357,7 @@ const FolderView: FC<FolderViewProps> = ({
           sortedFiles={activeSearch ? store.files : files}
           onAddressesClick={handleAddressesBtn}
           onMkdirClick={handleMkdirDialogBtn}
+          onUploadFolderClick={() => chooseUpload(true, handleUpload)}
           onDiskUsageClick={handleDiskUsageDialogBtn}
           onDirSizeClick={handleDirSizeDialogBtn}
         />

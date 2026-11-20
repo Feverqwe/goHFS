@@ -9,13 +9,13 @@ const meta = {
   title: 'Folder/FolderView',
   component: FolderView,
   decorators: [
-    (Story) => (
+    (Story, {parameters}) => (
       <QueryClientProvider client={queryClient}>
         <RootStoreCtx.Provider
           value={{
             dir: '/Shared media',
             isRoot: false,
-            isWritable: false,
+            isWritable: Boolean(parameters.writable),
             files: [],
             extHandle: {},
             extActions: {},
@@ -58,3 +58,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Navigation: Story = {};
+
+export const Writable: Story = {
+  parameters: {writable: true},
+};

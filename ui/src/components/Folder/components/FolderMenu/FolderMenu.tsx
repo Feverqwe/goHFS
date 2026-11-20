@@ -9,6 +9,8 @@ import {QrCode2 as QrCode2Icon} from '@mui/icons-material';
 import Path from 'path-browserify';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
+import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
+import DescriptionIcon from '@mui/icons-material/Description';
 import DataUsageIcon from '@mui/icons-material/DataUsage';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -26,6 +28,7 @@ interface FolderMenuProps {
   sortedFiles: FileInfo[];
   onAddressesClick: () => void;
   onMkdirClick: () => void;
+  onUploadFolderClick: () => void;
   onDirSizeClick: () => void;
   onDiskUsageClick: () => void;
 }
@@ -34,6 +37,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
   anchorEl,
   sortedFiles,
   onMkdirClick,
+  onUploadFolderClick,
   onAddressesClick,
   onDirSizeClick,
   onDiskUsageClick,
@@ -206,6 +210,33 @@ const FolderMenu: FC<FolderMenuProps> = ({
 
   return (
     <Menu anchorEl={anchorEl} open onClose={onClose}>
+      {store.isWritable && (
+        <MenuItem
+          onClick={() => {
+            onClose();
+            onUploadFolderClick();
+          }}
+        >
+          <ListItemIcon>
+            <DriveFolderUploadIcon />
+          </ListItemIcon>
+          <ListItemText>Upload folder</ListItemText>
+        </MenuItem>
+      )}
+      {store.isWritable && (
+        <MenuItem
+          component="a"
+          href={`/~/agent.md?${new URLSearchParams({place: store.dir})}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+        >
+          <ListItemIcon>
+            <DescriptionIcon />
+          </ListItemIcon>
+          <ListItemText>Agent upload instructions</ListItemText>
+        </MenuItem>
+      )}
       {menu.map(({id, title, icon, onClick}) => {
         return (
           <MenuItem key={id} onClick={onClick}>

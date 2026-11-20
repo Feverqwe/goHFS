@@ -17,6 +17,12 @@ import {api} from '../../../../tools/api';
 import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
 import ActionButton from '../ActionButton/ActionButton';
 
+export interface UploadEntry {
+  path: string;
+  file?: File;
+  error?: string;
+}
+
 export interface UploadFileResult {
   ok: boolean;
   filename: string;
@@ -29,7 +35,7 @@ export interface UploadResponse {
 }
 
 const useUpload = (dir: string) => {
-  const [queueFiles] = useState<File[]>([]);
+  const [queue] = useState<UploadEntry[]>([]);
   const [ok, setOk] = useState(false);
   const [isDone, setDone] = useState(false);
   const [report, setReport] = useState<UploadFileResult[] | null>(null);
@@ -39,6 +45,7 @@ const useUpload = (dir: string) => {
   const updateStore = useContext(RootStoreUpdateCtx);
   const {mutateAsync: initUpload} = useMutation({mutationFn: api.uploadInit});
   const {mutateAsync: uploadChunk} = useMutation({mutationFn: api.uploadChunk});
+  const {mutateAsync: makeDirectory} = useMutation({mutationFn: api.uploadMkdir});
 
   const resetState = useCallback(() => {
     setReport(null);
@@ -48,23 +55,26 @@ const useUpload = (dir: string) => {
   }, []);
 
   const handleUpload = useCallback(
-    async (files: File[]) => {
-      queueFiles.push(...files);
-
-      if (queueFiles.length > files.length) return;
+    async (entries: UploadEntry[]) => {
+      if (!entries.length) return;
+      const busy = queue.length > 0;
+      for (const entry of entries) queue.push(entry);
+      if (busy) return;
 
       setVisible(true);
       setDone(false);
+      setProgress(0);
 
       const newReport = await upload(
         dir,
-        queueFiles,
+        queue,
         setProgress,
         setRetry,
         initUpload,
         uploadChunk,
+        makeDirectory,
       );
-      queueFiles.splice(0);
+      queue.length = 0;
 
       setReport((prevReport) => {
         const sumReport = (prevReport || []).concat(newReport);
@@ -73,18 +83,18 @@ const useUpload = (dir: string) => {
         return sumReport;
       });
     },
-    [dir, initUpload, queueFiles, uploadChunk],
+    [dir, initUpload, makeDirectory, queue, uploadChunk],
   );
 
   const handleClose = useCallback(
     async (e: SyntheticEvent, reason?: string) => {
       e.preventDefault();
-      if (!ok && reason === 'backdropClick') return;
+      if (!isDone || (!ok && reason === 'backdropClick')) return;
       await updateStore();
       setVisible(false);
       resetState();
     },
-    [ok, resetState, updateStore],
+    [isDone, ok, resetState, updateStore],
   );
 
   let dialog = null;
@@ -137,24 +147,24 @@ const useUpload = (dir: string) => {
 
 const upload = async (
   dir: string,
-  files: File[],
+  entries: UploadEntry[],
   setProgress: (val: number) => void,
   setRetry: (bool: boolean) => void,
   initUpload: typeof api.uploadInit,
   uploadChunk: typeof api.uploadChunk,
+  makeDirectory: typeof api.uploadMkdir,
 ) => {
-  let sumBytesLen = 0;
+  let countedEntries = 0;
   let sumBytes = 0;
 
   let uploadedBytes = 0;
   const updateProgress = (bytes: number) => {
-    if (sumBytesLen !== files.length) {
-      sumBytes = files.slice(sumBytesLen).reduce((r, file) => (r += file.size), sumBytes);
-      sumBytesLen = files.length;
+    for (; countedEntries < entries.length; countedEntries++) {
+      sumBytes += entries[countedEntries].file?.size ?? 0;
     }
 
     uploadedBytes += bytes;
-    setProgress((100 / sumBytes) * uploadedBytes);
+    if (sumBytes > 0) setProgress((100 * uploadedBytes) / sumBytes);
   };
 
   const sendChunk = async (key: string, chunk: Blob, pos: number) => {
@@ -169,17 +179,16 @@ const upload = async (
     updateProgress(chunk.size);
   };
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (file: File, place: string) => {
     const {key, chunkSize} = await initUpload({
       fileName: file.name,
       size: file.size,
-      place: dir,
+      place,
     });
 
-    const blob = new Blob([file]);
     let pos = 0;
-    while (pos < blob.size) {
-      const chunk = blob.slice(pos, pos + chunkSize);
+    do {
+      const chunk = file.slice(pos, pos + chunkSize);
 
       while (true) {
         try {
@@ -198,22 +207,36 @@ const upload = async (
       setRetry(false);
 
       pos += chunkSize;
-    }
+    } while (pos < file.size);
   };
 
   const results: UploadFileResult[] = [];
+  const failedDirectories = new Set<string>();
 
-  for (let i = 0, file; (file = files[i]); i++) {
-    let error = '';
-    try {
-      await uploadFile(file);
-    } catch (err) {
-      error = (err as Error).message;
+  for (const entry of entries) {
+    const separator = entry.path.lastIndexOf('/');
+    const parent = separator < 0 ? '' : entry.path.slice(0, separator);
+    const place = parent ? `${dir === '/' ? '' : dir}/${parent}` : dir;
+    let error = entry.error ?? '';
+    if (!error) {
+      try {
+        if (failedDirectories.has(parent)) {
+          throw new Error('Could not upload the parent folder.');
+        }
+        if (entry.file) {
+          await uploadFile(entry.file, place);
+        } else {
+          await makeDirectory({place, name: entry.path.slice(separator + 1)});
+        }
+      } catch (err) {
+        error = (err as Error).message;
+      }
     }
+    if (!entry.file && error) failedDirectories.add(entry.path);
 
     results.push({
       ok: !error,
-      filename: file.name,
+      filename: entry.path,
       error,
     });
   }

@@ -14,7 +14,7 @@ const Report: React.FC<ReportProps> = ({report}) => {
       <TableBody>
         {report.map((file) => (
           <TableRow key={file.filename}>
-            <TableCell>
+            <TableCell sx={{overflowWrap: 'anywhere'}}>
               {file.filename}
               {!file.ok ? <Input fullWidth={true} value={file.error} readOnly /> : null}
             </TableCell>

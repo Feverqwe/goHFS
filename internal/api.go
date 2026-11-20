@@ -34,6 +34,7 @@ func HandleApi(router *Router, config *Config, storage *boltstorage.BoltStorage,
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
 	handleUpload(apiRouter, config)
+	handleAgentUpload(apiRouter, config)
 	handleWww(apiRouter, debugUi)
 	handleStorage(apiRouter, storage)
 	handleStore(apiRouter, config, storage)
@@ -83,6 +84,19 @@ func handleStore(router *Router, config *Config, storage *boltstorage.BoltStorag
 }
 
 func handleUpload(router *Router, config *Config) {
+	router.Post("/~/upload/mkdir", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[struct {
+				Place string `json:"place"`
+				Name  string `json:"name"`
+			}](r.Body)
+			if err != nil {
+				return "", err
+			}
+			return "ok", makeUploadDirectory(config, payload.Place, payload.Name)
+		})
+	})
+
 	salt := config.Salt
 	if len(salt) == 0 {
 		salt = strconv.FormatInt(time.Now().Unix(), 10)
@@ -299,6 +313,53 @@ func handleUpload(router *Router, config *Config) {
 			return result, err
 		})
 	})
+}
+
+func makeUploadDirectory(config *Config, place, name string) error {
+	root, relative, err := openWritableUploadTarget(config, place, name)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+
+	err = root.Mkdir(relative, 0700)
+	if errors.Is(err, os.ErrExist) {
+		if info, statErr := root.Lstat(relative); statErr == nil && info.IsDir() {
+			return nil
+		}
+	}
+	return err
+}
+
+var (
+	errInvalidUploadName = errors.New("expected a single file or folder name")
+	errUploadReadOnly    = errors.New("place is not writable")
+)
+
+func openWritableUploadTarget(config *Config, place, name string) (*os.Root, string, error) {
+	if !filepath.IsLocal(name) || path.Base(name) != name || name == "." ||
+		strings.ContainsRune(name, filepath.Separator) || strings.ContainsRune(name, 0) {
+		return nil, "", errInvalidUploadName
+	}
+
+	target := NormalizePath(path.Join(NormalizePath(place), name))
+	if !config.IsWritable(target) {
+		return nil, "", errUploadReadOnly
+	}
+	osPath, err := config.GetPlaceOsPath(target)
+	if err != nil {
+		return nil, "", err
+	}
+	public, _ := config.GetPublibPath(target)
+	if public == "" {
+		public = "."
+	}
+	relative, err := filepath.Rel(public, osPath)
+	if err != nil {
+		return nil, "", err
+	}
+	root, err := os.OpenRoot(public)
+	return root, relative, err
 }
 
 func handleInterfaces(router *Router, config *Config) {

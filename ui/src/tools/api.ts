@@ -68,6 +68,10 @@ export const api = {
     method: 'POST',
     path: '/~/upload/init',
   }),
+  uploadMkdir: action<{place: string; name: string}, string>({
+    method: 'POST',
+    path: '/~/upload/mkdir',
+  }),
   uploadChunk: action<FormData, boolean>({
     method: 'POST',
     path: '/~/upload/chunk',
