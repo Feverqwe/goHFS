@@ -19,26 +19,28 @@ import ActionButton from '../ActionButton/ActionButton';
 
 export interface UploadEntry {
   path: string;
+  isDirectory: boolean;
   file?: File;
   error?: string;
 }
 
-export interface UploadFileResult {
-  ok: boolean;
-  filename: string;
-  error: string;
+interface FolderUploadResult {
+  kind: 'folder';
+  path: string;
+  uploadedFiles: number;
+  errorCount: number;
+  errors: {path: string; message: string}[];
 }
 
-export interface UploadResponse {
-  error?: string;
-  result?: UploadFileResult[];
-}
+export type UploadResult = {kind: 'file'; path: string; error: string} | FolderUploadResult;
+
+const maxFolderErrorDetails = 10;
 
 const useUpload = (dir: string) => {
   const [queue] = useState<UploadEntry[]>([]);
-  const [ok, setOk] = useState(false);
   const [isDone, setDone] = useState(false);
-  const [report, setReport] = useState<UploadFileResult[] | null>(null);
+  const [report, setReport] = useState<UploadResult[]>([]);
+  const ok = report.every((entry) => (entry.kind === 'folder' ? !entry.errorCount : !entry.error));
   const [isRetry, setRetry] = useState(false);
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -48,10 +50,9 @@ const useUpload = (dir: string) => {
   const {mutateAsync: makeDirectory} = useMutation({mutationFn: api.uploadMkdir});
 
   const resetState = useCallback(() => {
-    setReport(null);
+    setReport([]);
     setProgress(0);
     setRetry(false);
-    setOk(false);
   }, []);
 
   const handleUpload = useCallback(
@@ -76,12 +77,8 @@ const useUpload = (dir: string) => {
       );
       queue.length = 0;
 
-      setReport((prevReport) => {
-        const sumReport = (prevReport || []).concat(newReport);
-        setOk(sumReport.every((file) => file.ok));
-        setDone(true);
-        return sumReport;
-      });
+      setReport((prevReport) => prevReport.concat(newReport));
+      setDone(true);
     },
     [dir, initUpload, makeDirectory, queue, uploadChunk],
   );
@@ -123,15 +120,15 @@ const useUpload = (dir: string) => {
           </DialogTitle>
         ) : null}
         <DialogContent>
-          {!isDone ? (
+          {isDone ? (
+            <Report report={report} />
+          ) : (
             <LinearProgress
               color={isRetry ? 'warning' : 'primary'}
               variant="determinate"
               value={progress}
             />
-          ) : report ? (
-            <Report report={report} />
-          ) : null}
+          )}
         </DialogContent>
         {isDone ? (
           <DialogActions>
@@ -210,7 +207,8 @@ const upload = async (
     } while (pos < file.size);
   };
 
-  const results: UploadFileResult[] = [];
+  const results: UploadResult[] = [];
+  const folders = new Map<string, FolderUploadResult>();
   const failedDirectories = new Set<string>();
 
   for (const entry of entries) {
@@ -232,13 +230,28 @@ const upload = async (
         error = (err as Error).message;
       }
     }
-    if (!entry.file && error) failedDirectories.add(entry.path);
+    if (entry.isDirectory && error) failedDirectories.add(entry.path);
 
-    results.push({
-      ok: !error,
-      filename: entry.path,
-      error,
-    });
+    if (!parent && !entry.isDirectory) {
+      results.push({kind: 'file', path: entry.path, error});
+      continue;
+    }
+
+    const folderPath = parent ? entry.path.slice(0, entry.path.indexOf('/')) : entry.path;
+    let folder = folders.get(folderPath);
+    if (!folder) {
+      folder = {kind: 'folder', path: folderPath, uploadedFiles: 0, errorCount: 0, errors: []};
+      folders.set(folderPath, folder);
+      results.push(folder);
+    }
+    if (error) {
+      folder.errorCount++;
+      if (folder.errors.length < maxFolderErrorDetails) {
+        folder.errors.push({path: entry.path, message: error});
+      }
+    } else if (entry.file) {
+      folder.uploadedFiles++;
+    }
   }
 
   return results;

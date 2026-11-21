@@ -15,8 +15,9 @@ const meta = {
   ],
   args: {
     report: [
-      {filename: 'holiday-photo.jpg', ok: true, error: ''},
-      {filename: 'project-notes.txt', ok: true, error: ''},
+      {kind: 'file', path: 'holiday-photo.jpg', error: ''},
+      {kind: 'folder', path: 'Project assets', uploadedFiles: 12_450, errorCount: 0, errors: []},
+      {kind: 'folder', path: 'Empty folder', uploadedFiles: 0, errorCount: 0, errors: []},
     ],
   },
 } satisfies Meta<typeof Report>;
@@ -29,13 +30,18 @@ export const Successful: Story = {};
 export const MixedResults: Story = {
   args: {
     report: [
-      {filename: 'holiday-photo.jpg', ok: true, error: ''},
+      {kind: 'file', path: 'holiday-photo.jpg', error: ''},
       {
-        filename: 'project-backup.zip',
-        ok: false,
-        error: 'The server rejected this file because the destination is read only.',
+        kind: 'folder',
+        path: 'Project assets',
+        uploadedFiles: 127,
+        errorCount: 2,
+        errors: [
+          {path: 'Project assets/Exports/cover.png', message: 'File exists'},
+          {path: 'Project assets/Exports/title.png', message: 'File exists'},
+        ],
       },
-      {filename: 'project-notes.txt', ok: true, error: ''},
+      {kind: 'file', path: 'project-notes.txt', error: 'File exists'},
     ],
   },
 };
@@ -44,10 +50,16 @@ export const LongContent: Story = {
   args: {
     report: [
       {
-        filename: 'Project assets/Exports/quarterly-archive-with-a-very-long-filename.tar.gz',
-        ok: false,
-        error:
-          'Upload failed after several attempts because the remote destination stopped accepting data.',
+        kind: 'folder',
+        path: 'Project assets',
+        uploadedFiles: 0,
+        errorCount: 25,
+        errors: [
+          {
+            path: 'Project assets/Exports/quarterly-archive-with-a-very-long-filename.tar.gz',
+            message: 'File exists',
+          },
+        ],
       },
     ],
   },

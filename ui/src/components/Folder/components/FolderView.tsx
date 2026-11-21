@@ -54,10 +54,10 @@ function chooseUpload(folder: boolean, onUpload: (entries: UploadEntry[]) => voi
         directory = directory ? directory + '/' + part : part;
         if (!directories.has(directory)) {
           directories.add(directory);
-          entries.push({path: directory});
+          entries.push({path: directory, isDirectory: true});
         }
       }
-      entries.push({path, file});
+      entries.push({path, file, isDirectory: false});
     }
     onUpload(entries);
   });

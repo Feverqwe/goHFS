@@ -26,7 +26,7 @@ interface DropZoneProps {
 
 async function readEntry(entry: FileSystemEntry, prefix: string, entries: UploadEntry[]) {
   const path = prefix + entry.name;
-  const result: UploadEntry = {path};
+  const result: UploadEntry = {path, isDirectory: entry.isDirectory};
   entries.push(result);
   try {
     if (entry.isFile) {
@@ -44,14 +44,14 @@ async function readEntry(entry: FileSystemEntry, prefix: string, entries: Upload
       }
     }
   } catch (error) {
-    result.error = `Could not read ${path}. ${(error as Error).message}`;
+    result.error = `Could not read ${entry.isDirectory ? 'the folder' : 'the file'}. ${(error as Error).message}`;
   }
 }
 
 async function readDrop(transfer: DataTransfer): Promise<UploadEntry[]> {
   const items = Array.from(transfer.items).filter((item) => item.kind === 'file');
   if (!items.length) {
-    return Array.from(transfer.files, (file) => ({path: file.name, file}));
+    return Array.from(transfer.files, (file) => ({path: file.name, file, isDirectory: false}));
   }
 
   // Access to the drag data ends when the drop event handler returns.
@@ -59,7 +59,7 @@ async function readDrop(transfer: DataTransfer): Promise<UploadEntry[]> {
   const entries: UploadEntry[] = [];
   for (const source of sources) {
     if (source instanceof File) {
-      entries.push({path: source.name, file: source});
+      entries.push({path: source.name, file: source, isDirectory: false});
     } else if (source) {
       await readEntry(source, '', entries);
     }
