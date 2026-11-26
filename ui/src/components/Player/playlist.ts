@@ -53,6 +53,19 @@ export function getPlaylistUrl(place: string, pattern: string | null): string {
   return `/~/www/player.html?${new URLSearchParams({playlist: source})}`;
 }
 
+export function readPlaylistTrack(): string | undefined {
+  return new URLSearchParams(location.search).get('track') ?? undefined;
+}
+
+export function updatePlaylistTrackUrl(track: string): void {
+  const url = new URL(location.href);
+  if (url.searchParams.get('track') === track && !url.searchParams.has('t')) return;
+
+  url.searchParams.set('track', track);
+  url.searchParams.delete('t');
+  history.replaceState(history.state, '', url);
+}
+
 export function parsePlaylistSource(source: string) {
   if (!source.startsWith('/')) return undefined;
 

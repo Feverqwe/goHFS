@@ -25,6 +25,8 @@ const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base
 interface PlaylistPlayerProps {
   playlist: readonly PlaylistEntry[];
   initialPositions?: Record<string, number>;
+  initialTrack?: string;
+  onTrackChange?: (url: string) => void;
   initialSettings?: PlaylistSettings;
   onSettingsChange?: (settings: PlaylistSettings) => void;
   autoplay?: boolean;
@@ -61,6 +63,8 @@ function findAdjacent(
 export default function PlaylistPlayer({
   playlist,
   initialPositions = {},
+  initialTrack,
+  onTrackChange,
   initialSettings = defaultPlaylistSettings,
   onSettingsChange,
   autoplay = true,
@@ -80,20 +84,24 @@ export default function PlaylistPlayer({
     const sign = sort === 'name' ? 1 : -1;
     return [...playlist].sort((a, b) => sign * collator.compare(a.name, b.name));
   }, [playlist, sort]);
-  const [playback, setPlayback] = useState(() => ({
-    url: sorted[0]?.url,
-    start: resume ? (initialPositions[sorted[0]?.url] ?? 0) : 0,
-    revision: 0,
-  }));
-  const [shuffled, setShuffled] = useState(() =>
-    shuffle && sorted[0] ? shuffleFrom(playlist, sorted[0]) : undefined,
-  );
+  const [playback, setPlayback] = useState(() => {
+    const linkedEntry = playlist.find((entry) => entry.url === initialTrack);
+    const url = (linkedEntry ?? sorted[0])?.url;
+    const start = resume ? (initialPositions[url] ?? 0) : 0;
+    return {url, start, revision: 0};
+  });
+  const [shuffled, setShuffled] = useState(() => {
+    const entry = playlist.find(({url}) => url === playback.url);
+    return shuffle && entry ? shuffleFrom(playlist, entry) : undefined;
+  });
   const togglePlaybackRef = useRef<(() => void) | null>(null);
   const panelButtonRef = useRef<HTMLButtonElement>(null);
   const activeRowRef = useRef<HTMLButtonElement>(null);
 
   const order = shuffled ?? sorted;
-  const current = playlist.find((entry) => entry.url === playback.url) ?? playlist[0];
+  const current = playlist.find((entry) => entry.url === playback.url) ?? sorted[0];
+  const currentUrl = current?.url;
+  const startPosition = playback.url === currentUrl ? playback.start : 0;
   const index = order.findIndex((entry) => entry.url === current?.url);
   const previous = findAdjacent(order, index, -1, repeat === 'all', failed);
   const next = findAdjacent(order, index, 1, repeat === 'all', failed);
@@ -106,6 +114,10 @@ export default function PlaylistPlayer({
   useEffect(() => {
     if (panelOpen && !term) activeRowRef.current?.scrollIntoView({block: 'nearest'});
   }, [current?.url, panelOpen, sorted, term]);
+
+  useEffect(() => {
+    if (currentUrl) onTrackChange?.(currentUrl);
+  }, [currentUrl, onTrackChange]);
 
   if (!current) {
     return (
@@ -127,11 +139,8 @@ export default function PlaylistPlayer({
   const play = (entry: PlaylistEntry, restart = false) => {
     if (entry.url === current.url && !restart) return;
     setPlayingUrl(undefined);
-    setPlayback(({revision}) => ({
-      url: entry.url,
-      start: resume && !restart ? (positions[entry.url] ?? 0) : 0,
-      revision: revision + 1,
-    }));
+    const start = resume && !restart ? (positions[entry.url] ?? 0) : 0;
+    setPlayback(({revision}) => ({url: entry.url, start, revision: revision + 1}));
     if (
       shuffled &&
       entry.url !== previous?.url &&
@@ -197,7 +206,7 @@ export default function PlaylistPlayer({
         <Video2
           key={`${current.url}-${playback.revision}`}
           url={current.url}
-          metadata={playback.url === current.url ? playback.start : initialPositions[current.url]}
+          metadata={startPosition}
           mediaTitle={current.name}
           autoplay={autoplay || playback.revision > 0}
           persistPosition={persistPosition}

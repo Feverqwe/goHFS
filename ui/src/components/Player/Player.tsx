@@ -51,6 +51,8 @@ const Player = React.memo(() => {
       if (playlistSource !== null) {
         const page = new URL(location.href);
         page.searchParams.delete('playlist');
+        page.searchParams.delete('track');
+        page.searchParams.delete('t');
         page.searchParams.set('url', nextUrl);
         history.replaceState(null, '', page);
         setPlaylistSource(null);

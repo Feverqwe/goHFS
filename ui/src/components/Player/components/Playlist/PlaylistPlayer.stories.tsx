@@ -68,3 +68,5 @@ export const RestoredControls: Story = {
     initialPositions: {[demoUrl('night')]: 7},
   },
 };
+
+export const LinkedTrack: Story = {args: {initialTrack: demoUrl('02')}};

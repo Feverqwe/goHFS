@@ -1,9 +1,15 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Alert, Box, LinearProgress} from '@mui/material';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
 import {queryKeys} from '../../../../tools/queryClient';
-import {parsePlaylistSettings, type PlaylistSettings, type PlaylistSnapshot} from '../../playlist';
+import {
+  parsePlaylistSettings,
+  readPlaylistTrack,
+  updatePlaylistTrackUrl,
+  type PlaylistSettings,
+  type PlaylistSnapshot,
+} from '../../playlist';
 import {getSidV1, getSidV2} from '../../utils';
 import PlaylistPlayer from './PlaylistPlayer';
 
@@ -12,6 +18,7 @@ export default function LoadPlaylistPlayer({
 }: {
   playlist: PlaylistSnapshot;
 }) {
+  const [initialTrack] = useState(readPlaylistTrack);
   const settingsKey = key === undefined ? undefined : `playlist-settings-${key}`;
   const keys = new Set(entries.flatMap(({url}) => [getSidV2(url), getSidV1(url)]));
   if (settingsKey) keys.add(settingsKey);
@@ -68,6 +75,8 @@ export default function LoadPlaylistPlayer({
           key={key}
           playlist={entries}
           initialPositions={initialPositions}
+          initialTrack={initialTrack}
+          onTrackChange={updatePlaylistTrackUrl}
           initialSettings={parsePlaylistSettings(settingsKey ? data?.[settingsKey] : undefined)}
           onSettingsChange={
             settingsKey ? (settings) => saveSettings({[settingsKey]: settings}) : undefined
