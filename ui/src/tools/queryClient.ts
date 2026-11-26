@@ -17,6 +17,8 @@ export const queryKeys = {
   diskUsage: (place: string) => ['diskUsage', place] as const,
   dirSize: (place: string) => ['dirSize', place] as const,
   storage: (keys: string[]) => ['storage', ...keys] as const,
+  playlistData: (keys?: string[]) =>
+    keys ? (['playlistData', ...keys] as const) : (['playlistData'] as const),
   previews: ['preview'] as const,
   preview: (place: string) => ['preview', place] as const,
 };

@@ -1,11 +1,22 @@
-import React, {FC, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import React, {
+  FC,
+  type Ref,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Hls from 'hls.js';
 import videojs from 'video.js';
 import type LiveTracker from 'video.js/dist/types/live-tracker';
 import 'video.js/dist/video-js.css';
-import {useMutation} from '@tanstack/react-query';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
 import {getProgressKey} from '../../../../tools/common';
+import {queryKeys} from '../../../../tools/queryClient';
 import {TITLE} from '../../constants';
 import {VideoMetadata} from '../../types';
 import {getSidV2} from '../../utils';
@@ -24,6 +35,7 @@ import {
   VOLUME_STEP,
 } from './constants';
 import {addNotice} from './Notice';
+import {addPlaylistControls, type PlaylistControlOptions} from './PlaylistControls';
 import {addSettingsButton} from './SettingsButton';
 import SettingsMenu from './SettingsMenu';
 import PlayerContainer from './styles';
@@ -36,6 +48,15 @@ interface Video2Props {
   poster?: string;
   url: string;
   metadata?: VideoMetadata;
+  mediaTitle?: string;
+  persistPosition?: boolean;
+  onPositionChange?: (position: number) => void;
+  onDurationChange?: (duration: number) => void;
+  onPlayingChange?: (playing: boolean) => void;
+  onPlaybackError?: () => void;
+  ref?: Ref<() => void>;
+  onEnded?: () => void;
+  playlistControls?: PlaylistControlOptions;
 }
 
 type TapZone = 'left' | 'center' | 'right';
@@ -59,14 +80,61 @@ function blurFocusedPlayerControlOnEscape(event: KeyboardEvent): boolean {
   return true;
 }
 
-const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, url, metadata}) => {
+const Video2: FC<Video2Props> = ({
+  autoplay = true,
+  loadSource = true,
+  poster,
+  url,
+  mediaTitle,
+  metadata,
+  persistPosition = true,
+  onPositionChange,
+  onDurationChange,
+  onPlayingChange,
+  onPlaybackError,
+  ref,
+  onEnded,
+  playlistControls,
+}) => {
   const toggleUrlDialog = useContext(UrlDialogCtx);
   const containerRef = useRef<HTMLDivElement>(null);
+  const playbackToggle = useRef<(() => void) | null>(null);
+  useImperativeHandle(ref, () => () => playbackToggle.current?.(), []);
   const [isPlaying, setPlaying] = useState(false);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLElement | null>(null);
   const [settingsControls, setSettingsControls] = useState<SettingsControls>();
-  const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
-  const title = useMemo(() => getMediaTitle(url), [url]);
+  const queryClient = useQueryClient();
+  const {mutateAsync: setStorage} = useMutation({
+    mutationFn: api.storageSet,
+    scope: {id: 'playback-position'},
+    onSuccess: () =>
+      queryClient.invalidateQueries({queryKey: queryKeys.playlistData(), refetchType: 'none'}),
+  });
+  const isPlaylist = Boolean(onPositionChange);
+  const hasPlaylistControls = Boolean(playlistControls);
+  const playlistOptionsRef = useRef(playlistControls);
+  const playlistControlsRef = useRef<ReturnType<typeof addPlaylistControls>>(undefined);
+  useLayoutEffect(() => {
+    playlistOptionsRef.current = playlistControls;
+    playlistControlsRef.current?.sync();
+  }, [playlistControls]);
+  const playlistCallbacks = useRef({
+    onPositionChange,
+    onDurationChange,
+    onPlayingChange,
+    onPlaybackError,
+    onEnded,
+  });
+  useLayoutEffect(() => {
+    playlistCallbacks.current = {
+      onPositionChange,
+      onDurationChange,
+      onPlayingChange,
+      onPlaybackError,
+      onEnded,
+    };
+  }, [onPositionChange, onDurationChange, onPlayingChange, onPlaybackError, onEnded]);
+  const title = useMemo(() => mediaTitle ?? getMediaTitle(url), [mediaTitle, url]);
 
   useEffect(() => {
     document.title = `[${isPlaying ? '>' : '||'}] ${title}`;
@@ -105,6 +173,7 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
         timeDivider: true,
       },
       controls: true,
+      errorDisplay: !hasPlaylistControls,
       playbackRates: PLAYBACK_RATES,
       poster,
       preload: 'auto',
@@ -142,12 +211,37 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
       player.userActive(true);
       setSettingsAnchorEl(anchor);
     });
+    const initialPlaylistOptions = playlistOptionsRef.current;
+    if (initialPlaylistOptions) {
+      playlistControlsRef.current = addPlaylistControls(
+        player,
+        () => playlistOptionsRef.current ?? initialPlaylistOptions,
+      );
+      const errorElement = document.createElement('div');
+      errorElement.className = 'vjs-playlist-error';
+      errorElement.setAttribute('role', 'status');
+      playerElement.appendChild(errorElement);
+      player.one('error', () => {
+        errorElement.textContent = player.error()?.message ?? '';
+        playlistCallbacks.current.onPlaybackError?.();
+      });
+      hls?.on(Hls.Events.ERROR, (_, error) => {
+        if (error.fatal && !player.error()) {
+          player.pause();
+          player.error('This stream could not be played.');
+        }
+      });
+    }
     setSettingsControls({container: playerElement, player, trackController});
     const sid = getSidV2(url);
     const progressKey = getProgressKey(decodeURIComponent(sid));
     let lastSyncAt = 0;
     let activelyPlaying = false;
     let hasStarted = false;
+    let hasPlayed = false;
+    let hasEnded = false;
+    let lastPosition: number | undefined;
+    let lastSavedTime: number | undefined;
     let touchStart: {x: number; y: number; at: number} | undefined;
     let previousTap: {zone: TapZone; at: number} | undefined;
 
@@ -263,16 +357,36 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
 
       previousTap = {zone, at: now};
     };
+    const togglePlayback = () => {
+      if (player.paused()) {
+        player.play()?.catch((err: unknown) => console.error('play error: %O', err));
+      } else {
+        player.pause();
+      }
+    };
+    playbackToggle.current = togglePlayback;
+
+    const updatePlaying = (playing: boolean) => {
+      setPlaying(playing);
+      playlistCallbacks.current.onPlayingChange?.(playing);
+    };
     const continuePlaying = () => {
       if (hasStarted) return;
       hasStarted = true;
-      if ((metadata ?? 0) > 0) player.currentTime(metadata);
+      const duration = getDuration();
+      if (metadata && metadata > 0 && (!isPlaylist || !isFinite(duration) || metadata < duration)) {
+        player.currentTime(metadata);
+      }
       if (!autoplay) return;
       player.play()?.catch((err: unknown) => {
         console.error('auto play error: %O', err);
       });
     };
+    const reportDuration = () => {
+      playlistCallbacks.current.onDurationChange?.(getDuration());
+    };
     const onLoadedMetadata = () => {
+      reportDuration();
       if (isBrokenAndroidEdge(navigator.userAgent) && getDuration() <= 0) {
         player.one('durationchange', continuePlaying);
       } else {
@@ -281,30 +395,65 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
     };
     const onPlay = () => {
       activelyPlaying = true;
+      hasPlayed = true;
+      hasEnded = false;
       lastSyncAt = Date.now();
-      setPlaying(true);
+      updatePlaying(true);
+    };
+    const savePosition = (currentTime: number, progress?: number) => {
+      if (
+        !persistPosition ||
+        !isFinite(currentTime) ||
+        (lastSavedTime === currentTime && progress === undefined)
+      )
+        return;
+      lastSavedTime = currentTime;
+      const percent = progress ?? Math.trunc((100 / getDuration()) * currentTime * 1000) / 1000;
+      setStorage({
+        [sid]: currentTime,
+        [progressKey]: isFinite(percent) ? percent : undefined,
+      }).catch((err: unknown) => {
+        if (lastSavedTime === currentTime) lastSavedTime = undefined;
+        console.error('Storage.set error: %O', err);
+      });
+    };
+    const reportPosition = () => {
+      if (!isPlaylist || !hasPlayed || hasEnded || player.seeking() || player.ended()) return;
+      const position = Math.floor(getCurrentTime());
+      if (position === lastPosition) return;
+      lastPosition = position;
+      playlistCallbacks.current.onPositionChange?.(position);
+    };
+    const flushPosition = () => {
+      if (isPlaylist && hasPlayed && !hasEnded && !player.seeking() && !player.ended()) {
+        reportPosition();
+        savePosition(getCurrentTime());
+      }
     };
     const onPause = () => {
       activelyPlaying = false;
-      setPlaying(false);
+      updatePlaying(false);
+      flushPosition();
     };
-    const onTimeUpdate = async () => {
+    const onPlaylistEnd = () => {
+      hasEnded = true;
+      lastPosition = 0;
+      playlistCallbacks.current.onPositionChange?.(0);
+      savePosition(0, 100);
+      playlistCallbacks.current.onEnded?.();
+    };
+    const onTimeUpdate = () => {
       normalizePlaybackRateAtLiveEdge();
+      reportPosition();
 
       const now = Date.now();
       if (!lastSyncAt) lastSyncAt = now;
-      if (lastSyncAt >= now - SAVE_INTERVAL || player.seeking() || !activelyPlaying) return;
+      if (lastSyncAt >= now - SAVE_INTERVAL || player.seeking() || !activelyPlaying || hasEnded) {
+        return;
+      }
 
       lastSyncAt = now;
-      const currentTime = getCurrentTime();
-      try {
-        await setStorage({
-          [sid]: currentTime,
-          [progressKey]: Math.trunc((100 / getDuration()) * currentTime * 1000) / 1000 || undefined,
-        });
-      } catch (err) {
-        console.error('Storage.set error: %O', err);
-      }
+      savePosition(getCurrentTime());
     };
     const onKeydown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -337,11 +486,7 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
         switch (code) {
           case 'Space':
             if (!event.repeat) {
-              if (player.paused()) {
-                player.play()?.catch((err: unknown) => console.error('play error: %O', err));
-              } else {
-                player.pause();
-              }
+              togglePlayback();
               handled = true;
             }
             break;
@@ -396,11 +541,15 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
     };
 
     player.on('loadedmetadata', onLoadedMetadata);
+    player.on('durationchange', reportDuration);
     player.on('play', onPlay);
     player.on('pause', onPause);
+    if (isPlaylist) player.on('ended', onPlaylistEnd);
     player.on('timeupdate', onTimeUpdate);
     player.on('seeked', () => {
       lastSyncAt = Date.now();
+      if (activelyPlaying) reportPosition();
+      else flushPosition();
     });
     if (DEBUG_EVENTS) {
       player.on([...DEBUG_EVENT_TYPES], (event: Event) => {
@@ -432,6 +581,10 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
     }
 
     return () => {
+      flushPosition();
+      playbackToggle.current = null;
+      playlistControlsRef.current?.dispose();
+      playlistControlsRef.current = undefined;
       setSettingsAnchorEl(null);
       setSettingsControls(undefined);
       document.removeEventListener('keydown', onKeydown, true);
@@ -452,7 +605,19 @@ const Video2: FC<Video2Props> = ({autoplay = true, loadSource = true, poster, ur
       player.dispose();
       container.replaceChildren();
     };
-  }, [autoplay, loadSource, metadata, poster, setStorage, title, toggleUrlDialog, url]);
+  }, [
+    autoplay,
+    hasPlaylistControls,
+    isPlaylist,
+    loadSource,
+    metadata,
+    persistPosition,
+    poster,
+    setStorage,
+    title,
+    toggleUrlDialog,
+    url,
+  ]);
 
   return (
     <>

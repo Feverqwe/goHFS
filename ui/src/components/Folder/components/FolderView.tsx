@@ -354,7 +354,8 @@ const FolderView: FC<FolderViewProps> = ({
         <FolderMenu
           anchorEl={menuAnchorEl}
           onClose={handleCloseMenu}
-          sortedFiles={activeSearch ? store.files : files}
+          sortedFiles={files}
+          activeSearch={activeSearch}
           onAddressesClick={handleAddressesBtn}
           onMkdirClick={handleMkdirDialogBtn}
           onUploadFolderClick={() => chooseUpload(true, handleUpload)}

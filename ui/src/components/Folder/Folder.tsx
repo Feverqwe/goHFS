@@ -4,7 +4,7 @@ import {useMutation, useQuery} from '@tanstack/react-query';
 import SelectProvider from './components/SelectProvider/SelectProvider';
 import FolderView from './components/FolderView';
 import {DirSort, ViewMode} from '../../types';
-import {prepDirSort, shuffle} from './utils';
+import {prepDirSort, sortDirectoryFiles} from './utils';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import SortDialog from './components/SortDialog/SortDialog';
 import {api} from '../../tools/api';
@@ -129,24 +129,7 @@ const Folder: FC = () => {
     setShowSortDialog(false);
   }, []);
 
-  const sortedFiles = useMemo(() => {
-    const {key, revers: d} = sortKey;
-    const field = key;
-    const [r1, r2] = d ? [-1, 1] : [1, -1];
-    const result = files.slice(0);
-    if (field === 'random') {
-      shuffle(result);
-    } else {
-      const sortableField = field as 'ctime' | 'name' | 'size';
-      result.sort(({[sortableField]: a}, {[sortableField]: b}) => {
-        return a === b ? 0 : a > b ? r1 : r2;
-      });
-    }
-    result.sort(({isDir: a}, {isDir: b}) => {
-      return a === b ? 0 : a ? -1 : 1;
-    });
-    return result;
-  }, [files, sortKey]);
+  const sortedFiles = useMemo(() => sortDirectoryFiles(files, sortKey), [files, sortKey]);
 
   return (
     <SelectProvider key={activeSearch ?? 'directory'} files={sortedFiles}>

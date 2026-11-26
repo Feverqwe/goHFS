@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {FC, useContext, useMemo} from 'react';
-import {ListItemIcon, ListItemText, Menu, MenuItem} from '@mui/material';
+import {Alert, ListItemIcon, ListItemText, Menu, MenuItem, Snackbar} from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import CachedIcon from '@mui/icons-material/Cached';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -21,11 +22,20 @@ import {FileInfo} from '../../../../types';
 import {api} from '../../../../tools/api';
 import {RootStoreUpdateCtx} from '../../../RootStore/RootStoreUpdateCtx';
 import {queryKeys} from '../../../../tools/queryClient';
+import {
+  directoryPlaylist,
+  getPlaylistKey,
+  getPlaylistUrl,
+  playablePlaylist,
+  PLAYLIST_STORAGE_KEY,
+  type PlaylistSnapshot,
+} from '../../../Player/playlist';
 
 interface FolderMenuProps {
   anchorEl: Element;
   onClose: () => void;
   sortedFiles: FileInfo[];
+  activeSearch: string | null;
   onAddressesClick: () => void;
   onMkdirClick: () => void;
   onUploadFolderClick: () => void;
@@ -36,6 +46,7 @@ interface FolderMenuProps {
 const FolderMenu: FC<FolderMenuProps> = ({
   anchorEl,
   sortedFiles,
+  activeSearch,
   onMkdirClick,
   onUploadFolderClick,
   onAddressesClick,
@@ -46,6 +57,12 @@ const FolderMenu: FC<FolderMenuProps> = ({
   const store = useContext(RootStoreCtx);
   const updateStore = useContext(RootStoreUpdateCtx);
   const queryClient = useQueryClient();
+  const [playlistError, setPlaylistError] = React.useState(false);
+  const playlist = useMemo(
+    () => directoryPlaylist(sortedFiles, store.dir),
+    [sortedFiles, store.dir],
+  );
+  const playableFiles = useMemo(() => playablePlaylist(playlist), [playlist]);
   const {mutateAsync: reloadConfig} = useMutation({mutationFn: api.reloadConfig});
   const {mutateAsync: setStorage} = useMutation({mutationFn: api.storageSet});
   const {mutateAsync: cleanupPreviews} = useMutation({
@@ -80,19 +97,41 @@ const FolderMenu: FC<FolderMenuProps> = ({
         },
       },
       {
+        id: 'openPlaylist',
+        title: 'Play playlist',
+        icon: <PlaylistPlayIcon />,
+        disabled: playableFiles.length === 0,
+        onClick: () => {
+          const playerWindow = window.open('about:blank', '_blank');
+          if (!playerWindow) {
+            setPlaylistError(true);
+            return;
+          }
+
+          try {
+            const snapshot: PlaylistSnapshot = {
+              key: getPlaylistKey(store.dir, activeSearch),
+              entries: playableFiles,
+            };
+            playerWindow.sessionStorage.setItem(PLAYLIST_STORAGE_KEY, JSON.stringify(snapshot));
+          } catch {
+            // The player can rebuild the list from the source URL.
+          }
+
+          playerWindow.opener = null;
+          playerWindow.location.replace(getPlaylistUrl(store.dir, activeSearch));
+          onClose();
+        },
+      },
+      {
         id: 'playlist',
         title: 'Get playlist',
-        icon: <PlaylistPlayIcon />,
+        icon: <DownloadIcon />,
         onClick: () => {
-          const lines = [];
-          lines.push('#EXTM3U');
-          sortedFiles.forEach((file) => {
-            if (!file.isDir) {
-              const url = new URL(Path.join(store.dir, file.name), location.href).toString();
-              const {name} = file;
-              lines.push(`#EXTINF:-1,${name}`);
-              lines.push(url);
-            }
+          const lines = ['#EXTM3U'];
+          playlist.forEach(({name, url}) => {
+            lines.push(`#EXTINF:-1,${name.replace(/[\r\n]/g, ' ')}`);
+            lines.push(new URL(url, location.href).href);
           });
 
           const dirname = store.isRoot ? 'root' : Path.basename(store.dir);
@@ -194,10 +233,12 @@ const FolderMenu: FC<FolderMenuProps> = ({
       store.showHidden,
       store.isRoot,
       store.dir,
+      activeSearch,
       onMkdirClick,
       onClose,
       updateStore,
-      sortedFiles,
+      playlist,
+      playableFiles,
       onDirSizeClick,
       onDiskUsageClick,
       onAddressesClick,
@@ -209,43 +250,54 @@ const FolderMenu: FC<FolderMenuProps> = ({
   );
 
   return (
-    <Menu anchorEl={anchorEl} open onClose={onClose}>
-      {store.isWritable && (
-        <MenuItem
-          onClick={() => {
-            onClose();
-            onUploadFolderClick();
-          }}
-        >
-          <ListItemIcon>
-            <DriveFolderUploadIcon />
-          </ListItemIcon>
-          <ListItemText>Upload folder</ListItemText>
-        </MenuItem>
-      )}
-      {store.isWritable && (
-        <MenuItem
-          component="a"
-          href={`/~/agent.md?${new URLSearchParams({place: store.dir})}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={onClose}
-        >
-          <ListItemIcon>
-            <DescriptionIcon />
-          </ListItemIcon>
-          <ListItemText>Agent upload instructions</ListItemText>
-        </MenuItem>
-      )}
-      {menu.map(({id, title, icon, onClick}) => {
-        return (
-          <MenuItem key={id} onClick={onClick}>
-            {icon && <ListItemIcon>{icon}</ListItemIcon>}
-            <ListItemText>{title}</ListItemText>
+    <>
+      <Menu anchorEl={anchorEl} open onClose={onClose}>
+        {store.isWritable && (
+          <MenuItem
+            onClick={() => {
+              onClose();
+              onUploadFolderClick();
+            }}
+          >
+            <ListItemIcon>
+              <DriveFolderUploadIcon />
+            </ListItemIcon>
+            <ListItemText>Upload folder</ListItemText>
           </MenuItem>
-        );
-      })}
-    </Menu>
+        )}
+        {store.isWritable && (
+          <MenuItem
+            component="a"
+            href={`/~/agent.md?${new URLSearchParams({place: store.dir})}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+          >
+            <ListItemIcon>
+              <DescriptionIcon />
+            </ListItemIcon>
+            <ListItemText>Agent upload instructions</ListItemText>
+          </MenuItem>
+        )}
+        {menu.map(({id, title, icon, onClick, disabled}) => {
+          return (
+            <MenuItem key={id} onClick={onClick} disabled={disabled}>
+              {icon && <ListItemIcon>{icon}</ListItemIcon>}
+              <ListItemText>{title}</ListItemText>
+            </MenuItem>
+          );
+        })}
+      </Menu>
+      <Snackbar
+        open={playlistError}
+        onClose={() => setPlaylistError(false)}
+        autoHideDuration={5000}
+      >
+        <Alert severity="error" onClose={() => setPlaylistError(false)}>
+          Could not open the playlist in a new tab.
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

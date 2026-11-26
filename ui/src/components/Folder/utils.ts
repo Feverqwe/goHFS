@@ -1,4 +1,4 @@
-import {DirSort} from '../../types';
+import {DirSort, FileInfo} from '../../types';
 
 export function getOption<T>(key: string, defaultValue: T) {
   let value: T | null = null;
@@ -44,6 +44,21 @@ export function shuffle<T>(array: T[]) {
     [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
   }
   return array;
+}
+
+export function sortDirectoryFiles(files: FileInfo[], {key, revers}: DirSort): FileInfo[] {
+  const result = [...files];
+  if (key === 'random') {
+    shuffle(result);
+  } else {
+    const field = key as 'ctime' | 'name' | 'size';
+    const direction = revers ? -1 : 1;
+    result.sort(({[field]: a}, {[field]: b}) => {
+      if (a === b) return 0;
+      return a > b ? direction : -direction;
+    });
+  }
+  return result.sort((a, b) => Number(b.isDir) - Number(a.isDir));
 }
 
 export function isIOS() {

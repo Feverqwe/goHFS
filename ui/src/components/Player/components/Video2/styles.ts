@@ -141,6 +141,57 @@ const PlayerContainer = styled('div')(({theme}) => ({
     lineHeight: CONTROL_TARGET_SIZE,
   },
 
+  '.video-js.vjs-has-playlist:not(.vjs-controls-disabled, .vjs-using-native-controls) .vjs-control-bar':
+    {
+      display: 'flex',
+    },
+
+  '.video-js.vjs-has-playlist.vjs-error:not(.vjs-controls-disabled, .vjs-using-native-controls) .vjs-control-bar':
+    {
+      display: 'flex !important',
+    },
+
+  '.video-js.vjs-has-playlist .vjs-control-bar:focus-within': {
+    opacity: 1,
+    pointerEvents: 'auto',
+  },
+
+  '.video-js .vjs-playlist-control': {
+    flex: 'none',
+    cursor: 'pointer',
+    '&:disabled': {
+      cursor: 'default',
+      opacity: 0.4,
+    },
+  },
+
+  '.video-js .vjs-playlist-toggle[aria-expanded=true]': {
+    backgroundColor: alpha(theme.palette.common.white, 0.16),
+    borderRadius: 6,
+  },
+
+  '.video-js.vjs-has-playlist:is(.vjs-layout-tiny, .vjs-layout-x-small, .vjs-layout-small) .vjs-control-bar .vjs-button':
+    {
+      width: 'min(40px, 10%)',
+      minWidth: 0,
+      marginInline: 1,
+    },
+
+  '.video-js.vjs-has-playlist:is(.vjs-layout-tiny, .vjs-layout-x-small, .vjs-layout-small) .vjs-volume-panel .vjs-button':
+    {
+      width: '100%',
+    },
+
+  '.video-js .vjs-playlist-error': {
+    position: 'absolute',
+    top: '50%',
+    insetInline: '8%',
+    transform: 'translateY(-50%)',
+    textAlign: 'center',
+    fontSize: '1.2em',
+    pointerEvents: 'none',
+  },
+
   '.video-js .vjs-settings-button': {
     cursor: 'pointer',
     flex: 'none',

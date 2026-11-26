@@ -9,6 +9,7 @@ import {getParamsFromUrl} from './utils';
 import FetchMetadata from './components/FetchMetadata/FetchMetadata';
 import {VideoMetadata} from './types';
 import Video2 from './components/Video2/Video2';
+import PlaylistFromSource from './components/Playlist/PlaylistFromSource';
 
 const RootStyles = (theme: Theme) => ({
   html: {
@@ -31,7 +32,10 @@ const RootStyles = (theme: Theme) => ({
 
 const Player = React.memo(() => {
   const {url} = getParamsFromUrl();
-  const [isShowDialog, setShowDialog] = React.useState(!url);
+  const [playlistSource, setPlaylistSource] = useState(() =>
+    new URLSearchParams(location.search).get('playlist'),
+  );
+  const [isShowDialog, setShowDialog] = React.useState(!url && playlistSource === null);
   const [, render] = useState({});
 
   const toggleDialog = React.useCallback(() => {
@@ -42,15 +46,27 @@ const Player = React.memo(() => {
     setShowDialog(false);
   }, []);
 
-  const handleChangeUrl = React.useCallback((url: string) => {
-    changeUrlParams({url});
-    render({});
-  }, []);
+  const handleChangeUrl = React.useCallback(
+    (nextUrl: string) => {
+      if (playlistSource !== null) {
+        const page = new URL(location.href);
+        page.searchParams.delete('playlist');
+        page.searchParams.set('url', nextUrl);
+        history.replaceState(null, '', page);
+        setPlaylistSource(null);
+        return;
+      }
+      changeUrlParams({url: nextUrl});
+      render({});
+    },
+    [playlistSource],
+  );
 
   return (
     <UrlDialogCtx.Provider value={toggleDialog}>
       <GlobalStyles styles={RootStyles} />
-      {url ? (
+      {playlistSource !== null && <PlaylistFromSource source={playlistSource} />}
+      {playlistSource === null && url ? (
         <FetchMetadata url={url}>
           {(metadata) => <Video2 metadata={metadata as VideoMetadata} url={url} />}
         </FetchMetadata>
