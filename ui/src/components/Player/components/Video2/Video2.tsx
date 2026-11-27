@@ -467,10 +467,16 @@ const Video2: FC<Video2Props> = ({
       }
 
       const {code} = event;
+      const isSeekKey = code === 'ArrowLeft' || code === 'ArrowRight';
       const hasModifier = event.ctrlKey || event.metaKey || event.shiftKey;
       let handled = false;
 
-      if (hasModifier) {
+      if (isSeekKey && !event.metaKey && !event.shiftKey) {
+        const direction = code === 'ArrowLeft' ? -1 : 1;
+        const offset = event.altKey || event.ctrlKey ? SHORT_SKIP : SKIP;
+        seekBy(direction * offset);
+        handled = true;
+      } else if (hasModifier) {
         const currentRate = player.playbackRate() ?? 1;
         if (code === 'Period') {
           setPlaybackRate(Math.min(3, currentRate + 0.25));
@@ -490,14 +496,6 @@ const Video2: FC<Video2Props> = ({
               handled = true;
             }
             break;
-          case 'ArrowLeft':
-          case 'ArrowRight': {
-            const direction = code === 'ArrowLeft' ? -1 : 1;
-            const offset = event.altKey ? SHORT_SKIP : SKIP;
-            seekBy(direction * offset);
-            handled = true;
-            break;
-          }
           case 'ArrowUp':
           case 'ArrowDown':
             adjustVolume(code === 'ArrowUp' ? 1 : -1);
