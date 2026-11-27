@@ -282,3 +282,18 @@ export const VerticalMediaTwoHours: Story = {
     timelineDuration: 2 * 60 * 60,
   },
 };
+
+export const InvalidHlsManifest: Story = {
+  render: () => (
+    <UrlDialogCtx.Provider value={() => {}}>
+      <QueryClientProvider client={queryClient}>
+        <Box sx={{height: '100dvh'}}>
+          <Video2
+            url="data:application/vnd.apple.mpegurl,Invalid%20manifest#broken.m3u8"
+            persistPosition={false}
+          />
+        </Box>
+      </QueryClientProvider>
+    </UrlDialogCtx.Provider>
+  ),
+};

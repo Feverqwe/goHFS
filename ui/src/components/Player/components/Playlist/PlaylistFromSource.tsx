@@ -31,11 +31,13 @@ export default function PlaylistFromSource({source}: {source: string}) {
     queryKey: queryKeys.rootStore(place),
     queryFn: () => api.getStore({place}),
     enabled: loadSource,
+    staleTime: Infinity,
   });
   const search = useQuery({
     queryKey: queryKeys.search(place, pattern),
     queryFn: () => api.search({place, pattern}),
     enabled: loadSource && Boolean(pattern),
+    staleTime: Infinity,
   });
 
   const store = folder.data;

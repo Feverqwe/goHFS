@@ -15,11 +15,11 @@ import type LiveTracker from 'video.js/dist/types/live-tracker';
 import 'video.js/dist/video-js.css';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
-import {getProgressKey} from '../../../../tools/common';
+import {getSidV2} from '../../../../tools/common';
 import {queryKeys} from '../../../../tools/queryClient';
 import {TITLE} from '../../constants';
 import {VideoMetadata} from '../../types';
-import {getSidV2} from '../../utils';
+import {getPlaybackProgressKey} from '../../utils';
 import UrlDialogCtx from '../UrlDialog/UrlDialogCtx';
 import {
   DEBUG_EVENTS,
@@ -225,16 +225,16 @@ const Video2: FC<Video2Props> = ({
         errorElement.textContent = player.error()?.message ?? '';
         playlistCallbacks.current.onPlaybackError?.();
       });
-      hls?.on(Hls.Events.ERROR, (_, error) => {
-        if (error.fatal && !player.error()) {
-          player.pause();
-          player.error('This stream could not be played.');
-        }
-      });
     }
+    hls?.on(Hls.Events.ERROR, (_, error) => {
+      if (error.fatal && !player.error()) {
+        player.pause();
+        player.error('This stream could not be played.');
+      }
+    });
     setSettingsControls({container: playerElement, player, trackController});
-    const sid = getSidV2(url);
-    const progressKey = getProgressKey(decodeURIComponent(sid));
+    const positionKey = getSidV2(url);
+    const progressKey = getPlaybackProgressKey(url);
     let lastSyncAt = 0;
     let activelyPlaying = false;
     let hasStarted = false;
@@ -410,7 +410,7 @@ const Video2: FC<Video2Props> = ({
       lastSavedTime = currentTime;
       const percent = progress ?? Math.trunc((100 / getDuration()) * currentTime * 1000) / 1000;
       setStorage({
-        [sid]: currentTime,
+        [positionKey]: currentTime,
         [progressKey]: isFinite(percent) ? percent : undefined,
       }).catch((err: unknown) => {
         if (lastSavedTime === currentTime) lastSavedTime = undefined;
@@ -436,6 +436,7 @@ const Video2: FC<Video2Props> = ({
       flushPosition();
     };
     const onPlaylistEnd = () => {
+      if (player.error()) return;
       hasEnded = true;
       lastPosition = 0;
       playlistCallbacks.current.onPositionChange?.(0);
@@ -572,8 +573,10 @@ const Video2: FC<Video2Props> = ({
 
     if (loadSource) {
       if (hls) {
-        hls.loadSource(url);
-        hls.attachMedia(player.tech(true).el() as HTMLMediaElement);
+        const stream = hls;
+        // Video.js clears errors when the media element starts loading the MediaSource.
+        stream.once(Hls.Events.MEDIA_ATTACHED, () => stream.loadSource(url));
+        stream.attachMedia(player.tech(true).el() as HTMLMediaElement);
       } else {
         player.src(url);
       }

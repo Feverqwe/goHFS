@@ -129,7 +129,8 @@ const FolderMenu: FC<FolderMenuProps> = ({
         icon: <DownloadIcon />,
         onClick: () => {
           const lines = ['#EXTM3U'];
-          playlist.forEach(({name, url}) => {
+          const exportEntries = activeSearch ? directoryPlaylist(store.files, store.dir) : playlist;
+          exportEntries.forEach(({name, url}) => {
             lines.push(`#EXTINF:-1,${name.replace(/[\r\n]/g, ' ')}`);
             lines.push(new URL(url, location.href).href);
           });
@@ -233,6 +234,7 @@ const FolderMenu: FC<FolderMenuProps> = ({
       store.showHidden,
       store.isRoot,
       store.dir,
+      store.files,
       activeSearch,
       onMkdirClick,
       onClose,

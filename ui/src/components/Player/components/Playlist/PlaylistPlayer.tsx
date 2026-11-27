@@ -15,6 +15,7 @@ import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import SearchIcon from '@mui/icons-material/Search';
+import {getSidV2} from '../../../../tools/common';
 import {defaultPlaylistSettings, type PlaylistEntry, type PlaylistSettings} from '../../playlist';
 import Video2 from '../Video2/Video2';
 import {formatTime} from '../Video2/utils';
@@ -47,17 +48,11 @@ function findAdjacent(
   index: number,
   direction: -1 | 1,
   wrap: boolean,
-  failed: ReadonlySet<string>,
 ) {
-  if (index < 0) return undefined;
+  if (index < 0 || order.length < 2) return undefined;
 
-  for (let offset = 1; offset <= order.length; offset += 1) {
-    const candidateIndex = index + direction * offset;
-    const entry = order[wrap ? (candidateIndex + order.length) % order.length : candidateIndex];
-    if (!entry) break;
-    if (!failed.has(entry.url)) return entry;
-  }
-  return undefined;
+  const adjacent = index + direction;
+  return order[wrap ? (adjacent + order.length) % order.length : adjacent];
 }
 
 export default function PlaylistPlayer({
@@ -77,7 +72,8 @@ export default function PlaylistPlayer({
   const {sort, repeat, shuffle, resume} = settings;
   const [playingUrl, setPlayingUrl] = useState<string>();
   const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
-  const [positions, setPositions] = useState(initialPositions);
+  const failedInSequence = useRef(new Set<string>());
+  const positions = useRef(new Map<string, number>());
   const [durations, setDurations] = useState<Record<string, number | undefined>>({});
   const sorted = useMemo(() => {
     if (sort === 'original') return playlist;
@@ -87,8 +83,8 @@ export default function PlaylistPlayer({
   const [playback, setPlayback] = useState(() => {
     const linkedEntry = playlist.find((entry) => entry.url === initialTrack);
     const url = (linkedEntry ?? sorted[0])?.url;
-    const start = resume ? (initialPositions[url] ?? 0) : 0;
-    return {url, start, revision: 0};
+    const start = resume && url ? (initialPositions[url] ?? 0) : 0;
+    return {url, start, revision: 0, autoplay};
   });
   const [shuffled, setShuffled] = useState(() => {
     const entry = playlist.find(({url}) => url === playback.url);
@@ -96,6 +92,7 @@ export default function PlaylistPlayer({
   });
   const togglePlaybackRef = useRef<(() => void) | null>(null);
   const panelButtonRef = useRef<HTMLButtonElement>(null);
+  const navigationFocus = useRef<'previous' | 'next' | null>(null);
   const activeRowRef = useRef<HTMLButtonElement>(null);
 
   const order = shuffled ?? sorted;
@@ -103,8 +100,8 @@ export default function PlaylistPlayer({
   const currentUrl = current?.url;
   const startPosition = playback.url === currentUrl ? playback.start : 0;
   const index = order.findIndex((entry) => entry.url === current?.url);
-  const previous = findAdjacent(order, index, -1, repeat === 'all', failed);
-  const next = findAdjacent(order, index, 1, repeat === 'all', failed);
+  const previous = findAdjacent(order, index, -1, repeat === 'all');
+  const next = findAdjacent(order, index, 1, repeat === 'all');
   const term = search.trim().toLocaleLowerCase();
   const visible = useMemo(
     () => sorted.filter((entry) => entry.name.toLocaleLowerCase().includes(term)),
@@ -127,6 +124,7 @@ export default function PlaylistPlayer({
     );
   }
 
+  const positionKey = getSidV2(current.url);
   const updateSettings = (patch: Partial<PlaylistSettings>) => {
     const updated = {...settings, ...patch};
     setSettings(updated);
@@ -136,11 +134,27 @@ export default function PlaylistPlayer({
     setShuffled(shuffle ? undefined : shuffleFrom(playlist, current));
     updateSettings({shuffle: !shuffle});
   };
-  const play = (entry: PlaylistEntry, restart = false) => {
+  const play = (entry: PlaylistEntry, {restart = false, afterError = false} = {}) => {
     if (entry.url === current.url && !restart) return;
+    if (!afterError) failedInSequence.current.clear();
     setPlayingUrl(undefined);
-    const start = resume && !restart ? (positions[entry.url] ?? 0) : 0;
-    setPlayback(({revision}) => ({url: entry.url, start, revision: revision + 1}));
+    if (failed.has(entry.url)) {
+      setFailed((entries) => {
+        const updated = new Set(entries);
+        updated.delete(entry.url);
+        return updated;
+      });
+    }
+    const start =
+      resume && !restart
+        ? (positions.current.get(getSidV2(entry.url)) ?? initialPositions[entry.url] ?? 0)
+        : 0;
+    setPlayback(({revision}) => ({
+      url: entry.url,
+      start,
+      revision: revision + 1,
+      autoplay: !afterError || playback.autoplay || playingUrl === current.url,
+    }));
     if (
       shuffled &&
       entry.url !== previous?.url &&
@@ -155,30 +169,26 @@ export default function PlaylistPlayer({
     panelButtonRef.current?.focus();
   };
   const handleEnded = () => {
-    if (repeat === 'one') play(current, true);
-    else if (next) play(next, next.url === current.url);
+    if (repeat === 'one' || (repeat === 'all' && !next)) play(current, {restart: true});
+    else if (next) play(next);
   };
   const handlePlaybackError = () => {
     setPlayingUrl(undefined);
     setFailed((entries) => new Set(entries).add(current.url));
-    if (next && next.url !== current.url) play(next);
+    failedInSequence.current.add(current.url);
+    if (next && !failedInSequence.current.has(next.url)) {
+      play(next, {afterError: true});
+    }
   };
   const handleRowClick = (entry: PlaylistEntry) => {
-    if (failed.has(entry.url)) {
-      setFailed((entries) => {
-        const updated = new Set(entries);
-        updated.delete(entry.url);
-        return updated;
-      });
-      play(entry, entry.url === current.url);
-    } else if (entry.url === current.url) {
+    if (entry.url === current.url && !failed.has(entry.url)) {
       togglePlaybackRef.current?.();
     } else {
-      play(entry);
+      play(entry, {restart: entry.url === current.url});
     }
   };
   const updatePosition = (position: number) => {
-    setPositions((saved) => ({...saved, [current.url]: position}));
+    positions.current.set(positionKey, position);
   };
   const updateDuration = (seconds: number) => {
     const duration = Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;
@@ -208,7 +218,7 @@ export default function PlaylistPlayer({
           url={current.url}
           metadata={startPosition}
           mediaTitle={current.name}
-          autoplay={autoplay || playback.revision > 0}
+          autoplay={playback.autoplay}
           persistPosition={persistPosition}
           onPositionChange={updatePosition}
           onDurationChange={updateDuration}
@@ -220,9 +230,10 @@ export default function PlaylistPlayer({
             panelId,
             panelOpen,
             toggleRef: panelButtonRef,
+            navigationFocus,
             onToggle: () => setPanelOpen((open) => !open),
-            onPrevious: previous && (() => play(previous, previous.url === current.url)),
-            onNext: next && (() => play(next, next.url === current.url)),
+            onPrevious: previous && (() => play(previous)),
+            onNext: next && (() => play(next)),
           }}
         />
       </Box>

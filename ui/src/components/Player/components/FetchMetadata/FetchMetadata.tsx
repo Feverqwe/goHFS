@@ -2,20 +2,21 @@ import React, {FC, ReactNode} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
 import {queryKeys} from '../../../../tools/queryClient';
-import {getSidV1, getSidV2} from '../../utils';
+import type {VideoMetadata} from '../../types';
+import {getPlaybackPositionKeys, readPlaybackPosition} from '../../utils';
 
 interface FetchMetadataProps {
   url: string;
-  children: (data: unknown) => ReactNode | undefined;
+  children: (data: VideoMetadata | undefined) => ReactNode;
 }
 
 const FetchMetadata: FC<FetchMetadataProps> = ({url, children}) => {
-  const keys = [getSidV2(url), getSidV1(url)];
+  const keys = getPlaybackPositionKeys(url);
   const {data, isPending} = useQuery({
     queryKey: queryKeys.storage(keys),
     queryFn: async () => {
       const result = await api.storageGet(keys);
-      return keys.map((key) => result[key]).find((value) => value !== undefined);
+      return readPlaybackPosition(result, keys) ?? null;
     },
     staleTime: Infinity,
     gcTime: 0,
@@ -23,7 +24,7 @@ const FetchMetadata: FC<FetchMetadataProps> = ({url, children}) => {
 
   if (isPending) return null;
 
-  return <>{children(data)}</>;
+  return <>{children(data ?? undefined)}</>;
 };
 
 export default FetchMetadata;

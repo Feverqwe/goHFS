@@ -7,7 +7,6 @@ import UrlDialogCtx from './components/UrlDialog/UrlDialogCtx';
 import {changeUrlParams} from '../../tools/urlParams';
 import {getParamsFromUrl} from './utils';
 import FetchMetadata from './components/FetchMetadata/FetchMetadata';
-import {VideoMetadata} from './types';
 import Video2 from './components/Video2/Video2';
 import PlaylistFromSource from './components/Playlist/PlaylistFromSource';
 
@@ -70,7 +69,7 @@ const Player = React.memo(() => {
       {playlistSource !== null && <PlaylistFromSource source={playlistSource} />}
       {playlistSource === null && url ? (
         <FetchMetadata url={url}>
-          {(metadata) => <Video2 metadata={metadata as VideoMetadata} url={url} />}
+          {(metadata) => <Video2 metadata={metadata} url={url} />}
         </FetchMetadata>
       ) : null}
       {isShowDialog ? <UrlDialog onClose={handleClose} onSubmit={handleChangeUrl} /> : null}

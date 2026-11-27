@@ -59,6 +59,18 @@ export const AllUnavailable: Story = {
       {name: 'Unavailable clip 1.mp4', url: 'data:video/mp4,one'},
       {name: 'Unavailable clip 2.mp4', url: 'data:video/mp4,two'},
     ],
+    initialSettings: {sort: 'original', repeat: 'all', shuffle: false, resume: false},
+  },
+};
+
+export const UnavailableHls: Story = {
+  args: {
+    playlist: [
+      {
+        name: 'Invalid stream.m3u8',
+        url: 'data:application/vnd.apple.mpegurl,Invalid%20manifest#broken.m3u8',
+      },
+    ],
   },
 };
 
@@ -70,3 +82,10 @@ export const RestoredControls: Story = {
 };
 
 export const LinkedTrack: Story = {args: {initialTrack: demoUrl('02')}};
+
+export const RepeatSingleFile: Story = {
+  args: {
+    playlist: [playlist[0]],
+    initialSettings: {sort: 'original', repeat: 'all', shuffle: false, resume: false},
+  },
+};

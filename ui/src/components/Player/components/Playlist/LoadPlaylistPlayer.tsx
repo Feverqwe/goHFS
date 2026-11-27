@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {Alert, Box, LinearProgress} from '@mui/material';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {api} from '../../../../tools/api';
@@ -10,7 +10,7 @@ import {
   type PlaylistSettings,
   type PlaylistSnapshot,
 } from '../../playlist';
-import {getSidV1, getSidV2} from '../../utils';
+import {getPlaybackPositionKeys, readPlaybackPosition} from '../../utils';
 import PlaylistPlayer from './PlaylistPlayer';
 
 export default function LoadPlaylistPlayer({
@@ -20,9 +20,12 @@ export default function LoadPlaylistPlayer({
 }) {
   const [initialTrack] = useState(readPlaylistTrack);
   const settingsKey = key === undefined ? undefined : `playlist-settings-${key}`;
-  const keys = new Set(entries.flatMap(({url}) => [getSidV2(url), getSidV1(url)]));
-  if (settingsKey) keys.add(settingsKey);
-  const storageKeys = [...keys];
+  const positionKeys = useMemo(
+    () => entries.map(({url}) => ({url, keys: getPlaybackPositionKeys(url)})),
+    [entries],
+  );
+  const storageKeys = [...new Set(positionKeys.flatMap((entry) => entry.keys))];
+  if (settingsKey) storageKeys.push(settingsKey);
   const queryKey = queryKeys.playlistData(storageKeys);
   const queryClient = useQueryClient();
   const {mutate: saveSettings, isError: settingsSaveFailed} = useMutation({
@@ -51,13 +54,7 @@ export default function LoadPlaylistPlayer({
   }
 
   const initialPositions = Object.fromEntries(
-    entries.map(({url}) => {
-      const position = data?.[getSidV2(url)] ?? data?.[getSidV1(url)];
-      return [
-        url,
-        typeof position === 'number' && Number.isFinite(position) && position > 0 ? position : 0,
-      ];
-    }),
+    positionKeys.map(({url, keys}) => [url, readPlaybackPosition(data, keys) ?? 0]),
   );
 
   return (

@@ -9,6 +9,7 @@ export interface PlaylistControlOptions {
   panelId: string;
   panelOpen: boolean;
   toggleRef: RefObject<HTMLButtonElement | null>;
+  navigationFocus: RefObject<'previous' | 'next' | null>;
   onToggle: () => void;
   onPrevious?: () => void;
   onNext?: () => void;
@@ -38,11 +39,18 @@ export function addPlaylistControls(player: Player, getOptions: () => PlaylistCo
   const bar = player.getChild('controlBar');
   if (!bar) return undefined;
 
+  const navigate = (direction: 'previous' | 'next', button: PlaylistButton) => {
+    const {onPrevious, onNext, navigationFocus} = getOptions();
+    const action = direction === 'previous' ? onPrevious : onNext;
+    if (!action) return;
+    if (document.activeElement === button.el()) navigationFocus.current = direction;
+    action();
+  };
   const previous = new PlaylistButton(player, 'Previous file', 'vjs-icon-previous-item', () =>
-    getOptions().onPrevious?.(),
+    navigate('previous', previous),
   );
   const next = new PlaylistButton(player, 'Next file', 'vjs-icon-next-item', () =>
-    getOptions().onNext?.(),
+    navigate('next', next),
   );
   const toggle = new PlaylistButton(player, 'Playlist', 'vjs-icon-chapters', () => {
     const {onToggle, panelOpen} = getOptions();
@@ -83,6 +91,12 @@ export function addPlaylistControls(player: Player, getOptions: () => PlaylistCo
   };
 
   sync();
+  const {navigationFocus, onPrevious, onNext} = getOptions();
+  if (navigationFocus.current) {
+    const target = navigationFocus.current === 'previous' ? onPrevious && previous : onNext && next;
+    ((target || toggle).el() as HTMLButtonElement).focus();
+    navigationFocus.current = null;
+  }
   return {
     sync,
     dispose: () => {
