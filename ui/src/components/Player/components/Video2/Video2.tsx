@@ -473,7 +473,8 @@ const Video2: FC<Video2Props> = ({
 
       if (isSeekKey && !event.metaKey && !event.shiftKey) {
         const direction = code === 'ArrowLeft' ? -1 : 1;
-        const offset = event.altKey || event.ctrlKey ? SHORT_SKIP : SKIP;
+        const altPressed = event.altKey || event.getModifierState('AltGraph');
+        const offset = altPressed || event.ctrlKey ? SHORT_SKIP : SKIP;
         seekBy(direction * offset);
         handled = true;
       } else if (hasModifier) {
